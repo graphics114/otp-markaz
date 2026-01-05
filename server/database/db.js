@@ -33,7 +33,7 @@ const { Client } = pkg;
 
 const database = new Client({
   user: "postgres",
-  host: "localhost",
+  host: "dpg-abc123.render.com",
   database: "ottapalam_markaz",
   password: "Unaisku114@",
   port: 5432,
