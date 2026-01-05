@@ -120,7 +120,7 @@ export const getUser = () => async (dispatch) => {
 }
 
 export const logout = () => async (dispatch) => {
-    dispatch(authSlice.actions.loginRequest());
+    dispatch(authSlice.actions.logoutRequest());
     try {
         const res = await axiosInstance.get("/auth/logout");
         dispatch(authSlice.actions.loginSuccess());
