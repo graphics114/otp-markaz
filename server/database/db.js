@@ -2,7 +2,7 @@ import pkg from 'pg';
 const { Client } = pkg;
 
 const database = new Client({
-    connectionString:"postgresql://otp_markaz_db_user:x1t1wrpZpTiIfdjtDInKMKY6MQNlPbWu@dpg-d5d30o3e5dus7393vi20-a.oregon-postgres.render.com/otp_markaz_db",
+    connectionString:"postgresql://ottapalam_markaz_user:nLGmylwJcs1pvgC9QbmTAwaWGVFIoA1d@dpg-d5dv6iumcj7s73b1k0r0-a.oregon-postgres.render.com/ottapalam_markaz",
     ssl:{
         rejectUnauthorized:false,
     },

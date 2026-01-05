@@ -69,7 +69,7 @@ export const login = catchAsyncError(async (req, res, next) => {
     };
 
     const user = await database.query(`
-        SELECT * FROM users WHERE username = $1`, [username]);
+        SELECT * FROM users WHERE username = $1`, [username.trim()]);
 
     if (user.rows.length === 0) {
         return next(new ErrorHandler("Invalid username", 401));
