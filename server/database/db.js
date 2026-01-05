@@ -22,25 +22,21 @@
 
 
 
-import dotenv from "dotenv";
-import path from "path";
-dotenv.config({
-  path: path.resolve("./config/config.env"),
-});
-
 import pkg from "pg";
 const { Client } = pkg;
 
 const database = new Client({
-  user: "postgres",
-  host: "dpg-abc123.render.com",
-  database: "ottapalam_markaz",
-  password: "Unaisku114@",
-  port: 5432,
-  ssl: false,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // REQUIRED
+  },
 });
 
-await database.connect();
-console.log("Database connected successfully");
+try {
+  await database.connect();
+  console.log("Database connected successfully");
+} catch (error) {
+  console.error("Database connection failed:", error);
+}
 
 export default database;

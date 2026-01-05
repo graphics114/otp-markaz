@@ -23,7 +23,6 @@ config({ path: "./config/config.env" });
 // }));
 
 
-
 // CONNECT FREND AND BACK
 app.use(cors({
   origin: [
