@@ -36,18 +36,6 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
 
-
-// // CONNECT FREND AND BACK
-// app.use(cors({
-//   origin: [
-//     process.env.FRONTEND_URL,
-//     process.env.DASHBOARD_URL
-//   ],
-//   credentials: true,
-// }));
-
-
-
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
