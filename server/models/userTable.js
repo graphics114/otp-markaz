@@ -2,7 +2,7 @@ import database from "../database/db.js";
 
 export async function createUserTable() {
     try {
-        const query =`
+        const query = `
             CREATE TABLE IF NOT EXISTS users (
                 id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 
@@ -10,7 +10,7 @@ export async function createUserTable() {
                 username VARCHAR(100) UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 
-                role VARCHAR(10) DEFAULT 'student' CHECK (role IN ('Admin', 'staff', 'student')),
+                role VARCHAR(10) DEFAULT 'Student' CHECK (role IN ('Admin', 'Staff', 'Student')),
                 
                 avatar JSONB DEFAULT NULL,
                 
@@ -21,6 +21,6 @@ export async function createUserTable() {
     } catch (error) {
         console.error("Error creating user table:", error);
         process.exit(1);
-        
+
     }
 }

@@ -19,14 +19,14 @@ import StudentDashboard from "./components/Student/StudentDashboard";
 /* HIFIFZ DASHBOARD CONTENT */
 const RenderDashboardContent = () => {
 
-    const { openedComponent } = useSelector((state) => state.popup);
-    
-    switch (openedComponent) {
-      case "Deshboard":
-        return <StudentDashboard/>;
-      default:
-        return <StudentDashboard />;
-    }
+  const { openedComponent } = useSelector((state) => state.popup);
+
+  switch (openedComponent) {
+    case "Deshboard":
+      return <StudentDashboard />;
+    default:
+      return <StudentDashboard />;
+  }
 };
 
 

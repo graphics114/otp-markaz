@@ -19,13 +19,19 @@ const LoginModal = () => {
 
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
-        e.preventDefault();
+    const handleLogin = async (e) => {
+      e.preventDefault();
 
-        dispatch(login({
-            username: formData.username,
-            password: formData.password
+      try {
+        await dispatch(login({
+          username: formData.username,
+          password: formData.password
         }));
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.message || "Invalid username or password"
+        );
+      }
     };
 
     const { isAuthPopupOpen } = useSelector((state) => state.popup)
@@ -35,25 +41,17 @@ const LoginModal = () => {
     useEffect(() => {
       if (!isAuthenticated || !user) return;
 
-      // STUDENT
-      if (user.role === "Student") {
-        toast.success("Login successful");
-
-        dispatch(toggleAuthPopup());
-
-        setTimeout(() => {
-          navigate("/", { replace: true });
-        }, 100);
-
-      }
-      // NOT STUDENT
-      else {
+      if (user.role !== "Student") {
         toast.error("Only students are allowed to login");
         dispatch(toggleAuthPopup());
+        return;
       }
 
-    }, [isAuthenticated, user, dispatch, navigate]);
+      toast.success("Login successful");
+      dispatch(toggleAuthPopup());
+      navigate("/", { replace: true });
 
+    }, [isAuthenticated, user]);
 
     if (!isAuthPopupOpen) return null;
 
@@ -74,7 +72,7 @@ const LoginModal = () => {
                     </button>
                 </div>
                 <p className="text-gray-400  text-xs">
-                    Enter your username and password to <br /> access your accound
+                    Enter your username and password to <br /> access your account
                 </p>
 
                 <form onSubmit={handleLogin}>
@@ -89,7 +87,7 @@ const LoginModal = () => {
                         <div className="pt-3">
                             <h5>Password</h5>
                             <input type="password" placeholder="Enter your password" name="password"
-                                value={formData.password} onChange={handleChange}
+                                value={formData.password} onChange={handleChange} required
                                 className="w-full py-1 pl-3 bg-white shadow-md rounded-sm
                             focus:outline-none placeholder:text-sm" />
                         </div>

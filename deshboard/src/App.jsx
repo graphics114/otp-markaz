@@ -25,96 +25,95 @@ import HifizStudents from "./components/staff/HifizStudents";
 import HifizDeshboard from "./components/staff/HifizDeshboard";
 
 const App = () => {
-      const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-      const { user, isAuthenticated } = useSelector((state) => state.auth);
-      const { openedComponent } = useSelector((state) => state.extra);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { openedComponent } = useSelector((state) => state.extra);
 
-      useEffect(() => {
-        dispatch(getUser());
-      }, [dispatch]);
+  useEffect(() => {
+    dispatch(getUser());
+  }, [dispatch]);
 
-      /* ADMIN DASHBOARD CONTENT */
-      const renderDashboardContent = () => {
-        switch (openedComponent) {
-          case "Deshboard":
-            return <Deshboard />;
-          case "Students":
-            return <Students />;
-          case "Result":
-            return <Result />;
-          case "Admissions":
-            return <Admissions />;
-          case "Users":
-            return <Users />;
-          case "Profile":
-            return <Profile />;
-          default:
-            return <Deshboard />;
-        }
-      };
+  /* ADMIN DASHBOARD CONTENT */
+  const renderDashboardContent = () => {
+    switch (openedComponent) {
+      case "Deshboard":
+        return <Deshboard />;
+      case "Students":
+        return <Students />;
+      case "Result":
+        return <Result />;
+      case "Admissions":
+        return <Admissions />;
+      case "Users":
+        return <Users />;
+      case "Profile":
+        return <Profile />;
+      default:
+        return <Deshboard />;
+    }
+  };
 
-      /* HIFIFZ DASHBOARD CONTENT */
-        const staffRenderDashboardContent = () => {
-            switch (openedComponent) {
-              case "Deshboard":
-                return <HifizDeshboard/>;
-              case "Students":
-                return <HifizStudents />;
-              case "Result":
-                return <HifizResult />;
-              case "Users":
-                return <StaffUsers />;
-              case "Profile":
-                return <Profile />;
-              default:
-                return <HifizDeshboard />;
-            }
-        };
+  /* HIFIFZ DASHBOARD CONTENT */
+  const staffRenderDashboardContent = () => {
+    switch (openedComponent) {
+      case "Deshboard":
+        return <HifizDeshboard />;
+      case "Students":
+        return <HifizStudents />;
+      case "Result":
+        return <HifizResult />;
+      case "Users":
+        return <StaffUsers />;
+      case "Profile":
+        return <Profile />;
+      default:
+        return <HifizDeshboard />;
+    }
+  };
 
-      /*  ROLE BASED LAYOUT  */
-      const renderRoleLayout = () => {
-        if (!isAuthenticated) {
-          return <Navigate to="/login" replace />;
-        }
+  /*  ROLE BASED LAYOUT  */
+  const renderRoleLayout = () => {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
 
-        // ADMIN
-        if (user?.role === "Admin") {
-          return (
-            <div className="flex min-h-screen">
-              <SideBar />
-              {renderDashboardContent()}
-            </div>
-          );
-        }
-
-        // STAFF
-        if (user?.role === "Staff") {
-          return (
-            <div className="flex min-h-screen">
-              <StaffSideBar />
-              {staffRenderDashboardContent()}
-
-              {/* <SideBar />
-              {renderDashboardContent()} */}
-            </div>
-          );
-        }
-
-      };
-
+    // ADMIN
+    if (user?.role === "Admin") {
       return (
-        <>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={renderRoleLayout()} />
-            </Routes>
-
-            <ToastContainer />
-          </Router>
-        </>
+        <div className="flex min-h-screen">
+          <SideBar />
+          {renderDashboardContent()}
+        </div>
       );
-    };
+    }
+
+    // STAFF
+    if (user?.role === "Staff") {
+      return (
+        <div className="flex min-h-screen">
+          <StaffSideBar />
+          {staffRenderDashboardContent()}
+        </div>
+      );
+    }
+
+    // DEFAULT (e.g. Student trying to access dashboard)
+    return <Navigate to="/login" replace />;
+  };
+
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={renderRoleLayout()} />
+        </Routes>
+
+        <ToastContainer />
+      </Router>
+    </>
+  );
+};
 
 export default App;

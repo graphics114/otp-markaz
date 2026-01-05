@@ -7,8 +7,8 @@ const authSlice = createSlice({
     initialState: {
         loading: false,
         user: null,
-        users: [],
         isAuthenticated: false,
+        error: null
     },
     reducers: {
         loginRequest(state) {
@@ -19,8 +19,9 @@ const authSlice = createSlice({
             state.user = action.payload;
             state.isAuthenticated = true;
         },
-        loginFailed(state) {
-            state.loading = false;
+        loginFailed(state, action) {
+          state.loading = false;
+          state.error = action.payload;
         },
 
         getUserRequest(state) {
@@ -69,21 +70,16 @@ const authSlice = createSlice({
 });
 
 export const login = (data) => async (dispatch) => {
-    dispatch(authSlice.actions.loginRequest());
-    try {
-        await axiosInstance.post("/auth/clint/login", data).then(res => {
-            if (res.data.user.role === "Admin" || res.data.user.role === "Staff" || res.data.user.role === "Student") {
-                dispatch(authSlice.actions.loginSuccess(res.data.user));
-            } else {
-                dispatch(authSlice.actions.loginFailed());
-            }
-        });
-    } catch (error) {
-
-        dispatch(authSlice.actions.loginFailed());
-        toast.error(error?.response?.data?.message || "Login Failed");
-    };
-}
+  dispatch(authSlice.actions.loginRequest());
+  try {
+    const res = await axiosInstance.post("/auth/login", data);
+    dispatch(authSlice.actions.loginSuccess(res.data.user));
+    return res.data.user; // ✅ important
+  } catch (error) {
+    dispatch(authSlice.actions.loginFailed());
+    throw error; // ✅ MUST
+  }
+};
 
 export const getUser = () => async (dispatch) => {
     dispatch(authSlice.actions.getUserRequest());
@@ -91,35 +87,37 @@ export const getUser = () => async (dispatch) => {
         const res = await axiosInstance.get("/auth/me")
         dispatch(authSlice.actions.getUserSuccess(res.data.user));
     } catch (error) {
-        dispatch(authSlice.actions.loginFailed());
-        toast.error(error?.response?.data?.message || "Authentication failed");
+        dispatch(authSlice.actions.getUserFailed());
+        toast.error(error?.response?.data?.message || "get Failed")
     }
 }
 
 export const logout = () => async (dispatch) => {
-    dispatch(authSlice.actions.loginRequest());
-    try {
-        const res = await axiosInstance.get("/auth/logout");
-        dispatch(authSlice.actions.loginSuccess());
-        toast.success(res.data.message);
-        dispatch(authSlice.actions.resetAuthSlice());
-    } catch (error) {
-        dispatch(authSlice.actions.logoutFailed());
-        toast.error(error?.response?.data?.message || "Logout Failed");
-        dispatch(authSlice.actions.resetAuthSlice());
-    }
-}
+  dispatch(authSlice.actions.logoutRequest());
+  try {
+    const res = await axiosInstance.get("/auth/logout");
+    dispatch(authSlice.actions.logoutSuccess());
+    toast.success(res.data.message);
+  } catch (error) {
+    dispatch(authSlice.actions.logoutFailed());
+    toast.error(error?.response?.data?.message || "Logout Failed");
+  }
+};
 
 export const updateProfile = (data) => async (dispatch) => {
-    dispatch(authSlice.actions.updateProfileRequest());
-    try {
-        const res = await axiosInstance.put("/auth/profile/update", data);
-        dispatch(authSlice.actions.updateProfileSuccess(res.data.user));
-        toast.success(res.data.message);
-    } catch (error) {
-        dispatch(authSlice.actions.updateProfileFailed());
-        toast.error(error.response.data.message || "Failed to update profile")
-    }
-}
+  dispatch(authSlice.actions.updateProfileRequest());
+  try {
+    const res = await axiosInstance.put("/auth/profile/update", data);
+    dispatch(authSlice.actions.updateProfileSuccess(res.data.user));
+    toast.success(res.data.message);
+  } catch (error) {
+    dispatch(
+      authSlice.actions.updateProfileFailed(
+        error?.response?.data?.message
+      )
+    );
+    toast.error("Failed to update profile");
+  }
+};
 
 export default authSlice.reducer;

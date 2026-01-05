@@ -16,31 +16,45 @@ const app = express();
 
 config({ path: "./config/config.env" });
 
-// app.use(cors({
-//     origin: [process.env.FRONTEND_URL, process.env.DASHBOARD_URL],
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     credentials: true
-// }));
-
-
-// CONNECT FREND AND BACK
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    process.env.DASHBOARD_URL
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173", // Vite frontend
+      "http://localhost:5175", // optional
+    ];
+
+    // allow requests with no origin (Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
+
+
+// // CONNECT FREND AND BACK
+// app.use(cors({
+//   origin: [
+//     process.env.FRONTEND_URL,
+//     process.env.DASHBOARD_URL
+//   ],
+//   credentials: true,
+// }));
 
 
 
 app.use(cookieParser());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(fileUpload({
-    tempFileDir: "./uploads",
-    useTempFiles: true
+  tempFileDir: "./uploads",
+  useTempFiles: true
 }));
 
 
