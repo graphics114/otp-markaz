@@ -31,6 +31,12 @@ app.use(fileUpload({
     useTempFiles: true
 }));
 
+
+// FOR BEVK 
+app.get("/", (req, res) => {
+  res.send("OTP Markaz Backend is running 🚀");
+});
+
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/student", studentRouter);
 app.use("/api/v1/exam", examRouter);
