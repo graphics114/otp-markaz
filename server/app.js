@@ -19,8 +19,9 @@ config({ path: "./config/config.env" });
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
-      "http://localhost:5173", // Vite frontend
-      "http://localhost:5175", // optional
+      "https://otp-markaz-zdfr.vercel.app",
+      // "http://localhost:5173", // Vite frontend
+      // "http://localhost:5175", // optional
     ];
 
     // allow requests with no origin (Postman)
