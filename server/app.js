@@ -47,7 +47,7 @@ app.use(fileUpload({
 
 // FOR BEVK 
 app.get("/", (req, res) => {
-  res.send("OTP Markaz Backend is running 🚀");
+  res.send("OTP Markaz Backend is running... 🚀");
 });
 
 app.use("/api/v1/auth", authRouter);

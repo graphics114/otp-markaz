@@ -24,7 +24,7 @@ const Login = () => {
 
     const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
 
-    if(isAuthenticated && user.role === "Admin" || user?.role === "Staff") {
+    if(isAuthenticated && (user?.role === "Admin" || user?.role === "Staff")) {
         return <Navigate to={"/"} />
     }
 
@@ -44,7 +44,7 @@ const Login = () => {
                     <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
                         Username
                     </label>
-                    <input type="username" name="username" value={formData.username} onChange={handleChange} 
+                    <input type="text" name="username" value={formData.username} onChange={handleChange} 
                         placeholder="Enter your username" className="w-full px-4 py-1 border 
                         rounded-md placeholder:text-sm focus:outline-none" required />
                 </div>
