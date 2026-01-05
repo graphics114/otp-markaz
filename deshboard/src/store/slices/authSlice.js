@@ -20,8 +20,14 @@ const authSlice = createSlice({
             state.user = action.payload;
             state.isAuthenticated = true;
         },
+        // loginFailed(state) {
+        //     state.loading = false;
+        // },
+
         loginFailed(state) {
             state.loading = false;
+            state.user = null;
+            state.isAuthenticated = false;
         },
 
         getUserRequest(state) {
@@ -89,24 +95,46 @@ const authSlice = createSlice({
     },
 });
 
+// export const login = (data) => async (dispatch) => {
+//     dispatch(authSlice.actions.loginRequest());
+//     try {
+//         await axiosInstance.post("/auth/login", data).then(res => {
+//             if (res.data.user.role === "Admin" || res.data.user.role === "Staff") {
+//                 dispatch(authSlice.actions.loginSuccess(res.data.user));
+//                 toast.success(res.data.message);
+//             } else {
+//                 dispatch(authSlice.actions.loginFailed());
+//                 toast.error(res.data.message);
+//             }
+//         });
+//     } catch (error) {
+
+//         dispatch(authSlice.actions.loginFailed());
+//         toast.error(error?.response?.data?.message || "Login Failed");
+//     };
+// }
+
 export const login = (data) => async (dispatch) => {
     dispatch(authSlice.actions.loginRequest());
-    try {
-        await axiosInstance.post("/auth/login", data).then(res => {
-            if (res.data.user.role === "Admin" || res.data.user.role === "Staff") {
-                dispatch(authSlice.actions.loginSuccess(res.data.user));
-                toast.success(res.data.message);
-            } else {
-                dispatch(authSlice.actions.loginFailed());
-                toast.error(res.data.message);
-            }
-        });
-    } catch (error) {
 
+    try {
+        const res = await axiosInstance.post("/auth/login", data);
+
+        if (res.data.success) {
+            dispatch(authSlice.actions.loginSuccess(res.data.user));
+            toast.success(res.data.message || "Login successful");
+        } else {
+            dispatch(authSlice.actions.loginFailed());
+            toast.error(res.data.message || "Invalid username or password");
+        }
+
+    } catch (error) {
         dispatch(authSlice.actions.loginFailed());
-        toast.error(error?.response?.data?.message || "Login Failed");
-    };
-}
+        toast.error(
+            error?.response?.data?.message || "Login failed"
+        );
+    }
+};
 
 export const getUser = () => async (dispatch) => {
     dispatch(authSlice.actions.getUserRequest());
@@ -119,19 +147,33 @@ export const getUser = () => async (dispatch) => {
     }
 }
 
+// export const logout = () => async (dispatch) => {
+//     dispatch(authSlice.actions.logoutRequest());
+//     try {
+//         const res = await axiosInstance.get("/auth/logout");
+//         dispatch(authSlice.actions.loginSuccess());
+//         toast.success(res.data.message);
+//         dispatch(authSlice.actions.resetAuthSlice());
+//     } catch (error) {
+//         dispatch(authSlice.actions.logoutFailed());
+//         toast.error(error?.response?.data?.message || "Logout Failed");
+//         dispatch(authSlice.actions.resetAuthSlice());
+//     }
+// }
+
 export const logout = () => async (dispatch) => {
     dispatch(authSlice.actions.logoutRequest());
     try {
         const res = await axiosInstance.get("/auth/logout");
-        dispatch(authSlice.actions.loginSuccess());
+        dispatch(authSlice.actions.logoutSuccess());
         toast.success(res.data.message);
-        dispatch(authSlice.actions.resetAuthSlice());
     } catch (error) {
         dispatch(authSlice.actions.logoutFailed());
         toast.error(error?.response?.data?.message || "Logout Failed");
+    } finally {
         dispatch(authSlice.actions.resetAuthSlice());
     }
-}
+};
 
 export const updateProfile = (data) => async (dispatch) => {
     dispatch(authSlice.actions.updateProfileRequest());
