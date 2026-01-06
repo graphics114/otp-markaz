@@ -19,37 +19,30 @@ const LoginModal = () => {
 
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
-      e.preventDefault();
+    const handleLogin = (e) => {
+        e.preventDefault();
 
-      try {
-        await dispatch(login({
-          username: formData.username,
-          password: formData.password
+        dispatch(login({
+            username: formData.username,
+            password: formData.password
         }));
-      } catch (error) {
-        toast.error(
-          error?.response?.data?.message || "Invalid username or password"
-        );
-      }
     };
 
-    const { isAuthPopupOpen } = useSelector((state) => state.popup)
+    const { isAuthPopupOpen } = useSelector((state) => state.popup);
 
     const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
 
     useEffect(() => {
-      if (!isAuthenticated || !user) return;
+        if (!isAuthenticated || !user) return;
 
-      if (user.role !== "Student") {
-        toast.error("Only students are allowed to login");
-        dispatch(toggleAuthPopup());
-        return;
-      }
-
-      toast.success("Login successful");
-      dispatch(toggleAuthPopup());
-      navigate("/", { replace: true });
+        if (user.role === "Student") {
+            toast.success("Login successful");
+            dispatch(toggleAuthPopup());
+            navigate("/", { replace: true });
+        } else {
+            toast.error("Only students are allowed to login");
+            dispatch(toggleAuthPopup());
+        }
 
     }, [isAuthenticated, user]);
 
@@ -87,7 +80,7 @@ const LoginModal = () => {
                         <div className="pt-3">
                             <h5>Password</h5>
                             <input type="password" placeholder="Enter your password" name="password"
-                                value={formData.password} onChange={handleChange} required
+                                value={formData.password} onChange={handleChange}
                                 className="w-full py-1 pl-3 bg-white shadow-md rounded-sm
                             focus:outline-none placeholder:text-sm" />
                         </div>
