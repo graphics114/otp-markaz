@@ -21,7 +21,9 @@ app.use(cors({
     const allowedOrigins = [
       "https://otp-markaz-zdfr.vercel.app",
       "https://otp-markaz.vercel.app",
-      "https://otp-markaz-student.vercel.app", // standard predicted name
+      "https://otp-markaz-student.vercel.app",
+      "https://otp-markaz-deshboard.vercel.app",
+      "https://otp-markaz-admin.vercel.app",
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5176",
