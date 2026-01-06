@@ -2,15 +2,8 @@ import pkg from 'pg';
 const { Client } = pkg;
 
 const database = new Client({
-    connectionString:"postgresql://ottapalam_markaz_user:nLGmylwJcs1pvgC9QbmTAwaWGVFIoA1d@dpg-d5dv6iumcj7s73b1k0r0-a.oregon-postgres.render.com/ottapalam_markaz",
-    ssl:{
-        rejectUnauthorized:false,
-    },
-    // user: "postgres",
-    // host: "localhost",
-    // database: "ottapalam_markaz",
-    // password: "Unaisku114@", 
-    // port: 5432, 
+    connectionString: process.env.DATABASE_URL || "postgresql://ottapalam_markaz_user:nLGmylwJcs1pvgC9QbmTAwaWGVFIoA1d@dpg-d5dv6iumcj7s73b1k0r0-a.oregon-postgres.render.com/ottapalam_markaz",
+    ssl: process.env.DATABASE_URL ? (process.env.DATABASE_URL.includes("render.com") ? { rejectUnauthorized: false } : false) : { rejectUnauthorized: false },
 });
 
 try {

@@ -1,5 +1,7 @@
 import express from "express";
 import { config } from 'dotenv';
+config({ path: "./config/config.env" });
+
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import fileUpload from 'express-fileupload';
@@ -13,8 +15,6 @@ import admitionRouter from "./router/admitionRotes.js"
 import adminRouter from "./router/adminRouts.js"
 
 const app = express();
-
-config({ path: "./config/config.env" });
 
 app.use(cors({
   origin: function (origin, callback) {
