@@ -2,7 +2,7 @@ import pkg from 'pg';
 const { Client } = pkg;
 
 const database = new Client({
-    connectionString: process.env.DATABASE_URL || "postgresql://ottapalam_markaz_user:nLGmylwJcs1pvgC9QbmTAwaWGVFIoA1d@dpg-d5dv6iumcj7s73b1k0r0-a.oregon-postgres.render.com/ottapalam_markaz",
+    connectionString: process.env.DATABASE_URL || "postgresql://ottapalam_markaz:03xH71xpITljN82craEg9ZrdBiVAasEa@dpg-d5e8vjvfte5s73ad3j80-a.oregon-postgres.render.com/ottapalam_markaz_xgp8",
     ssl: process.env.DATABASE_URL ? (process.env.DATABASE_URL.includes("render.com") ? { rejectUnauthorized: false } : false) : { rejectUnauthorized: false },
 });
 
