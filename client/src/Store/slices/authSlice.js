@@ -3,70 +3,70 @@ import { axiosInstance } from "../../lib/axios.js";
 import { toast } from "react-toastify";
 
 const authSlice = createSlice({
-    name: "auth",
-    initialState: {
-        loading: false,
-        user: null,
-        isAuthenticated: false,
-        error: null
+  name: "auth",
+  initialState: {
+    loading: false,
+    user: null,
+    isAuthenticated: false,
+    error: null
+  },
+  reducers: {
+    loginRequest(state) {
+      state.loading = true;
     },
-    reducers: {
-        loginRequest(state) {
-            state.loading = true;
-        },
-        loginSuccess(state, action) {
-            state.loading = false;
-            state.user = action.payload;
-            state.isAuthenticated = true;
-        },
-        loginFailed(state, action) {
-          state.loading = false;
-          state.error = action.payload;
-        },
-
-        getUserRequest(state) {
-            state.loading = true;
-        },
-        getUserSuccess(state, action) {
-            state.loading = false;
-            state.user = action.payload;
-            state.isAuthenticated = true;
-        },
-        getUserFailed(state) {
-            state.loading = false;
-            state.user = null;
-            state.isAuthenticated = false;
-        },
-
-        logoutRequest(state) {
-            state.loading = true;
-        },
-        logoutSuccess(state) {
-            state.loading = false;
-            state.user = null;
-            state.isAuthenticated = false;
-        },
-        logoutFailed(state) {
-            state.loading = false;
-        },
-
-        updateProfileRequest(state) {
-            state.loading = true;
-        },
-        updateProfileSuccess(state, action) {
-            state.loading = false;
-            state.user = action.payload;
-        },
-        updateProfileFailed(state) {
-            state.loading = false;
-        },
-
-        resetAuthSlice(state) {
-            state.loading = false;
-            state.user = null;
-            state.isAuthenticated = false;
-        },
+    loginSuccess(state, action) {
+      state.loading = false;
+      state.user = action.payload;
+      state.isAuthenticated = true;
     },
+    loginFailed(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+
+    getUserRequest(state) {
+      state.loading = true;
+    },
+    getUserSuccess(state, action) {
+      state.loading = false;
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
+    getUserFailed(state) {
+      state.loading = false;
+      state.user = null;
+      state.isAuthenticated = false;
+    },
+
+    logoutRequest(state) {
+      state.loading = true;
+    },
+    logoutSuccess(state) {
+      state.loading = false;
+      state.user = null;
+      state.isAuthenticated = false;
+    },
+    logoutFailed(state) {
+      state.loading = false;
+    },
+
+    updateProfileRequest(state) {
+      state.loading = true;
+    },
+    updateProfileSuccess(state, action) {
+      state.loading = false;
+      state.user = action.payload;
+    },
+    updateProfileFailed(state) {
+      state.loading = false;
+    },
+
+    resetAuthSlice(state) {
+      state.loading = false;
+      state.user = null;
+      state.isAuthenticated = false;
+    },
+  },
 });
 
 export const login = (data) => async (dispatch) => {
@@ -76,20 +76,22 @@ export const login = (data) => async (dispatch) => {
     dispatch(authSlice.actions.loginSuccess(res.data.user));
     return res.data.user; // ✅ important
   } catch (error) {
-    dispatch(authSlice.actions.loginFailed());
-    throw error; // ✅ MUST
+    const errorMessage = error?.response?.data?.message || "Login Failed";
+    dispatch(authSlice.actions.loginFailed(errorMessage));
+    toast.error(errorMessage);
+    throw error;
   }
 };
 
 export const getUser = () => async (dispatch) => {
-    dispatch(authSlice.actions.getUserRequest());
-    try {
-        const res = await axiosInstance.get("/auth/me")
-        dispatch(authSlice.actions.getUserSuccess(res.data.user));
-    } catch (error) {
-        dispatch(authSlice.actions.getUserFailed());
-        toast.error(error?.response?.data?.message || "get Failed")
-    }
+  dispatch(authSlice.actions.getUserRequest());
+  try {
+    const res = await axiosInstance.get("/auth/me")
+    dispatch(authSlice.actions.getUserSuccess(res.data.user));
+  } catch (error) {
+    dispatch(authSlice.actions.getUserFailed());
+    toast.error(error?.response?.data?.message || "get Failed")
+  }
 }
 
 export const logout = () => async (dispatch) => {

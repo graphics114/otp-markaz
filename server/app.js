@@ -20,8 +20,13 @@ app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
       "https://otp-markaz-zdfr.vercel.app",
-      // "http://localhost:5173", // Vite frontend
-      // "http://localhost:5175", // optional
+      "https://otp-markaz.vercel.app",
+      "https://otp-markaz-student.vercel.app", // standard predicted name
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5176",
+      process.env.FRONTEND_URL,
+      process.env.DASHBOARD_URL
     ];
 
     // allow requests with no origin (Postman)
@@ -30,7 +35,7 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
   credentials: true,
