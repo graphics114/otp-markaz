@@ -240,20 +240,20 @@ const Hifiz = () => {
               {/* TOGGLE PUBLISH AND PANDING */}
               <button
                 onClick={handleToggleAllStatus}
-                className="px-2 text-black rounded hover:text-blue-800"
+                className="px-2 py-2 text-black rounded hover:text-blue-800"
               >
                 <ReplaceAll />
               </button>
 
               {/* PRINT */}
-              <button onClick={handlePrint} className="px-4 bg-gray-700 text-white rounded">
+              <button onClick={handlePrint} className="px-4 py-2 bg-gray-700 text-white rounded">
                 Print
               </button>
 
               {/* EXCEL */}
               <button
                 onClick={handleExcel}
-                className="px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
                 Excel
               </button>
@@ -261,7 +261,7 @@ const Hifiz = () => {
               {/* Reset Marks */}
               <button
                 onClick={() => setShowConfirm(true)}
-                className="px-4 bg-red-600 text-white rounded hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Reset All Marks
               </button>
