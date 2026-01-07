@@ -89,7 +89,7 @@ const Admissions = () => {
     // Apply same filters used in UI
     const exportData = filteredAdmitios.map((s, index) => ({
       "Sl No": index + 1,
-      "Candidate Name": s.candidate_name ,
+      "Candidate Name": s.candidate_name,
       "Date of Birth": s.date_of_birth
         ? new Date(s.date_of_birth).toLocaleDateString("en-IN")
         : "",
@@ -111,10 +111,10 @@ const Admissions = () => {
       "State": s.state,
       "Country": s.country,
       "Pin Code": s.pin_code,
-
-      "School": s.course_program,
-      "Madrasa": s.madrasa_class,
       "Institution": s.institution,
+      "Syllabus": s.syllabus,
+      "School": s.school_class,
+      "Madrasa": s.madrasa_class,
       "Applayed": s.created_at,
     }));
 
@@ -178,9 +178,9 @@ const Admissions = () => {
 
             {/* REGISTER */}
             <button onClick={() => dispatch(toggleRegisterAdmition())}
-                className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white 
+              className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white 
                 font-semibold rounded-md shadow-md hover:bg-blue-700 transition-all">
-                    New Admission
+              New Admission
             </button>
 
             {/* PRINT */}
@@ -225,9 +225,10 @@ const Admissions = () => {
                 <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Name</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Phone</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Place</th>
+                <th className="border px-1 py-0.5 whitespace-nowrap">Institution</th>
+                <th className="border px-1 py-0.5 whitespace-nowrap">Syllabus</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">School</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Madrasa</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Institution</th>
               </tr>
             </thead>
 
@@ -243,9 +244,10 @@ const Admissions = () => {
                   <td className="border p-2">{s.guardian_name}</td>
                   <td className="border p-2">{s.guardian_phone}</td>
                   <td className="border p-2">{s.locality}</td>
+                  <td className="border p-2">{s.institution}</td>
+                  <td className="border p-2">{s.syllabus}</td>
                   <td className="border p-2">{s.school_class}</td>
                   <td className="border p-2">{s.madrasa_class}</td>
-                  <td className="border p-2">{s.institution}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,8 +284,9 @@ const Admissions = () => {
                   <th className="py-3 px-4 text-left">District</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">Pin Code</th>
                   <th className="py-3 px-4 text-left">Institution</th>
-                  <th className="py-3 px-4 text-left">Madrasa</th>
+                  <th className="py-3 px-4 text-left">Syllabus</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">School</th>
+                  <th className="py-3 px-4 text-left">Madrasa</th>
                   <th className="py-3 px-4 text-left">Applayed</th>
                   <th className="py-3 px-4 text-left">Edit</th>
                   <th className="py-3 px-4 text-left">Delete</th>
@@ -320,8 +323,9 @@ const Admissions = () => {
                       <td className="py-3 px-4 whitespace-nowrap">{admition.district}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{admition.pin_code}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{admition.institution}</td>
-                      <td className="py-3 px-4">{admition.madrasa_class}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{admition.syllabus}</td>
                       <td className="py-3 px-4">{admition.school_class}</td>
+                      <td className="py-3 px-4">{admition.madrasa_class}</td>
                       <td className="py-3 px-4">{new Date(admition.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4">
                         {/* UPDATE */}

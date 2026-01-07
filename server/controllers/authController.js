@@ -6,7 +6,7 @@ import { sendToken } from "../utils/jwtToken.js";
 import { v2 as cloudinary } from "cloudinary";
 
 export const register = catchAsyncError(async (req, res, next) => {
-    const { full_name, username, password, role } = req.body;
+    const { full_name, username, password, role, institution, joining_batch } = req.body;
 
     if (!full_name || !username || !password) {
         return next(new ErrorHandler("Please provide all required fields", 400));
@@ -42,10 +42,10 @@ export const register = catchAsyncError(async (req, res, next) => {
 
         // 1️⃣ Create student
         const studentResult = await database.query(
-            `INSERT INTO students (user_id)
-     VALUES ($1)
+            `INSERT INTO students (user_id, institution, joining_batch)
+     VALUES ($1, $2, $3)
      RETURNING id`,
-            [user.id]
+            [user.id, institution, joining_batch]
         );
 
         const studentId = studentResult.rows[0].id;
@@ -255,13 +255,12 @@ export const fetchAllRegisteredUsers = catchAsyncError(async (req, res) => {
 
 export const updateProfile2 = catchAsyncError(async (req, res, next) => {
     const { userId } = req.params;
-    const { full_name } = req.body;
+    const { full_name, institution, joining_batch } = req.body;
 
     if (!full_name) {
         return next(new ErrorHandler("Please provide all required fields", 400));
     };
 
-    // User " " മാത്രം അയച്ചാൽ reject ചെയ്യും
     if (full_name.trim().length === 0) {
         return next(new ErrorHandler("cannot be empty", 400));
     };
@@ -275,23 +274,19 @@ export const updateProfile2 = catchAsyncError(async (req, res, next) => {
 
     let avatarData = existingUser.rows[0].avatar;
 
-    // new profile image upload ചെയ്തുണ്ടോ എന്ന് check
     if (req.files && req.files.avatar) {
         const { avatar } = req.files;
 
-        // already avatar ഉണ്ടെങ്കിൽ Cloudinary-ൽ നിന്ന് delete ചെയ്യുന്നു
         if (avatarData?.public_id) {
             await cloudinary.uploader.destroy(avatarData.public_id);
         }
 
-        // New image Cloudinary-ലേക്ക് upload
         const newProfileImage = await cloudinary.uploader.upload(avatar.tempFilePath, {
             folder: "markaz_avatar",
             width: 150,
             crop: "scale"
         });
 
-        // DB-യിൽ save ചെയ്യാനുള്ള format
         avatarData = {
             public_id: newProfileImage.public_id,
             url: newProfileImage.secure_url
@@ -303,6 +298,14 @@ export const updateProfile2 = catchAsyncError(async (req, res, next) => {
         "UPDATE users SET full_name = $1, avatar = $2 WHERE id = $3 RETURNING *",
         [full_name, avatarData, userId]
     );
+
+    // Update students table if institution or joining_batch is provided
+    if (institution !== undefined || joining_batch !== undefined) {
+        await database.query(
+            "UPDATE students SET institution = $1, joining_batch = $2 WHERE user_id = $3",
+            [institution, joining_batch, userId]
+        );
+    }
 
     res.status(200).json({
         success: true,

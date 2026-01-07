@@ -27,7 +27,7 @@ const About = () => {
                     <div className="space-y-6 text-lg text-muted-foreground leading-relaxed text-justify">
                         <p>
                             <span className="text-foreground font-semibold text-xl">Ottappalam Markaz</span> is a prominent educational institution located in Palakkad
-                            district, famously known as the granary of Kerala. Established in 1992, the Markaz has, over the past three decades,
+                            district, famously known as the granary of Kerala. Established in 1993, the Markaz has, over the past three decades,
                             made consistent progress in both religious and secular education.
                         </p>
                         <p>

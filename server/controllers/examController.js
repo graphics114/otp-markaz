@@ -31,11 +31,11 @@ export const addExamResult = catchAsyncError(async (req, res, next) => {
 });
 
 export const updateExamResult = catchAsyncError(async (req, res, next) => {
-  const { resultId } = req.params;
-  const { hifiz_marks, hizb_marks, result_status } = req.body;
+    const { resultId } = req.params;
+    const { hifiz_marks, hizb_marks, result_status } = req.body;
 
-  const result = await database.query(
-    `
+    const result = await database.query(
+        `
     UPDATE student_exam_results
     SET 
       hifiz_marks = COALESCE($1, hifiz_marks),
@@ -44,17 +44,17 @@ export const updateExamResult = catchAsyncError(async (req, res, next) => {
       WHERE id = $4
       RETURNING *
     `, [hifiz_marks, hizb_marks, result_status, resultId]
-  );
+    );
 
-  if (result.rows.length === 0) {
-    return next(new ErrorHandler("Result not found", 404));
-  }
+    if (result.rows.length === 0) {
+        return next(new ErrorHandler("Result not found", 404));
+    }
 
-  res.status(200).json({
-    success: true,
-    message: "Result updated successfully",
-    result: result.rows[0],
-  });
+    res.status(200).json({
+        success: true,
+        message: "Result updated successfully",
+        result: result.rows[0],
+    });
 });
 
 export const fetchAllExamResults = catchAsyncError(async (req, res) => {
@@ -66,6 +66,7 @@ export const fetchAllExamResults = catchAsyncError(async (req, res) => {
             u.full_name,
             s.institution,
             s.reg_number,
+            s.joining_batch,
 
             ser.hifiz_marks,
             ser.hizb_marks,

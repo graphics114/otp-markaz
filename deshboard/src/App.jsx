@@ -27,12 +27,20 @@ import HifizDeshboard from "./components/staff/HifizDeshboard";
 const App = () => {
   const dispatch = useDispatch();
 
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, isUserLoading } = useSelector((state) => state.auth);
   const { openedComponent } = useSelector((state) => state.extra);
 
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   /* ADMIN DASHBOARD CONTENT */
   const renderDashboardContent = () => {

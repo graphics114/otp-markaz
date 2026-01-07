@@ -6,14 +6,17 @@ export const fetchAllUsers = catchAsyncError(async (req, res) => {
 
   const result = await database.query(`
         SELECT
-            id,
-            full_name,
-            username,
-            role,
-            avatar,
-            created_at
-        FROM users
-        ORDER BY created_at DESC
+            u.id,
+            u.full_name,
+            u.username,
+            u.role,
+            u.avatar,
+            u.created_at,
+            s.institution,
+            s.joining_batch
+        FROM users u
+        LEFT JOIN students s ON u.id = s.user_id
+        ORDER BY u.created_at DESC
     `);
 
   res.status(200).json({

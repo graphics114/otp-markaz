@@ -190,7 +190,9 @@ const UpdateStudent = ({ selectedStudent }) => {
       {
         instu: "Hifzul Quran College",
         courses: [
-          "Hifiz",
+            "HZ1",
+            "HZ2",
+            "HZ3",
         ],
       },
       {

@@ -117,7 +117,7 @@ const Hifiz = () => {
       "Sl No": index + 1,
       "Name": r.full_name,
       "Reg No": r.reg_number,
-      "Institution": r.institution,
+      "Course": r.joining_batch,
       "Hifiz": r.hifiz_marks,
       "Hizb": r.hizb_marks,
       "Result": r.hifiz_marks >= 30 && r.hizb_marks >= 30 ? "Passed" : "Failed",
@@ -223,6 +223,7 @@ const Hifiz = () => {
 
         <div className=" sm:p-8 bg-gray-50 min-h-full p-2">
 
+          {/* HEADER SIDE */}
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
             {/* SEARCH */}
             <div className="relative w-full sm:w-72">
@@ -281,7 +282,7 @@ const Hifiz = () => {
                   <tr>
                     <th className="py-3 px-4 text-left">#</th>
                     <th className="py-3 px-4 text-left">Name</th>
-                    <th className="py-3 px-4 text-left whitespace-nowrap">Institution</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Course</th>
                     <th className="py-3 px-4 text-left">Reg No</th>
                     <th className="py-3 px-4 text-left">Hifiz</th>
                     <th className="py-3 px-4 text-left">Hizb</th>
@@ -306,7 +307,7 @@ const Hifiz = () => {
                             {(page - 1) * 10 + index + 1}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">{result.full_name}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{result.institution}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{result.joining_batch}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{result.reg_number}</td>
                           <td className="py-3 px-4">
                             <input

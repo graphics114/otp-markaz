@@ -14,14 +14,18 @@ const UserUpdate = ({ selectedUser }) => {
         full_name: "",
         username: "",
         role: "",
+        institution: "",
+        joining_batch: "",
     });
 
     useEffect(() => {
-        if(selectedUser) {
+        if (selectedUser) {
             setEditData({
                 full_name: selectedUser.full_name || "",
                 username: selectedUser.username || "",
                 role: selectedUser.role || "",
+                institution: selectedUser.institution || "",
+                joining_batch: selectedUser.joining_batch || "",
             });
         }
     }, [selectedUser]);
@@ -44,9 +48,11 @@ const UserUpdate = ({ selectedUser }) => {
             full_name: editData.full_name,
             username: editData.username,
             role: editData.role,
+            institution: editData.institution,
+            joining_batch: editData.joining_batch,
         };
 
-        if(avatarFile){
+        if (avatarFile) {
             const formData = new FormData();
 
             Object.keys(data).forEach((key) => {
@@ -61,17 +67,49 @@ const UserUpdate = ({ selectedUser }) => {
         }
     };
 
-    return(<>
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
-        <div className="bg-white rounded-xl w-full max-w-2xl p-6 relative">
-            <button onClick={() => dispatch(toggleUpdateUser())}
-                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl">
-                &times;
-            </button>
-            <h2 className="text-2xl font-bold mb-4 text-center">Update Details</h2>
+    // INSTUTUTION
+    const institutions = [
+        {
+            instu: "Hifzul Quran College",
+            courses: [
+                "HZ1",
+                "HZ2",
+                "HZ3",
+            ],
+        },
+        {
+            instu: "Uthmaniyya College...",
+            courses: [
+                "HI1",
+                "HI2",
+                "HS1",
+                "HS2",
+                "BS1",
+                "BS2",
+                "BS3",
+                "BS4",
+                "BS5",
+            ],
+        },
+    ];
 
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                onSubmit={handleSubmit}>
+    const selectedinstuObj = institutions.find(
+        (s) => s.instu === editData.institution
+    );
+
+    const courses = selectedinstuObj?.courses || [];
+
+    return (<>
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
+            <div className="bg-white rounded-xl w-full max-w-2xl p-6 relative">
+                <button onClick={() => dispatch(toggleUpdateUser())}
+                    className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl">
+                    &times;
+                </button>
+                <h2 className="text-2xl font-bold mb-4 text-center">Update Details</h2>
+
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-1">
                         <label className="text-sm font-medium text-gray-700">
                             Name <span className="text-red-600">*</span>
@@ -94,32 +132,67 @@ const UserUpdate = ({ selectedUser }) => {
                         </label>
                         <select name="role" value={editData.role} onChange={handleUserChange}
                             className="border px-4 py-2 rounded-lg h-[41px] outline-none">
-                                <option value="">Select Role</option>
-                                <option value="Student">Student</option>
-                                <option value="Staff">Staff</option>
+                            <option value="">Select Role</option>
+                            <option value="Student">Student</option>
+                            <option value="Staff">Staff</option>
                         </select>
                     </div>
+
                     <div className="flex flex-col gap-1">
                         <label className="text-sm font-medium text-gray-700">Profile Image</label>
                         <input type="file" name="avatar" onChange={handleAvatarChange}
-                            className="p-2 border rounded-lg col-span-1 md:col-span-2 h-[41px]
+                            className="p-2 border rounded-lg h-[41px]
                             file:mr-4 file:px-4 file:rounded-md file:border-0 file:bg-blue-50
                             file:text-blue-700 file:hover:text-blue-500 focus:outline-none" />
                     </div>
+
+                    {editData.role === "Student" && (
+                        <>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700">
+                                    Institution
+                                </label>
+                                <select name="institution" value={editData.institution} onChange={handleUserChange}
+                                    className="border px-4 py-2 rounded-lg h-[41px] outline-none text-sm">
+                                    <option value="">Select institution</option>
+                                    {institutions.map((item) => (
+                                        <option key={item.instu} value={item.instu}>
+                                            {item.instu}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700">Course</label>
+                                <select
+                                    name="joining_batch" value={editData.joining_batch} onChange={handleUserChange}
+                                    disabled={!editData.institution} className="border px-4 py-2 rounded-lg h-[41px] 
+                                outline-none disabled:bg-gray-100 text-sm">
+                                    <option value="">Select course</option>
+                                    {courses.map((cour) => (
+                                        <option key={cour} value={cour}>
+                                            {cour}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    )}
 
                     <button type="submit" className="flex items-center justify-center gap-2 bg-blue-600
                         hover:bg-blue-700 text-white py-2 px-6 rounded col-span-1 md:col-span-2">
                         {loading ? (
                             <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent 
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent 
                                 rounded-full animate-spin"/>
-                            <span>Updating User...</span>
+                                <span>Updating User...</span>
                             </>
                         ) : ("Update User")}
                     </button>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
     </>)
 }
 
