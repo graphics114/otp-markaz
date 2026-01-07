@@ -206,7 +206,7 @@ const Hifiz = () => {
   };
 
   return (<>
-    <div className="fixed inset-0 bg-gray-50">
+    <div className="relative w-full bg-gray-50 min-h-screen">
       <div className="p-[10px] pl-[10px] md:pl-[17rem] w-full">
 
         {/* HEADER */}

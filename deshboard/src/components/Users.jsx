@@ -135,7 +135,7 @@ const Users = () => {
     const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
 
     const filteredUsers = (users || []).filter((user) => {
-        const matchesRole = (user.role === "Staff" || user.role === "Student");
+        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa");
 
         const matchesInstitution =
             selectedInstitution === "All Institutions" ||
@@ -163,7 +163,7 @@ const Users = () => {
 
             {/* USERS */}
             <div className="p-4 sm:p-8 bg-gray-50 min-h-full">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
 
                     {/* SEARCH */}
                     <div className="relative w-full sm:w-72">
@@ -180,7 +180,8 @@ const Users = () => {
                         <select
                             value={selectedInstitution}
                             onChange={(e) => setSelectedInstitution(e.target.value)}
-                            className="w-full border px-4 py-2 rounded-lg focus:outline-none placeholder:text-sm h-11"
+                            className="w-full border px-4 py-2 rounded-lg focus:outline-none
+                                 placeholder:text-sm h-11 cursor-pointer"
                         >
                             {institutions.map((inst) => (
                                 <option key={inst} value={inst}>
@@ -190,7 +191,7 @@ const Users = () => {
                         </select>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 ml-auto">
 
                         {/* REGISTER */}
                         <button onClick={() => dispatch(toggleRegisterUser())}

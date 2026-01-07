@@ -17,12 +17,17 @@ import Students from "./components/Students";
 import Result from "./components/Result";
 import Admissions from "./components/admissions";
 
-// Staff Components
+// Hifiz Components
 import StaffUsers from "./components/staff/StaffUsers";
 import StaffSideBar from "./components/staff/StaffSideBar";
 import HifizResult from "./components/staff/HifizResult";
 import HifizStudents from "./components/staff/HifizStudents";
 import HifizDeshboard from "./components/staff/HifizDeshboard";
+
+//Dawa Components
+import DawaDeshboard from "./components/dawa/DawaDeshboard";
+import DawaStudents from "./components/dawa/DawaStudents";
+import DawaResult from "./components/dawa/DawaResult";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -80,6 +85,24 @@ const App = () => {
     }
   };
 
+  /* DAWA DASHBOARD CONTENT */
+  const dawaRenderDashboardContent = () => {
+    switch (openedComponent) {
+      case "Deshboard":
+        return <DawaDeshboard />;
+      case "Students":
+        return <DawaStudents />;
+      case "Result":
+        return <DawaResult />;
+      case "Users":
+        return <StaffUsers />; 
+      case "Profile":
+        return <Profile />;
+      default:
+        return <DawaDeshboard />;
+    }
+  };
+
   /*  ROLE BASED LAYOUT  */
   const renderRoleLayout = () => {
     if (!isAuthenticated) {
@@ -96,12 +119,22 @@ const App = () => {
       );
     }
 
-    // STAFF
-    if (user?.role === "Staff") {
+    //HIFIZ
+    if (user?.role === "Hifiz") {
       return (
         <div className="flex min-h-screen">
           <StaffSideBar />
           {staffRenderDashboardContent()}
+        </div>
+      );
+    }
+
+    //DAWA
+    if (user?.role === "Dawa") {
+      return (
+        <div className="flex min-h-screen">
+          <StaffSideBar />
+          {dawaRenderDashboardContent()}
         </div>
       );
     }

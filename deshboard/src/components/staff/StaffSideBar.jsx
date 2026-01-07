@@ -1,4 +1,4 @@
-import { ClipboardCheck,LayoutDashboard, Users, User, LogOut, MoveLeft, GraduationCap, PackagePlus } from "lucide-react";
+import { ClipboardCheck, LayoutDashboard, Users, User, LogOut, MoveLeft, GraduationCap, PackagePlus } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { toggleComponent, toggleNavbar } from "../../store/slices/extraSlice";
@@ -47,12 +47,20 @@ const StaffSideBar = () => {
         dispatch(logout());
     };
 
-    if(!isAuthenticated) {
+    if (!isAuthenticated) {
         return <Navigate to="/login" />
     }
-    return(<>
-    <aside className={`${isNavbarOpened ? "left-[10px]" : "-left-full"} fixed w-64 h-[97.5%] rounded-xl 
-        bg-white z-10 mt-[10px] transition-all duration-300 shadow-lg p-4 space-y-4 flex flex-col 
+    return (<>
+        {/* Backdrop for mobile */}
+        {isNavbarOpened && (
+            <div
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+                onClick={() => dispatch(toggleNavbar())}
+            />
+        )}
+
+        <aside className={`${isNavbarOpened ? "left-[10px]" : "-left-full"} fixed w-64 h-[97.5%] rounded-xl 
+        bg-white z-50 mt-[10px] transition-all duration-300 shadow-xl p-4 space-y-4 flex flex-col 
         justify-between md:left-[10px]`}>
             <nav className="space-y-2">
                 <div className="flex flex-col gap-2 py-2">
@@ -64,8 +72,9 @@ const StaffSideBar = () => {
                 </div>
 
                 {Links.map((item, index) => {
-                    return(
-                        <button onClick={() => {setActiveLink(index);
+                    return (
+                        <button onClick={() => {
+                            setActiveLink(index);
                             dispatch(toggleComponent(item.title));
                         }} key={index} className={`${activeLink === index && "bg-dark-gradient text-white"}
                             hover:bg-gray-200 w-full transition-all duration-300 flex items-center 

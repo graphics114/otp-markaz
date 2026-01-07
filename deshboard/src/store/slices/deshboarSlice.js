@@ -36,6 +36,19 @@ const deshboardSlice = createSlice({
     hifizDashboardStatsFail: (state) => {
       state.loading = false;
     },
+
+    dawaDashboardStatsRequest: (state) => {
+      state.loading = true;
+    },
+    dawaDashboardStatsSuccess: (state, action) => {
+      state.loading = false;
+      state.cards = action.payload.cards;
+      state.today = action.payload.today;
+      state.charts = action.payload.charts;
+    },
+    dawaDashboardStatsFaile: (state) => {
+      state.loading = false;
+    },
   },
 });
 
@@ -46,6 +59,9 @@ export const {
   hifizDashboardStatsRequest,
   hifizDashboardStatsSuccess,
   hifizDashboardStatsFail,
+  dawaDashboardStatsRequest,
+  dawaDashboardStatsSuccess,
+  dawaDashboardStatsFaile,
 } = deshboardSlice.actions;
 
 export const fetchDashboardStats = () => async (dispatch) => {
@@ -66,6 +82,17 @@ export const hifizDashboardStats = () => async (dispatch) => {
     dispatch(hifizDashboardStatsSuccess(res.data));
   } catch (error) {
     dispatch(hifizDashboardStatsFail());
+    toast.error(error?.response?.data?.message || "Authentication failed");
+  }
+};
+
+export const dawaDashboardStats = () => async (dispatch) => {
+  try {
+    dispatch(dawaDashboardStatsRequest());
+    const res = await axiosInstance.get("/admin/dawa/deshboard/status");
+    dispatch(dawaDashboardStatsSuccess(res.data));
+  } catch (error) {
+    dispatch(dawaDashboardStatsFaile());
     toast.error(error?.response?.data?.message || "Authentication failed");
   }
 };

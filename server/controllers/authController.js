@@ -63,7 +63,7 @@ export const register = catchAsyncError(async (req, res, next) => {
 
 export const login = catchAsyncError(async (req, res, next) => {
     const { username, password } = req.body;
-    console.log(`Login attempt for username: ${username}`);
+    // console.log(`Login attempt for username: ${username}`);
 
     if (!username || !password) {
         return next(new ErrorHandler("Please enter username and password", 400));

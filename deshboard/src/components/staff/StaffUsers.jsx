@@ -158,7 +158,7 @@ const StaffUsers = () => {
 
       {/* USERS */}
       <div className="p-4 sm:p-8 bg-gray-50 min-h-full">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
 
           {/* SEARCH */}
           <div className="relative w-full sm:w-72">
@@ -185,7 +185,7 @@ const StaffUsers = () => {
             </select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-auto">
             {/* REGISTER */}
             <button onClick={() => dispatch(toggleRegisterUser())}
               className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white 

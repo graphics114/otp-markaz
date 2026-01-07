@@ -120,7 +120,7 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
   const admissionsByInstitution = await database.query(`
     SELECT
       COUNT(*) FILTER (WHERE institution = 'Hifzul Quran College') AS hifzul_admissions,
-      COUNT(*) FILTER (WHERE institution = 'Uthmaniyya College...') AS uthmaniyya_admissions
+      COUNT(*) FILTER (WHERE institution = 'Uthmaniyya College of Excellence') AS uthmaniyya_admissions
     FROM admission_candidates
   `);
 
@@ -193,6 +193,59 @@ export const hifizDashboardStats = catchAsyncError(async (req, res) => {
 
       hifzul_students: Number(studentsByInstitution.rows[0].hifzul_students),
       hifzul_admissions: Number(admissionsByInstitution.rows[0].hifzul_admissions),
+    }
+  });
+});
+
+export const dawaDashboardStats = catchAsyncError(async (req, res) => {
+
+  const totalUsers = await database.query(`SELECT COUNT(*) FROM users WHERE users.role = $1`, ["Student"]);
+  
+  const totalStudents = await database.query(`SELECT COUNT(*) FROM students`);
+  const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates`);
+
+  const totalResults = await database.query(`
+  SELECT COUNT(*) 
+  FROM student_exam_results ser
+  JOIN students s ON s.id = ser.student_id
+  WHERE s.institution = $1
+  `, ["Uthmaniyya College..."]);
+
+  const resultStatus = await database.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE ser.result_status = 'Published') AS published,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Pending') AS pending
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    WHERE s.institution = $1
+  `, ["Uthmaniyya College..."]);
+
+  const studentsByInstitution = await database.query(`
+    SELECT COUNT(*) AS dawa_students
+    FROM students
+    WHERE institution = $1
+  `, ["Uthmaniyya College..."]);
+
+  const admissionsByInstitution = await database.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE institution = $1) AS dawa_admissions
+    FROM admission_candidates
+  `, ["Uthmaniyya College of Excellence"]);
+
+
+  res.status(200).json({
+    success: true,
+    cards: {
+      total_users: Number(totalUsers.rows[0].count),
+      total_students: Number(totalStudents.rows[0].count),
+      total_admissions: Number(totalAdmissions.rows[0].count),
+      total_results: Number(totalResults.rows[0].count),
+
+      published_results: Number(resultStatus.rows[0].published),
+      pending_results: Number(resultStatus.rows[0].pending),
+
+      dawa_students: Number(studentsByInstitution.rows[0].dawa_students),
+      dawa_admissions: Number(admissionsByInstitution.rows[0].dawa_admissions),
     }
   });
 });

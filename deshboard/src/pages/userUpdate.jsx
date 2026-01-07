@@ -134,7 +134,8 @@ const UserUpdate = ({ selectedUser }) => {
                             className="border px-4 py-2 rounded-lg h-[41px] outline-none">
                             <option value="">Select Role</option>
                             <option value="Student">Student</option>
-                            <option value="Staff">Staff</option>
+                            <option value="Hifiz">Hifiz</option>
+                            <option value="Dawa">Dawa</option>
                         </select>
                     </div>
 

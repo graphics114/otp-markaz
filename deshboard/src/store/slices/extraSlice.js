@@ -10,6 +10,7 @@ const extraSlice = createSlice({
         isResetPasswordOpened: false,
         isUpdateStudentOpened: false,
         isHifizCollageOpened: false,
+        isDawaCollageOpened: false,
         isUpdateSAdmitionOpened: false,
         isRegisterAdmitionOpend: false,
         selectedUser: null,
@@ -19,7 +20,7 @@ const extraSlice = createSlice({
             state.openedComponent = action.payload;
         },
         toggleNavbar: (state) => {
-            state.isNavbarOpened =!state.isNavbarOpened
+            state.isNavbarOpened = !state.isNavbarOpened
         },
         toggleRegisterUser: (state) => {
             state.isRegisterUserOpened = !state.isRegisterUserOpened
@@ -35,6 +36,9 @@ const extraSlice = createSlice({
         },
         toggleHifizCollage: (state) => {
             state.isHifizCollageOpened = !state.isHifizCollageOpened
+        },
+        toggleDawaCollage: (state) => {
+            state.isDawaCollageOpened = !state.isDawaCollageOpened
         },
         toggleUpdateAdmition: (state) => {
             state.isUpdateSAdmitionOpened = !state.isUpdateSAdmitionOpened
@@ -53,6 +57,7 @@ export const {
     toggleResetPassword,
     toggleUpdateStudent,
     toggleHifizCollage,
+    toggleDawaCollage,
     toggleUpdateAdmition,
     toggleRegisterAdmition,
 } = extraSlice.actions;

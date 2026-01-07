@@ -108,7 +108,8 @@ const UserRegister = () => {
                                 }`} required>
                             <option value="" disabled hidden>Select Role</option>
                             <option value="Student" className="text-black">Student</option>
-                            <option value="Staff" className="text-black">Staff</option>
+                            <option value="Hifiz" className="text-black">Hifiz</option>
+                            <option value="Dawa" className="text-black">Dawa</option>
                         </select>
                     </div>
 
