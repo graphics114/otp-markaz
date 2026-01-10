@@ -66,9 +66,9 @@ const ResultCard = ({ result }) => {
             {/* Marks Card 2 */}
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-100 dark:border-purple-800 flex flex-col items-center">
               <span className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Hizb Marks</span>
-              {result.hifiz_marks ? (
+              {result.hizb_marks ? (
                 <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
-                  {result.hifiz_marks}
+                  {result.hizb_marks}
                 </span>
               ) : (
                 <span className="text-2xl font-bold text-red-600 mt-2 font-sans">
