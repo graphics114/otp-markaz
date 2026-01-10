@@ -101,13 +101,14 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
   const totalUsers = await database.query(`SELECT COUNT(*) FROM users`);
   const totalStudents = await database.query(`SELECT COUNT(*) FROM students`);
   const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates`);
-  const totalResults = await database.query(`SELECT COUNT(*) FROM student_exam_results`);
+  const totalResults = await database.query(`SELECT COUNT(*) FROM student_exam_results WHERE DATE_TRUNC('month', exam_date) = DATE_TRUNC('month', CURRENT_DATE)`);
 
   const resultStatus = await database.query(`
     SELECT
       COUNT(*) FILTER (WHERE result_status = 'Published') AS published,
       COUNT(*) FILTER (WHERE result_status = 'Pending') AS pending
     FROM student_exam_results
+    WHERE DATE_TRUNC('month', exam_date) = DATE_TRUNC('month', CURRENT_DATE)
   `);
 
   const studentsByInstitution = await database.query(`
@@ -147,7 +148,7 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
 export const hifizDashboardStats = catchAsyncError(async (req, res) => {
 
   const totalUsers = await database.query(`SELECT COUNT(*) FROM users WHERE users.role = $1`, ["Student"]);
-  
+
   const totalStudents = await database.query(`SELECT COUNT(*) FROM students`);
   const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates`);
 
@@ -156,6 +157,7 @@ export const hifizDashboardStats = catchAsyncError(async (req, res) => {
   FROM student_exam_results ser
   JOIN students s ON s.id = ser.student_id
   WHERE s.institution = $1
+  AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
   `, ["Hifzul Quran College"]);
 
   const resultStatus = await database.query(`
@@ -165,6 +167,7 @@ export const hifizDashboardStats = catchAsyncError(async (req, res) => {
     FROM student_exam_results ser
     JOIN students s ON s.id = ser.student_id
     WHERE s.institution = $1
+    AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
   `, ["Hifzul Quran College"]);
 
   const studentsByInstitution = await database.query(`
@@ -200,7 +203,7 @@ export const hifizDashboardStats = catchAsyncError(async (req, res) => {
 export const dawaDashboardStats = catchAsyncError(async (req, res) => {
 
   const totalUsers = await database.query(`SELECT COUNT(*) FROM users WHERE users.role = $1`, ["Student"]);
-  
+
   const totalStudents = await database.query(`SELECT COUNT(*) FROM students`);
   const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates`);
 
@@ -209,6 +212,7 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
   FROM student_exam_results ser
   JOIN students s ON s.id = ser.student_id
   WHERE s.institution = $1
+  AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
   `, ["Uthmaniyya College..."]);
 
   const resultStatus = await database.query(`
@@ -218,6 +222,7 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     FROM student_exam_results ser
     JOIN students s ON s.id = ser.student_id
     WHERE s.institution = $1
+    AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
   `, ["Uthmaniyya College..."]);
 
   const studentsByInstitution = await database.query(`

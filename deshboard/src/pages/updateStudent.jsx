@@ -267,19 +267,19 @@ const UpdateStudent = ({ selectedStudent }) => {
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                        DOB <span className="text-red-600">*</span>
+                        DOB
                     </label>
                     <input type="date" name="date_of_birth" placeholder="Enter your date of birth"
-                        onChange={handleStudentChange} value={editData.date_of_birth} required
+                        onChange={handleStudentChange} value={editData.date_of_birth}
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                        Phone Number <span className="text-red-600">*</span>
+                        Phone Number 
                     </label>
                     <input type="tel" name="phone_number" placeholder="Enter your phone number" maxLength={10}
-                        onChange={handleStudentChange} value={editData.phone_number} required
+                        onChange={handleStudentChange} value={editData.phone_number} 
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 
@@ -294,10 +294,10 @@ const UpdateStudent = ({ selectedStudent }) => {
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                       Aadhar Number <span className="text-red-600">*</span>
+                       Aadhar Number 
                     </label>
                     <input type="num" name="aadhar_number" placeholder="Enter your aadhar number" maxLength={12}
-                        onChange={handleStudentChange} value={editData.aadhar_number} required
+                        onChange={handleStudentChange} value={editData.aadhar_number} 
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 
@@ -324,10 +324,10 @@ const UpdateStudent = ({ selectedStudent }) => {
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                        Father's Name <span className="text-red-600">*</span>
+                        Father's Name 
                     </label>
                     <input type="text" name="father_name" placeholder="Enter your father's name"
-                        onChange={handleStudentChange} value={editData.father_name} required
+                        onChange={handleStudentChange} value={editData.father_name} 
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 
@@ -351,10 +351,10 @@ const UpdateStudent = ({ selectedStudent }) => {
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                        Mother's Name <span className="text-red-600">*</span>
+                        Mother's Name 
                     </label>
                     <input type="text" name="mother_name" placeholder="Enter your mother's name"
-                        onChange={handleStudentChange} value={editData.mother_name} required
+                        onChange={handleStudentChange} value={editData.mother_name} 
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 
@@ -378,10 +378,10 @@ const UpdateStudent = ({ selectedStudent }) => {
 
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
-                        Guardian's Name <span className="text-red-600">*</span>
+                        Guardian's Name 
                     </label>
                     <input type="text" name="guardian_name" placeholder="Enter your guardian's name"
-                        onChange={handleStudentChange} value={editData.guardian_name} required
+                        onChange={handleStudentChange} value={editData.guardian_name} 
                         className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                 </div>
 

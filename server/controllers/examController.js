@@ -2,37 +2,40 @@ import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import database from "../database/db.js";
 
-export const addExamResult = catchAsyncError(async (req, res, next) => {
+// export const addExamResult = catchAsyncError(async (req, res, next) => {
 
-    const { studentId } = req.params;
-    const { hifiz_marks, hizb_marks, tajweed_marks } = req.body;
+//     const { studentId } = req.params;
+//     const { hifiz_marks, hizb_marks, tajweed_marks } = req.body;
 
-    const studentCheck = await database.query(
-        "SELECT id FROM students WHERE id = $1",
-        [studentId]
-    );
+//     const studentCheck = await database.query(
+//         "SELECT id FROM students WHERE id = $1",
+//         [studentId]
+//     );
 
-    if (studentCheck.rows.length === 0) {
-        return next(new ErrorHandler("Student not found", 404));
-    }
+//     if (studentCheck.rows.length === 0) {
+//         return next(new ErrorHandler("Student not found", 404));
+//     }
 
-    const result = await database.query(
-        `INSERT INTO student_exam_results (
-            student_id, hifiz_marks, hizb_marks, tajweed_marks
-        ) VALUES ($1,$2,$3,$4)
-        RETURNING *`,
-        [studentId, hifiz_marks, hizb_marks, tajweed_marks]
-    );
+//     const result = await database.query(
+//         `INSERT INTO student_exam_results (
+//             student_id, hifiz_marks, hizb_marks, tajweed_marks
+//         ) VALUES ($1,$2,$3,$4)
+//         RETURNING *`,
+//         [studentId, hifiz_marks, hizb_marks, tajweed_marks]
+//     );
 
-    res.status(201).json({
-        success: true,
-        exam: result.rows[0]
-    });
-});
+//     res.status(201).json({
+//         success: true,
+//         exam: result.rows[0]
+//     });
+// });
 
 export const updateExamResult = catchAsyncError(async (req, res, next) => {
     const { resultId } = req.params;
-    const { hifiz_marks, hizb_marks, result_status } = req.body;
+    let { hifiz_marks, hizb_marks, result_status } = req.body;
+
+    if (hifiz_marks === "") hifiz_marks = 0;
+    if (hizb_marks === "") hizb_marks = 0;
 
     const result = await database.query(
         `
@@ -61,24 +64,25 @@ export const fetchAllExamResults = catchAsyncError(async (req, res) => {
 
     const result = await database.query(
         `SELECT
-            ser.id AS result_id,
+          ser.id AS result_id,
+          ser.exam_date,
 
-            u.full_name,
-            s.institution,
-            s.reg_number,
-            s.joining_batch,
+          u.full_name,
+          s.reg_number,
+          s.institution,
+          s.joining_batch,
 
-            ser.hifiz_marks,
-            ser.hizb_marks,
-            ser.tajweed_marks,
-            ser.total_marks,
-            ser.result_status,
-            ser.created_at
+          ser.hifiz_marks,
+          ser.hizb_marks,
+          ser.tajweed_marks,
+          ser.total_marks,
+          ser.result_status
 
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id
         JOIN users u ON u.id = s.user_id
-        ORDER BY s.reg_number ASC`
+        ORDER BY ser.exam_date DESC;
+        `
     );
 
     res.status(200).json({
@@ -181,5 +185,81 @@ export const fetchMyExamResult = catchAsyncError(async (req, res, next) => {
         success: true,
         count: result.rows.length,
         results: result.rows
+    });
+});
+
+export const addExamResult = catchAsyncError(async (req, res) => {
+    const { studentId } = req.params;
+    let { hifiz_marks, hizb_marks, tajweed_marks, exam_date } = req.body;
+
+    if (hifiz_marks === "") hifiz_marks = 0;
+    if (hizb_marks === "") hizb_marks = 0;
+    if (tajweed_marks === "") tajweed_marks = 0;
+
+    const result = await database.query(
+        `
+    INSERT INTO student_exam_results
+    (student_id, exam_date, hifiz_marks, hizb_marks, tajweed_marks)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING *
+    `,
+        [
+            studentId,
+            exam_date || new Date(),
+            hifiz_marks,
+            hizb_marks,
+            tajweed_marks
+        ]
+    );
+
+    res.status(201).json({
+        success: true,
+        message: "New exam result added",
+        result: result.rows[0]
+    });
+});
+
+export const searchResultsByDate = catchAsyncError(async (req, res) => {
+    const { from, to } = req.query;
+
+    const result = await database.query(
+        `
+    SELECT
+      u.full_name,
+      s.reg_number,
+      ser.exam_date,
+      ser.total_marks,
+      ser.result_status
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    JOIN users u ON u.id = s.user_id
+    WHERE ser.exam_date BETWEEN $1 AND $2
+    ORDER BY ser.exam_date
+    `,
+        [from, to]
+    );
+
+    res.json({
+        success: true,
+        count: result.rows.length,
+        results: result.rows
+    });
+});
+
+export const deleteExamResult = catchAsyncError(async (req, res, next) => {
+    const { resultId } = req.params;
+
+    const result = await database.query(
+        "DELETE FROM student_exam_results WHERE id = $1 RETURNING *",
+        [resultId]
+    );
+
+    if (result.rows.length === 0) {
+        return next(new ErrorHandler("Result not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Exam result deleted successfully",
     });
 });

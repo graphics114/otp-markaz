@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchMyExamResult } from "../../Store/slices/examResultSlice";
 import { downloadResultPDF } from "../../utils/resultPdf";
 import { ChevronDown, ChevronUp, Download } from "lucide-react";
+import Header from "./Head";
 
 // Sub-component for individual result card
 const ResultCard = ({ result }) => {
@@ -51,13 +52,29 @@ const ResultCard = ({ result }) => {
             {/* Marks Card 1 */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-100 dark:border-blue-800 flex flex-col items-center">
               <span className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Hifiz Marks</span>
-              <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">{result.hifiz_marks}</span>
+              {result.hifiz_marks ? (
+                <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
+                  {result.hifiz_marks}
+                </span>
+              ) : (
+                <span className="text-2xl font-bold text-red-600 mt-2 font-sans">
+                  Absent
+                </span>
+              )}
             </div>
 
             {/* Marks Card 2 */}
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-100 dark:border-purple-800 flex flex-col items-center">
               <span className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Hizb Marks</span>
-              <span className="text-3xl font-bold text-purple-700 dark:text-purple-300 mt-2">{result.hizb_marks}</span>
+              {result.hifiz_marks ? (
+                <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
+                  {result.hifiz_marks}
+                </span>
+              ) : (
+                <span className="text-2xl font-bold text-red-600 mt-2 font-sans">
+                  Absent
+                </span>
+              )}
             </div>
           </div>
 
@@ -101,37 +118,37 @@ const StudentExamResult = () => {
     dispatch(fetchMyExamResult());
   }, [dispatch]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <span className="ml-3 text-blue-600 font-medium animate-pulse">Fetching results...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-600 p-6 rounded-xl text-center border border-red-200 mt-4 shadow-sm">
-        <p>Error: {error}</p>
-      </div>
-    );
-  }
-
-  if (!results || results.length === 0) {
-    return (
-      <div className="text-center py-12 bg-secondary/10 rounded-xl border-2 border-dashed border-border mt-4">
-        <p className="text-muted-foreground font-medium">No exam results published yet.</p><br />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4 mt-6 mb-12 animate-fade-in-up">
-      {results.map((r, index) => (
-        <ResultCard key={index} result={r} />
-      ))}
-    </div>
+    <main className="p-[10px] pl-[10px] md:pl-[17rem] w-full">
+      <div className="flex-1 p-6 mb:pb-0">
+        <Header />
+        <h1 className="text-2xl font-bold">Exam Result</h1>
+        <p className="text-sm text-gray-600 mb-6">View your academic performance</p>
+      </div>
+
+      <div className="md:px-4 py-1">
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="ml-3 text-blue-600 font-medium animate-pulse">Fetching results...</span>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 text-red-600 p-6 rounded-xl text-center border border-red-200 mt-4 shadow-sm">
+            <p>Error: {error}</p>
+          </div>
+        ) : !results || results.length === 0 ? (
+          <div className="text-center py-12 bg-secondary/10 rounded-xl border-2 border-dashed border-border mt-4">
+            <p className="text-muted-foreground font-medium">No exam results published yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-4 mb-12 animate-fade-in-up">
+            {results.map((r, index) => (
+              <ResultCard key={index} result={r} />
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
 };
 

@@ -33,9 +33,10 @@ const LoginModal = () => {
     const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
 
     useEffect(() => {
+        if (!isAuthPopupOpen) return;
         if (!isAuthenticated || !user) return;
 
-        if (user.role === "Student") {
+        if (user?.role === "Student") {
             toast.success("Login successful");
             dispatch(toggleAuthPopup());
             navigate("/", { replace: true });
@@ -44,7 +45,7 @@ const LoginModal = () => {
             dispatch(toggleAuthPopup());
         }
 
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, user, isAuthPopupOpen]);
 
     if (!isAuthPopupOpen) return null;
 

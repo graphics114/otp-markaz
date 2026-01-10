@@ -47,15 +47,6 @@ export const register = catchAsyncError(async (req, res, next) => {
      RETURNING id`,
             [user.id, institution, joining_batch]
         );
-
-        const studentId = studentResult.rows[0].id;
-
-        // 2️⃣ Create empty exam result for that student
-        await database.query(
-            `INSERT INTO student_exam_results (student_id)
-     VALUES ($1)`,
-            [studentId]
-        );
     }
 
     sendToken(user, 201, "Registered successfully", res);
@@ -82,11 +73,28 @@ export const login = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("Invalid password", 401));
     };
 
-    sendToken(user.rows[0], 200, "Login successful", res);
+    const userData = user.rows[0];
+
+    if (userData.role === "Student") {
+        const studentData = await database.query(
+            "SELECT * FROM students WHERE user_id = $1", [userData.id]
+        );
+        userData.student_details = studentData.rows[0] || {};
+    }
+
+    sendToken(userData, 200, "Login successful", res);
 });
 
 export const getUser = catchAsyncError(async (req, res, next) => {
     const { user } = req;
+
+    if (user.role === "Student") {
+        const studentData = await database.query(
+            "SELECT * FROM students WHERE user_id = $1", [user.id]
+        );
+        user.student_details = studentData.rows[0] || {};
+    }
+
     res.status(200).json({
         success: true,
         user,
@@ -182,30 +190,25 @@ export const updateProfile = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("Please provide all required fields", 400));
     };
 
-    // User " " മാത്രം അയച്ചാൽ reject ചെയ്യും
     if (full_name.trim().length === 0) {
         return next(new ErrorHandler("cannot be empty", 400));
     };
 
     let avatarData = {};
 
-    // new profile image upload ചെയ്തുണ്ടോ എന്ന് check
     if (req.files && req.files.avatar) {
         const { avatar } = req.files;
 
-        // already avatar ഉണ്ടെങ്കിൽ Cloudinary-ൽ നിന്ന് delete ചെയ്യുന്നു
         if (req.user?.avatar?.public_id) {
             await cloudinary.uploader.destroy(req.user.avatar.public_id);
         }
 
-        // New image Cloudinary-ലേക്ക് upload
         const newProfileImage = await cloudinary.uploader.upload(avatar.tempFilePath, {
             folder: "markaz_avatar",
             width: 150,
             crop: "scale"
         });
 
-        // DB-യിൽ save ചെയ്യാനുള്ള format
         avatarData = {
             public_id: newProfileImage.public_id,
             url: newProfileImage.secure_url
@@ -224,6 +227,44 @@ export const updateProfile = catchAsyncError(async (req, res, next) => {
             [full_name, avatarData, req.user.id]
         );
     };
+
+    if (req.user.role === "Student") {
+        const fields = [
+            "date_of_birth", "phone_number", "emergency_contact", "blood_group",
+            "father_name", "father_phone", "father_occupation",
+            "mother_name", "mother_phone", "mother_occupation",
+            "guardian_name", "guardian_phone",
+            "address_line1", "address_line2", "locality", "district", "state", "country", "pin_code"
+        ];
+
+        const updates = [];
+        const values = [];
+
+        fields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updates.push(`${field} = $${values.length + 1}`);
+                const value = req.body[field] === "" ? null : req.body[field];
+                values.push(value);
+            }
+        });
+
+        if (updates.length > 0) {
+            const query = `UPDATE students SET ${updates.join(", ")} WHERE user_id = $${values.length + 1} RETURNING *`;
+            values.push(req.user.id);
+
+            const studentUpdate = await database.query(query, values);
+            if (user.rows[0]) {
+                user.rows[0].student_details = studentUpdate.rows[0];
+            }
+        } else {
+            const studentData = await database.query(
+                "SELECT * FROM students WHERE user_id = $1", [req.user.id]
+            );
+            if (user.rows[0]) {
+                user.rows[0].student_details = studentData.rows[0] || {};
+            }
+        }
+    }
 
     res.status(200).json({
         success: true,

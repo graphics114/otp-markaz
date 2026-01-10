@@ -141,7 +141,7 @@ const App = () => {
 
     // DEFAULT (e.g. Student trying to access dashboard)
     return <Navigate to="/login" replace />;
-  };
+  }; 
 
   return (
     <>

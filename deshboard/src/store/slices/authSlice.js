@@ -117,7 +117,6 @@ export const getUser = () => async (dispatch) => {
         dispatch(authSlice.actions.getUserSuccess(res.data.user));
     } catch (error) {
         dispatch(authSlice.actions.getUserFailed());
-        toast.error(error?.response?.data?.message);
     }
 }
 

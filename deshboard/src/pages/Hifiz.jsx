@@ -2,20 +2,35 @@ import { useDispatch, useSelector } from "react-redux";
 import Header from "../components/Header";
 import { toggleHifizCollage } from "../store/slices/extraSlice";
 import { useEffect, useState } from "react";
-import { fetchAllExamResults, updateResult } from "../store/slices/studentsSlice";
+import { fetchAllExamResults, updateResult, addExamResult, fetchAllStudents, deleteResult } from "../store/slices/studentsSlice";
 import { hifizDashboardStats } from "../store/slices/deshboarSlice";
-import { FolderSearch, ReplaceAll, Users, GraduationCap, FileText, CheckCircle, XCircle } from "lucide-react";
+import { FolderSearch, ReplaceAll, Users, GraduationCap, FileText, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Hifiz = () => {
 
-  const { loading, results, totalStudents } = useSelector((state) => state.std);
+  const { loading, results, students } = useSelector((state) => state.std);
 
   const [selectedStatus, setSelectedStatus] = useState({});
 
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return `${y}-${String(m + 1).padStart(2, "0")}-01`;
+  });
+  const [toDate, setToDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const lastDay = new Date(y, m + 1, 0).getDate();
+    return `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  });
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -25,17 +40,49 @@ const Hifiz = () => {
   const [page, setPage] = useState(1);
   const [maxPage, setMaxPage] = useState(null);
 
-  useEffect(() => {
-    dispatch(fetchAllExamResults(page));
-    dispatch(hifizDashboardStats());
-  }, [dispatch, page]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [examDate, setExamDate] = useState("");
+  const [hifiz, setHifiz] = useState("");
+  const [hizb, setHizb] = useState("");
 
   useEffect(() => {
-    if (totalStudents !== undefined) {
-      const newMax = Math.ceil(totalStudents / 10);
-      setMaxPage(newMax || 1);
-    }
-  }, [totalStudents]);
+    dispatch(fetchAllExamResults());
+    dispatch(fetchAllStudents());
+    dispatch(hifizDashboardStats());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, fromDate, toDate]);
+
+  const isWithinDateRange = (examDate) => {
+    if (!examDate) return true;
+    const date = new Date(examDate).setHours(0, 0, 0, 0);
+    const from = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
+    const to = toDate ? new Date(toDate).setHours(0, 0, 0, 0) : null;
+
+    if (from && date < from) return false;
+    if (to && date > to) return false;
+    return true;
+  };
+
+  useEffect(() => {
+    const filtered = results.filter(result =>
+      result.institution === "Hifzul Quran College" &&
+      isWithinDateRange(result.exam_date) &&
+      (
+        (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        getRStatus(result).includes(search.toLowerCase())
+      )
+    );
+    const newMax = Math.ceil(filtered.length / 10);
+    setMaxPage(newMax || 1);
+  }, [results, search, fromDate, toDate]);
 
   useEffect(() => {
     if (maxPage && page > maxPage) {
@@ -54,7 +101,15 @@ const Hifiz = () => {
   };
 
   const handleSave = (resultId) => {
-    dispatch(updateResult(resultId, selectedStatus[resultId]));
+    if (!selectedStatus[resultId]) {
+      toast.info("No changes to save");
+      return;
+    }
+    const dataToSave = { ...selectedStatus[resultId] };
+    if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = 0;
+    if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = 0;
+
+    dispatch(updateResult(resultId, dataToSave));
   };
 
   const getRStatus = (result) => {
@@ -66,7 +121,17 @@ const Hifiz = () => {
 
   // PRINT
   const handlePrint = () => {
-    const printContent = document.getElementById("print-only-table");
+    const filteredResults = results.filter(result =>
+      result.institution === "Hifzul Quran College" &&
+      isWithinDateRange(result.exam_date) &&
+      (
+        (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
+        getRStatus(result).includes(search.toLowerCase())
+      )
+    );
 
     const printDate = new Date().toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -76,30 +141,61 @@ const Hifiz = () => {
 
     const win = window.open("", "", "width=900,height=650");
 
+    const tableRows = filteredResults.map((result, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${new Date(result.exam_date).toLocaleString("default", { month: "long" })}</td>
+        <td>${result.full_name}</td>
+        <td>${result.joining_batch}</td>
+        <td>${result.reg_number}</td>
+        <td>${result.hifiz_marks}</td>
+        <td>${result.hizb_marks}</td>
+        <td>${(result.hifiz_marks || 0) + (result.hizb_marks || 0)}</td>
+        <td>${getRStatus(result).toUpperCase()}</td>
+      </tr>
+    `).join("");
+
     win.document.write(`
         <html>
           <head>
-            <title>Hifiz Collage Exam Result</title>
+            <title>Hifiz College Exam Result</title>
             <style>
               @page { size: A4 landscape; margin: 10mm; }
               body { font-family: Arial, sans-serif; }
-              table { width: 100%; border-collapse: collapse; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
               th, td {
                 border: 1px solid #000;
-                padding: 6px;
-                white-space: nowrap;
+                padding: 8px;
                 text-align: left;
+                font-size: 12px;
               }
               th { background: #f1f5f9; }
-              h2 { text-align: center; }
-              p { text-align: center; }
-              .actions-col { display: none; }
+              h2 { text-align: center; margin-bottom: 5px; }
+              p { text-align: center; margin-top: 0; }
             </style>
           </head>
           <body>
-            <h2>Hifiz Collage Exam Result</h2>
-            <p>Print Date: ${printDate}<p>
-            ${printContent.innerHTML}
+            <h2>Hifzul Quran College</h2>
+            <p>Exam Results Report</p>
+            <p style="text-align: right; font-size: 10px;">Print Date: ${printDate}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Month</th>
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Reg No</th>
+                  <th>Hifiz</th>
+                  <th>Hizb</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
           </body>
         </html>
       `);
@@ -113,15 +209,19 @@ const Hifiz = () => {
   // EXCEL EXPORT
   const handleExcel = () => {
 
-    const excelData = results.map((r, index) => ({
-      "Sl No": index + 1,
-      "Name": r.full_name,
-      "Reg No": r.reg_number,
-      "Course": r.joining_batch,
-      "Hifiz": r.hifiz_marks,
-      "Hizb": r.hizb_marks,
-      "Result": r.hifiz_marks >= 30 && r.hizb_marks >= 30 ? "Passed" : "Failed",
-    }));
+    const excelData = results
+      .filter((r) => r.institution === "Hifzul Quran College" && isWithinDateRange(r.exam_date))
+      .map((r, index) => ({
+        "Sl No": index + 1,
+        "Month": new Date(r.exam_date).toLocaleString("default", { month: "long" }),
+        "Name": r.full_name,
+        "Reg No": r.reg_number,
+        "Course": r.joining_batch,
+        "Hifiz": r.hifiz_marks,
+        "Hizb": r.hizb_marks,
+        "Total": (r.hifiz_marks || 0) + (r.hizb_marks || 0),
+        "Result": getRStatus(r).toUpperCase(),
+      }));
 
 
     // Excel sheet create ചെയ്യുന്നു
@@ -134,13 +234,65 @@ const Hifiz = () => {
     XLSX.writeFile(workbook, "Hifiz-Collage-Exam-Result.xlsx");
   };
 
-  const handleToggleAllStatus = async () => {
+  // PDF EXPORT
+  const handlePDF = () => {
+    try {
+      const doc = new jsPDF();
 
+      const filteredResults = results.filter(result =>
+        result.institution === "Hifzul Quran College" &&
+        isWithinDateRange(result.exam_date) &&
+        (
+          (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+          (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
+          (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
+          (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
+          getRStatus(result).includes(search.toLowerCase())
+        )
+      );
+
+      const tableColumn = ["#", "Month", "Name", "Course", "Reg No", "Hifiz", "Hizb", "Total", "Status"];
+      const tableRows = filteredResults.map((result, index) => [
+        index + 1,
+        new Date(result.exam_date).toLocaleString("default", { month: "long" }),
+        result.full_name,
+        result.joining_batch,
+        result.reg_number,
+        result.hifiz_marks,
+        result.hizb_marks,
+        (result.hifiz_marks || 0) + (result.hizb_marks || 0),
+        getRStatus(result).toUpperCase()
+      ]);
+
+      doc.setFontSize(18);
+      doc.text("Hifzul Quran College", 14, 22);
+      doc.setFontSize(12);
+      doc.text("Exam Results Report", 14, 30);
+      doc.setFontSize(10);
+      doc.text(`Print Date: ${new Date().toLocaleDateString("en-IN")}`, 14, 38);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 45,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [241, 245, 249], textColor: 0 },
+      });
+
+      doc.save("Hifiz-College-Results.pdf");
+      toast.success("PDF generated successfully");
+    } catch (error) {
+      console.error("PDF Error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
+  };
+
+  const handleToggleAllStatus = async () => {
     const collegeResults = results.filter(
-      r => r.institution === "Hifzul Quran College"
+      r => r.institution === "Hifzul Quran College" && isWithinDateRange(r.exam_date)
     );
 
-    if (collegeResults.length === 0) return;
+    if (!collegeResults.length) return;
 
     const allPublished = collegeResults.every(
       r => (selectedStatus[r.result_id]?.result_status ?? r.result_status) === "Published"
@@ -148,7 +300,6 @@ const Hifiz = () => {
 
     const nextStatus = allPublished ? "Pending" : "Published";
 
-    // Update UI
     const updated = {};
     collegeResults.forEach(r => {
       updated[r.result_id] = {
@@ -156,22 +307,21 @@ const Hifiz = () => {
         result_status: nextStatus,
       };
     });
+
     setSelectedStatus(prev => ({ ...prev, ...updated }));
 
-    // Backend update (NO toast)
     for (const r of collegeResults) {
       await dispatch(updateResult(r.result_id, { result_status: nextStatus }, false));
     }
 
-    // ONE toast only
-    toast.success(`All results set to ${nextStatus}`);
+    toast.success(`All results marked as ${nextStatus}`);
   };
 
   const handleConfirmReset = async () => {
     setIsResetting(true);
 
     const collegeResults = results.filter(
-      r => r.institution === "Hifzul Quran College"
+      r => r.institution === "Hifzul Quran College" && isWithinDateRange(r.exam_date)
     );
 
     if (collegeResults.length === 0) {
@@ -202,8 +352,38 @@ const Hifiz = () => {
     setIsResetting(false);
     setShowConfirm(false);
 
-    toast.success("All marks reset sucssusfully");
+    toast.success("All marks reset successfully");
   };
+
+  const handleAddResult = () => {
+    if (!selectedStudent) {
+      toast.error("Please select student");
+      return;
+    }
+
+    dispatch(
+      addExamResult(selectedStudent, {
+        exam_date: examDate,
+        hifiz_marks: Number(hifiz),
+        hizb_marks: Number(hizb),
+      })
+    );
+
+    // reset
+    setSelectedStudent("");
+    setSelectedCourse("");
+    setExamDate("");
+    setHifiz("");
+    setHizb("");
+    setShowAddModal(false);
+  };
+
+  const handleDeleteResult = (resultId) => {
+    if (window.confirm("Are you sure you want to delete this result?")) {
+      dispatch(deleteResult(resultId));
+    }
+  };
+
 
   return (<>
     <div className="relative w-full bg-gray-50 min-h-screen">
@@ -224,18 +404,43 @@ const Hifiz = () => {
         <div className=" sm:p-8 bg-gray-50 min-h-full p-2">
 
           {/* HEADER SIDE */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row items-center gap-2 mb-6">
             {/* SEARCH */}
-            <div className="relative w-full sm:w-72">
-              <input type="text" placeholder="Search by name, reg number or status..."
+            <div className="relative w-full sm:w-40">
+              <input type="text" placeholder="Search by name, reg number, course or status..."
                 value={search} onChange={(e) => setSearch(e.target.value)}
-                className="w-full border px-4 py-2 rounded-lg pl-10
+                className="w-full border px-4 py-1.5 rounded-lg pl-10
                                    placeholder:text-sm focus:outline-none" />
               <FolderSearch className="absolute left-3 top-1/2 -translate-y-1/2
                                                text-gray-400 w-5 h-5"/>
             </div>
 
-            <div className="flex gap-2 ml-50 sm:ml-auto">
+            {/* DATE RANGE */}
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+              />
+              <span className="text-gray-400">to</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+              />
+              {(fromDate || toDate) && (
+                <button
+                  onClick={() => { setFromDate(""); setToDate(""); }}
+                  className="text-xs text-red-500 hover:text-red-700 font-medium"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-2 sm:ml-auto">
 
               {/* TOGGLE PUBLISH AND PANDING */}
               <button
@@ -258,20 +463,27 @@ const Hifiz = () => {
                 Excel
               </button>
 
-              {/* Reset Marks */}
+              {/* PDF */}
               <button
-                onClick={() => setShowConfirm(true)}
-                className="px-4 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={handlePDF}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                Reset All Marks
+                PDF
               </button>
 
+              {/* ADD RESULT */}
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                + Add Result
+              </button>
 
             </div>
           </div>
 
           {/* STUDENTS */}
-          <div id="print-only-table" className={`overflow-x-auto rounded-lg ${loading ? "p-10 shadow-none" : `${results && results.length > 0 && "shadow-lg"}`
+          <div className={`overflow-x-auto rounded-lg ${loading ? "p-10 shadow-none" : `${results && results.length > 0 && "shadow-lg"}`
             }`}>
             {loading ? (
               <div className="w-40 h-40 mx-auto border-2 border-white border-t-transparent 
@@ -281,30 +493,41 @@ const Hifiz = () => {
                 <thead className="bg-blue-100 text-gray-700">
                   <tr>
                     <th className="py-3 px-4 text-left">#</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Month</th>
                     <th className="py-3 px-4 text-left">Name</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">Course</th>
                     <th className="py-3 px-4 text-left">Reg No</th>
                     <th className="py-3 px-4 text-left">Hifiz</th>
                     <th className="py-3 px-4 text-left">Hizb</th>
+                    <th className="py-3 px-4 text-left">Total</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">R Status</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap actions-col">P Status</th>
                     <th className="py-3 px-4 text-left actions-col">Update</th>
+                    <th className="py-3 px-4 text-left actions-col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.filter((result) => (result.institution === "Hifzul Quran College") &&
-                    (
-                      result.full_name.toLowerCase().includes(search.toLowerCase()) ||
-                      result.reg_number.toLowerCase().includes(search.toLowerCase()) ||
-                      result.result_status.toLowerCase().includes(search.toLowerCase()) ||
-                      getRStatus(result).includes(search.toLowerCase())
+                  {results
+                    .filter(result =>
+                      result.institution === "Hifzul Quran College" &&
+                      isWithinDateRange(result.exam_date) &&
+                      (
+                        (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+                        (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
+                        (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
+                        (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
+                        getRStatus(result).includes(search.toLowerCase())
+                      )
                     )
-                  )
+                    .slice((page - 1) * 10, page * 10)
                     .map((result, index) => {
                       return (
                         <tr key={index} className="border-t hover:bg-gray-50">
                           <td className="py-3 px-4 font-semibold text-gray-600">
                             {(page - 1) * 10 + index + 1}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {new Date(result.exam_date).toLocaleString("default", { month: "long" })}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">{result.full_name}</td>
                           <td className="py-3 px-4 whitespace-nowrap">{result.joining_batch}</td>
@@ -328,6 +551,13 @@ const Hifiz = () => {
                               }
                               className="text-center w-10 focus:outline-none 
                                                     bg-transparent" />
+                          </td>
+                          <td className="py-3 px-4 font-bold text-gray-700">
+                            {(() => {
+                              const hifiz = Number(selectedStatus[result.result_id]?.hifiz_marks ?? (result.hifiz_marks || 0));
+                              const hizb = Number(selectedStatus[result.result_id]?.hizb_marks ?? (result.hizb_marks || 0));
+                              return hifiz + hizb;
+                            })()}
                           </td>
                           <td className="py-3 px-4">
                             {(() => {
@@ -376,6 +606,15 @@ const Hifiz = () => {
                               className="text-xs px-3 py-1 bg-blue-600 text-white rounded"
                             >
                               Save
+                            </button>
+                          </td>
+                          <td className="py-3 px-4 actions-col">
+                            <button
+                              onClick={() => handleDeleteResult(result.result_id)}
+                              className="text-red-500 hover:text-red-700 transition"
+                              title="Delete Result"
+                            >
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </td>
                         </tr>
@@ -444,8 +683,84 @@ const Hifiz = () => {
           )}
 
         </div>
+
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-full max-w-md">
+
+              <h2 className="text-lg font-bold mb-4">Add New Exam Result</h2>
+
+              <select
+                value={selectedCourse}
+                onChange={(e) => {
+                  setSelectedCourse(e.target.value);
+                  setSelectedStudent("");
+                }}
+                className="w-full border p-2 mb-3 rounded"
+              >
+                <option value="">Select Course</option>
+                {[...new Set(students
+                  .filter(s => s.institution === "Hifzul Quran College" && s.joining_batch)
+                  .map(s => s.joining_batch))]
+                  .map((course, index) => (
+                    <option key={index} value={course}>{course}</option>
+                  ))}
+              </select>
+
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="w-full border p-2 mb-3 rounded"
+              >
+                <option value="">Select Student</option>
+                {students
+                  .filter(s => s.institution === "Hifzul Quran College")
+                  .filter(s => !selectedCourse || s.joining_batch === selectedCourse)
+                  .map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.full_name}
+                    </option>
+                  ))}
+              </select>
+
+              <input
+                type="date"
+                value={examDate}
+                onChange={(e) => setExamDate(e.target.value)}
+                className="w-full border p-2 mb-3 rounded"
+              />
+
+              <input
+                type="number"
+                placeholder="Hifiz Marks"
+                value={hifiz}
+                onChange={(e) => setHifiz(e.target.value)}
+                className="w-full border p-2 mb-3 rounded"
+              />
+
+              <input
+                type="number"
+                placeholder="Hizb Marks"
+                value={hizb}
+                onChange={(e) => setHizb(e.target.value)}
+                className="w-full border p-2 mb-4 rounded"
+              />
+
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button
+                  onClick={handleAddResult}
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
-    </div>
+    </div >
   </>)
 };
 

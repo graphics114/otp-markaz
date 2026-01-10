@@ -62,7 +62,7 @@ const Deshboard = () => {
 
   return (
     <main className="p-[10px] pl-[10px] md:pl-[17rem] mx-4 w-full min-h-screen pt-10">
-          
+
       <Header />
       {/* HERO HEADER */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-7 mb-8 shadow-lg">
@@ -70,16 +70,16 @@ const Deshboard = () => {
         <p className="text-sm opacity-90">
           Admissions, students & results performance overview
         </p>
-    
+
         <div className="absolute -right-20 -top-20 w-72 h-72 bg-white/10 rounded-full" />
         <div className="absolute -right-10 -bottom-20 w-72 h-72 bg-white/5 rounded-full" />
       </div>
-    
+
       {loading ? (
         <div className="text-center py-20 text-gray-500">
           Loading dashboard data...
         </div>
-          ) : (
+      ) : (
         <>
           {/* STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -94,7 +94,7 @@ const Deshboard = () => {
                   <h2 className="text-3xl font-bold">
                     <CountUp end={item.value} duration={1.2} />
                   </h2>
-                
+
                   <div
                     className={`absolute top-5 right-5 p-3 rounded-xl ${item.color}`}
                   >
@@ -104,10 +104,10 @@ const Deshboard = () => {
               );
             })}
           </div>
-          
+
           {/* ANALYTICS */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
             {/* STUDENTS */}
             <div className="bg-white rounded-2xl p-6 shadow-md">
               <h3 className="font-semibold text-lg mb-1">
@@ -116,7 +116,7 @@ const Deshboard = () => {
               <p className="text-xs text-gray-500 mb-4">
                 Institution-wise enrolled students
               </p>
-          
+
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={studentsData}>
                   <XAxis dataKey="name" />
@@ -130,7 +130,7 @@ const Deshboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          
+
             {/* ADMISSIONS */}
             <div className="bg-white rounded-2xl p-6 shadow-md">
               <h3 className="font-semibold text-lg mb-1">
@@ -139,7 +139,7 @@ const Deshboard = () => {
               <p className="text-xs text-gray-500 mb-4">
                 Current admission distribution
               </p>
-          
+
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={admissionsData}>
                   <XAxis dataKey="name" />
@@ -153,16 +153,16 @@ const Deshboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          
+
             {/* RESULTS */}
             <div className="bg-white rounded-2xl p-6 shadow-md">
               <h3 className="font-semibold text-lg mb-1">
                 Results Status
               </h3>
               <p className="text-xs text-gray-500 mb-4">
-                Published vs Pending results
+                Published vs Pending results (This Month)
               </p>
-          
+
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
@@ -185,7 +185,7 @@ const Deshboard = () => {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-                  
+
               {/* LEGEND */}
               <div className="flex justify-center gap-6 mt-4 text-sm">
                 <span className="flex items-center gap-2">
@@ -198,12 +198,12 @@ const Deshboard = () => {
                 </span>
               </div>
             </div>
-                  
+
           </div>
         </>
       )}
     </main>
-);
+  );
 
 };
 

@@ -8,7 +8,9 @@ const authSlice = createSlice({
     loading: false,
     user: null,
     isAuthenticated: false,
-    error: null
+    error: null,
+    students: [],
+    selectedStudent: null,
   },
   reducers: {
     loginRequest(state) {
@@ -66,6 +68,18 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
     },
+
+    updateStudentRequest(state) {
+      state.loading = true;
+    },
+    updateStudentSuccess(state, action) {
+      state.loading = false;
+      state.students = state.students.map((student) =>
+        student.id === action.payload.id ? action.payload : student);
+    },
+    updateStudentFailed(state) {
+      state.loading = false;
+    },
   },
 });
 
@@ -90,7 +104,6 @@ export const getUser = () => async (dispatch) => {
     dispatch(authSlice.actions.getUserSuccess(res.data.user));
   } catch (error) {
     dispatch(authSlice.actions.getUserFailed());
-    toast.error(error?.response?.data?.message || "get Failed")
   }
 }
 
@@ -121,5 +134,17 @@ export const updateProfile = (data) => async (dispatch) => {
     toast.error("Failed to update profile");
   }
 };
+
+export const updateStudent = (id, data) => async (dispatch) => {
+  dispatch(authSlice.actions.updateStudentRequest());
+  try {
+    const res = await axiosInstance.put(`/student/update/student/${id}`, data);
+    dispatch(authSlice.actions.updateStudentSuccess(res.data.student));
+    toast.success(res.data.message || "Updated successfully");
+  } catch (error) {
+    dispatch(authSlice.actions.updateStudentFailed());
+    toast.error(error?.response?.data?.message || "Failed to update")
+  }
+}
 
 export default authSlice.reducer;
