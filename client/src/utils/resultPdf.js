@@ -24,23 +24,23 @@ export const downloadResultPDF = (r) => {
   /* ===== STUDENT DETAILS ===== */
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  
+
   const leftX = 17;
   const valueX = 50;
   let y = 45;
-  
+
   /* Student Name */
   doc.text("Student Name :", leftX, y);
   doc.setFont("helvetica", "normal");
   doc.text(r.full_name, valueX, y);
-  
+
   /* Register No */
   y += 10;
   doc.setFont("helvetica", "bold");
   doc.text("Register No :", leftX, y);
   doc.setFont("helvetica", "normal");
   doc.text(r.reg_number, valueX, y);
-  
+
   /* Institution */
   y += 10;
   doc.setFont("helvetica", "bold");
@@ -49,13 +49,23 @@ export const downloadResultPDF = (r) => {
   doc.text(r.institution, valueX, y);
 
   /* ===== MARKS TABLE ===== */
+  // Helper function to display marks or 'A' for absent
+  const displayMark = (mark) => {
+    return (mark === 0 || mark === null || mark === undefined) ? "A" : mark;
+  };
+
+  // Calculate total (treat null/undefined/0 as 0 for calculation)
+  const hifizValue = r.hifiz_marks || 0;
+  const hizbValue = r.hizb_marks || 0;
+  const totalValue = hifizValue + hizbValue;
+
   autoTable(doc, {
     startY: y + 10,
     head: [["Subject", "Marks"]],
     body: [
-      ["Hifiz", r.hifiz_marks],
-      ["Hizb", r.hizb_marks],
-      ["Total", r.hifiz_marks + r.hizb_marks],
+      ["Hifiz", displayMark(r.hifiz_marks)],
+      ["Hizb", displayMark(r.hizb_marks)],
+      ["Total", totalValue === 0 ? "A" : totalValue],
     ],
     styles: {
       halign: "center",
