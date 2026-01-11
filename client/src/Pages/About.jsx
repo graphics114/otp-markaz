@@ -13,7 +13,7 @@ const About = () => {
                         About Markaz
                     </h1>
                     <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                        A journey of transforming lives through education, spirituality, and community service since 1992.
+                        A journey of transforming lives through education, spirituality, and community service since 1993.
                     </p>
                 </div>
             </div>

@@ -4,7 +4,18 @@ import autoTable from "jspdf-autotable";
 export const downloadResultPDF = (r) => {
   const doc = new jsPDF();
 
-  const isPassed = r.hifiz_marks >= 30 && r.hizb_marks >= 30;
+  const isBlank = (value) => value === null || value === undefined || value === "";
+  const hifizBlank = isBlank(r.hifiz_marks);
+  const hizbBlank = isBlank(r.hizb_marks);
+  const hifizValid = !hifizBlank && Number(r.hifiz_marks) >= 30;
+  const hizbValid = !hizbBlank && Number(r.hizb_marks) >= 30;
+  
+  const isPassed =
+    r.hifiz_marks === 1 ||
+    r.hizb_marks === 1 ||
+    (hifizValid && hizbValid) ||
+    (hifizBlank && hizbValid) ||
+    (hizbBlank && hifizValid);
 
   /* ===== PROFESSIONAL HEADER ===== */
   doc.setFont("helvetica", "bold");
@@ -49,37 +60,59 @@ export const downloadResultPDF = (r) => {
   doc.text(r.institution, valueX, y);
 
   /* ===== MARKS TABLE ===== */
-  // Helper function to display marks or 'A' for absent
-  const displayMark = (mark) => {
-    return (mark === 0 || mark === null || mark === undefined) ? "A" : mark;
-  };
 
-  // Calculate total (treat null/undefined/0 as 0 for calculation)
-  const hifizValue = r.hifiz_marks || 0;
-  const hizbValue = r.hizb_marks || 0;
-  const totalValue = hifizValue + hizbValue;
+// Helper: display mark or Absent
+const displayMark = (mark) => {
+  return mark === 0 ? "A" : mark;
+};
 
-  autoTable(doc, {
-    startY: y + 10,
-    head: [["Subject", "Marks"]],
-    body: [
-      ["Hifiz", displayMark(r.hifiz_marks)],
-      ["Hizb", displayMark(r.hizb_marks)],
-      ["Total", totalValue === 0 ? "A" : totalValue],
-    ],
-    styles: {
-      halign: "center",
-      fontSize: 12,
-    },
-    headStyles: {
-      fillColor: [37, 99, 235],
-      textColor: 255,
-      fontStyle: "bold",
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245],
-    },
-  });
+// Build rows dynamically (HIDE when value is null/undefined/empty or === 1)
+const tableRows = [];
+
+if (r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1) {
+  tableRows.push([
+    "Hifiz",
+    displayMark(r.hifiz_marks),
+  ]);
+}
+
+if (r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1) {
+  tableRows.push([
+    "Hizb",
+    displayMark(r.hizb_marks),
+  ]);
+}
+
+// Total calculation (ignore value === 1)
+const hifizValue = r.hifiz_marks === 1 ? 0 : r.hifiz_marks || 0;
+const hizbValue  = r.hizb_marks === 1 ? 0 : r.hizb_marks || 0;
+const totalValue = hifizValue + hizbValue;
+
+// Show Total only if at least one subject exists
+if (tableRows.length > 0) {
+  tableRows.push([
+    "Total",
+    totalValue === 0 ? "A" : totalValue,
+  ]);
+}
+
+autoTable(doc, {
+  startY: y + 10,
+  head: [["Subject", "Marks"]],
+  body: tableRows,
+  styles: {
+    halign: "center",
+    fontSize: 12,
+  },
+  headStyles: {
+    fillColor: [37, 99, 235],
+    textColor: 255,
+    fontStyle: "bold",
+  },
+  alternateRowStyles: {
+    fillColor: [245, 245, 245],
+  },
+});
 
   /* ===== RESULT STATUS (CENTER ALIGNED & COLOR) ===== */
   const resultY = doc.lastAutoTable.finalY + 20;

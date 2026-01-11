@@ -34,29 +34,50 @@ export const updateExamResult = catchAsyncError(async (req, res, next) => {
     const { resultId } = req.params;
     let { hifiz_marks, hizb_marks, result_status } = req.body;
 
-    if (hifiz_marks === "") hifiz_marks = 0;
-    if (hizb_marks === "") hizb_marks = 0;
+    if (hifiz_marks === "") hifiz_marks = null;
+    if (hizb_marks === "") hizb_marks = null;
 
-    const result = await database.query(
-        `
-    UPDATE student_exam_results
-    SET 
-      hifiz_marks = COALESCE($1, hifiz_marks),
-      hizb_marks = COALESCE($2, hizb_marks),
-      result_status = COALESCE($3, result_status)
-      WHERE id = $4
-      RETURNING *
-    `, [hifiz_marks, hizb_marks, result_status, resultId]
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (hifiz_marks !== undefined) {
+        updates.push(`hifiz_marks = $${paramCount}`);
+        values.push(hifiz_marks);
+        paramCount++;
+    }
+    if (hizb_marks !== undefined) {
+        updates.push(`hizb_marks = $${paramCount}`);
+        values.push(hizb_marks);
+        paramCount++;
+    }
+    if (result_status !== undefined) {
+        updates.push(`result_status = $${paramCount}`);
+        values.push(result_status);
+        paramCount++;
+    }
+
+    if (updates.length === 0) {
+        return next(new ErrorHandler("No fields to update", 400));
+    }
+
+    values.push(resultId);
+    const queryResult = await database.query(
+        `UPDATE student_exam_results
+         SET ${updates.join(", ")}
+         WHERE id = $${paramCount}
+         RETURNING *`,
+        values
     );
 
-    if (result.rows.length === 0) {
+    if (queryResult.rows.length === 0) {
         return next(new ErrorHandler("Result not found", 404));
     }
 
     res.status(200).json({
         success: true,
         message: "Result updated successfully",
-        result: result.rows[0],
+        result: queryResult.rows[0],
     });
 });
 
@@ -167,6 +188,7 @@ export const fetchMyExamResult = catchAsyncError(async (req, res, next) => {
             ser.tajweed_marks,
             ser.total_marks,
             ser.result_status,
+            ser.exam_date,
             ser.created_at
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id
@@ -192,9 +214,9 @@ export const addExamResult = catchAsyncError(async (req, res) => {
     const { studentId } = req.params;
     let { hifiz_marks, hizb_marks, tajweed_marks, exam_date } = req.body;
 
-    if (hifiz_marks === "") hifiz_marks = 0;
-    if (hizb_marks === "") hizb_marks = 0;
-    if (tajweed_marks === "") tajweed_marks = 0;
+    if (hifiz_marks === "") hifiz_marks = null;
+    if (hizb_marks === "") hizb_marks = null;
+    if (tajweed_marks === "") tajweed_marks = null;
 
     const result = await database.query(
         `

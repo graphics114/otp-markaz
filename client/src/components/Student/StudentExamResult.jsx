@@ -8,7 +8,18 @@ import Header from "./Head";
 // Sub-component for individual result card
 const ResultCard = ({ result }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isPassed = result.hifiz_marks >= 30 && result.hizb_marks >= 30;
+  const isBlank = (value) => value === null || value === undefined || value === "";
+  const hifizBlank = isBlank(result.hifiz_marks);
+  const hizbBlank = isBlank(result.hizb_marks);
+  const hifizValid = !hifizBlank && Number(result.hifiz_marks) >= 30;
+  const hizbValid = !hizbBlank && Number(result.hizb_marks) >= 30;
+  
+  const isPassed =
+    result.hifiz_marks === 1 ||
+    result.hizb_marks === 1 ||
+    (hifizValid && hizbValid) ||
+    (hifizBlank && hizbValid) ||
+    (hizbBlank && hifizValid);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden transition-all duration-300 hover:shadow-md">
@@ -50,33 +61,46 @@ const ResultCard = ({ result }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Marks Card 1 */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-100 dark:border-blue-800 flex flex-col items-center">
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Hifiz Marks</span>
-              {result.hifiz_marks ? (
-                <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
-                  {result.hifiz_marks}
-                </span>
-              ) : (
-                <span className="text-2xl font-bold text-red-600 mt-2 font-sans">
-                  Absent
-                </span>
-              )}
-            </div>
+            {result.hifiz_marks !== null && result.hifiz_marks !== undefined && result.hifiz_marks !== "" && (
+  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-100 dark:border-blue-800 flex flex-col items-center">
+    <span className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">
+      Hifiz Marks
+    </span>
+
+    {result.hifiz_marks === 0 ? (
+      <span className="text-2xl font-bold text-red-600 mt-2">
+        Absent
+      </span>
+    ) : (
+      <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
+        {result.hifiz_marks}
+      </span>
+    )}
+  </div>
+)}
+
 
             {/* Marks Card 2 */}
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-100 dark:border-purple-800 flex flex-col items-center">
-              <span className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Hizb Marks</span>
-              {result.hizb_marks ? (
-                <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
-                  {result.hizb_marks}
-                </span>
-              ) : (
-                <span className="text-2xl font-bold text-red-600 mt-2 font-sans">
-                  Absent
-                </span>
-              )}
-            </div>
-          </div>
+            {result.hizb_marks !== null && result.hizb_marks !== undefined && result.hizb_marks !== "" && (
+  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-100 dark:border-purple-800 flex flex-col items-center">
+    <span className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">
+      Hizb Marks
+    </span>
+
+    {result.hizb_marks === 0 ? (
+      <span className="text-2xl font-bold text-red-600 mt-2">
+        Absent
+      </span>
+    ) : (
+      <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
+        {result.hizb_marks}
+      </span>
+    )}
+  </div>
+)}
+
+</div>
+
 
           {/* Footer Info */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 border-t border-border gap-4">
@@ -85,8 +109,10 @@ const ResultCard = ({ result }) => {
               <p className="font-medium text-foreground">{result.full_name}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Result Status</p>
-              <p className="font-medium text-foreground">{result.result_status}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Result Date</p>
+              <p className="font-medium text-foreground">{result.exam_date
+                ? new Date(result.exam_date).toLocaleDateString("en-GB").replace(/\//g, "-")
+                : "N/A"}</p>
             </div>
           </div>
 

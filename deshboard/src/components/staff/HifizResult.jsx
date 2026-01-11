@@ -95,8 +95,8 @@ const Hifiz = () => {
     }
 
     const dataToSave = { ...selectedStatus[resultId] };
-    if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = 0;
-    if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = 0;
+    if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = null;
+    if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = null;
 
     dispatch(updateResult(resultId, dataToSave));
   };
@@ -323,8 +323,8 @@ const Hifiz = () => {
     dispatch(
       addExamResult(selectedStudent, {
         exam_date: examDate,
-        hifiz_marks: Number(hifiz),
-        hizb_marks: Number(hizb),
+        hifiz_marks: hifiz === "" ? null : (hifiz ? Number(hifiz) : null),
+        hizb_marks: hizb === "" ? null : (hizb ? Number(hizb) : null),
       })
     );
 
@@ -481,7 +481,7 @@ const Hifiz = () => {
                           <td className="py-3 px-4">
                             <input
                               type="number"
-                              value={selectedStatus[result.result_id]?.hifiz_marks ?? result.hifiz_marks}
+                              value={selectedStatus[result.result_id]?.hifiz_marks !== undefined ? selectedStatus[result.result_id].hifiz_marks : (result.hifiz_marks ?? "")}
                               onChange={(e) =>
                                 handleResultChange(result.result_id, "hifiz_marks", e.target.value)
                               }
@@ -491,7 +491,7 @@ const Hifiz = () => {
                           <td className="py-3 px-4">
                             <input
                               type="number"
-                              value={selectedStatus[result.result_id]?.hizb_marks ?? result.hizb_marks}
+                              value={selectedStatus[result.result_id]?.hizb_marks !== undefined ? selectedStatus[result.result_id].hizb_marks : (result.hizb_marks ?? "")}
                               onChange={(e) =>
                                 handleResultChange(result.result_id, "hizb_marks", e.target.value)
                               }
@@ -513,7 +513,16 @@ const Hifiz = () => {
                               const hizb =
                                 selectedStatus[result.result_id]?.hizb_marks ?? result.hizb_marks;
 
-                              const isPassed = hifiz >= 30 && hizb >= 30;
+                              const isBlank = (value) => value === null || value === undefined || value === "";
+                              const hifizBlank = isBlank(hifiz);
+                              const hizbBlank = isBlank(hizb);
+                              const hifizValid = !hifizBlank && Number(hifiz) >= 30;
+                              const hizbValid = !hizbBlank && Number(hizb) >= 30;
+                              
+                              const isPassed = hifiz === 1 || hizb === 1 ||
+                                  (hifizValid && hizbValid) ||
+                                  (hifizBlank && hizbValid) ||
+                                  (hizbBlank && hifizValid);
 
                               return (
                                 <span
