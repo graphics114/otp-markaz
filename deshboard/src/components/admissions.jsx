@@ -3,7 +3,7 @@ import Header from "./Header";
 import avatar from "../assets/avatar.jpg"
 import { fetchAllAdmissions, deleteAdmition } from "../store/slices/admitionSlice"
 import { useEffect, useState } from "react";
-import { Trash2, UserPen, FolderSearch } from "lucide-react";
+import { Trash2, UserPen, FolderSearch, Ticket } from "lucide-react";
 
 import UpdateAdmition from "../pages/updateAdmition";
 import RegisterAdmition from "../pages/registerAdmition";
@@ -66,6 +66,8 @@ const Admissions = () => {
   // INST FILTER
   const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
   const [search, setSearch] = useState("");
+  // Default to current date (YYYY-MM-DD)
+  const [examDate, setExamDate] = useState(new Date().toISOString().split('T')[0]);
 
   const filteredAdmitios = admissions.filter((admition) => {
     // Institution filter
@@ -132,6 +134,23 @@ const Admissions = () => {
     XLSX.writeFile(workbook, "Admition-data.xlsx");
   };
 
+  // PRINT STATE
+  const [printType, setPrintType] = useState('list');
+
+  const handlePrintList = () => {
+    setPrintType('list');
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
+  const handlePrintHallTicket = () => {
+    setPrintType('hallTicket');
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
 
   return (<>
     <main className="p-[10px] pl-[10px] md:pl-[17rem] w-full">
@@ -159,6 +178,16 @@ const Admissions = () => {
                       text-gray-400 w-5 h-5" />
           </div>
 
+          {/* DATE INPUT */}
+          <div className="relative w-full sm:w-48">
+            <input
+              type="date"
+              value={examDate}
+              onChange={(e) => setExamDate(e.target.value)}
+              className="w-full border px-4 py-2 rounded-lg text-sm h-11 focus:outline-none placeholder-gray-400"
+            />
+          </div>
+
           {/* INST FILER */}
           <div className="relative w-full sm:w-48">
             <select
@@ -174,27 +203,35 @@ const Admissions = () => {
             </select>
           </div>
 
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto ml-auto">
 
             {/* REGISTER */}
             <button onClick={() => dispatch(toggleRegisterAdmition())}
               className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white 
-                font-semibold rounded-md shadow-md hover:bg-blue-700 transition-all">
+                font-semibold rounded-md shadow-md hover:bg-blue-700 transition-all whitespace-nowrap w-full sm:w-auto">
               New Admission
             </button>
 
-            {/* PRINT */}
+            {/* PRINT LIST */}
             <button
-              onClick={() => window.print()}
-              className="bg-gray-700 text-white px-4 py-2 rounded"
+              onClick={handlePrintList}
+              className="bg-gray-700 text-white px-4 py-2 rounded flex-1 sm:flex-none"
             >
               Print
+            </button>
+
+            {/* HALL TICKET */}
+            <button
+              onClick={handlePrintHallTicket}
+              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2 flex-1 sm:flex-none"
+            >
+              <Ticket className="w-4 h-4" />
             </button>
 
             {/* EXCEL EXPORT */}
             <button
               onClick={handleExcel}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex-1 sm:flex-none"
             >
               Excel
             </button>
@@ -202,57 +239,189 @@ const Admissions = () => {
 
         </div>
 
-        {/* PRINT ONLY TABLE */}
-        <div id="table-print" className="hidden">
-          <h2 className="text-center text-xl font-bold mb-2">
-            Admitions List
-          </h2>
+        {/* PRINT ONLY LIST TABLE */}
+        {printType === 'list' && (
+          <div id="table-print" className="hidden">
+            <h2 className="text-center text-xl font-bold mb-2">
+              Admitions List
+            </h2>
 
-          <p className="text-center mb-4">
-            Institution: {selectedInstitution} <br />
-            Date: {new Date().toLocaleDateString()}
-          </p>
+            <p className="text-center mb-4">
+              Institution: {selectedInstitution} <br />
+              Date: {new Date().toLocaleDateString()}
+            </p>
 
-          <table className="w-full border-collapse border text-[10px]">
-            <thead>
-              <tr>
-                <th className="border">#</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Candidate Name</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">DOB</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Phone</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">UIDAI</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Father's Name</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Name</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Phone</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Place</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Institution</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Syllabus</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">School</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Madrasa</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredAdmitios.map((s, i) => (
-                <tr key={s.id}>
-                  <td className="border text-center">{i + 1}</td>
-                  <td className="border p-2">{s.candidate_name}</td>
-                  <td className="border p-2">{new Date(s.date_of_birth).toLocaleDateString("en-IN")}</td>
-                  <td className="border p-2">{s.phone_number}</td>
-                  <td className="border p-2">{s.aadhar_number}</td>
-                  <td className="border p-2">{s.father_name}</td>
-                  <td className="border p-2">{s.guardian_name}</td>
-                  <td className="border p-2">{s.guardian_phone}</td>
-                  <td className="border p-2">{s.locality}</td>
-                  <td className="border p-2">{s.institution}</td>
-                  <td className="border p-2">{s.syllabus}</td>
-                  <td className="border p-2">{s.school_class}</td>
-                  <td className="border p-2">{s.madrasa_class}</td>
+            <table className="w-full border-collapse border text-[10px]">
+              <thead>
+                <tr>
+                  <th className="border">#</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Candidate Name</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">DOB</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Phone</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">UIDAI</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Father's Name</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Name</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Guardian's Phone</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Place</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Institution</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Syllabus</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">School</th>
+                  <th className="border px-1 py-0.5 whitespace-nowrap">Madrasa</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {filteredAdmitios.map((s, i) => (
+                  <tr key={s.id}>
+                    <td className="border text-center">{i + 1}</td>
+                    <td className="border p-2">{s.candidate_name}</td>
+                    <td className="border p-2">{new Date(s.date_of_birth).toLocaleDateString("en-IN")}</td>
+                    <td className="border p-2">{s.phone_number}</td>
+                    <td className="border p-2">{s.aadhar_number}</td>
+                    <td className="border p-2">{s.father_name}</td>
+                    <td className="border p-2">{s.guardian_name}</td>
+                    <td className="border p-2">{s.guardian_phone}</td>
+                    <td className="border p-2">{s.locality}</td>
+                    <td className="border p-2">{s.institution}</td>
+                    <td className="border p-2">{s.syllabus}</td>
+                    <td className="border p-2">{s.school_class}</td>
+                    <td className="border p-2">{s.madrasa_class}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* PRINT ONLY HALL TICKETS */}
+        {printType === 'hallTicket' && (
+          <div id="hall-ticket-print" className="hidden">
+            {filteredAdmitios.map((student) => (
+              <div key={student.id} className="w-full h-[92mm] p-2 relative break-inside-avoid flex flex-col justify-center font-sans">
+                {/* CARD CONTAINER */}
+                <div className="border-2 border-slate-800 h-full bg-white relative p-2 flex flex-col gap-1">
+
+                  {/* HEADER - Compacted */}
+                  <div className="flex justify-between items-center border-b-2 border-slate-800 pb-1 mb-1">
+                    <div className="flex items-center gap-2">
+                      {/* Logo: Smaller Square 12x12 */}
+                      <div className="h-12 w-12 flex items-center justify-center p-0.5">
+                        <img src="/logo2.png" alt="Logo" className="w-full h-full object-contain" />
+                      </div>
+                      <div>
+                        <h1 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">OTTAPALAM MARKAZ</h1>
+                        <h2 className="text-base font-bold uppercase tracking-tight leading-none text-slate-900 mt-0.5">{student.institution || "Institution"}</h2>
+                        <p className="text-[8px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">Entrance Examination Hall Ticket</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-sm">
+                        <p className="text-[8px] font-bold text-slate-500 uppercase leading-none">Admition Id</p>
+                        <p className="text-base font-mono font-bold text-slate-900 leading-none mt-0.5">{student.id ? student.id.toString().slice(-6) : "------"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BODY CONTENT */}
+                  <div className="flex gap-2 flex-1 min-h-0">
+                    {/* LEFT: INFO - Distributed Spacing */}
+                    <div className="flex-1 flex flex-col justify-between pt-0 pb-1">
+
+                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Candidate Name</span>
+                        <span className="text-sm font-bold text-slate-900 uppercase truncate leading-tight">
+                          {student.candidate_name}
+                          {student.locality && <span className="text-[10px] text-slate-500 font-semibold ml-1">, {student.locality}</span>}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Father's Name</span>
+                        <span className="text-[10px] font-semibold text-slate-800 truncate">{student.father_name}</span>
+                      </div>
+
+                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Institution</span>
+                        <span className="text-[10px] font-semibold text-slate-800 truncate">{student.institution || "General"}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mt-0.5">
+                        <div className="bg-slate-50 p-1 rounded border border-slate-100">
+                          <p className="text-[8px] font-bold text-slate-400 uppercase">Date of Birth</p>
+                          <p className="text-[10px] font-semibold text-slate-800">{student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}</p>
+                        </div>
+                        <div className="bg-slate-50 p-1 rounded border border-slate-100">
+                          <p className="text-[8px] font-bold text-slate-400 uppercase">School / Madrasa</p>
+                          <p className="text-[10px] font-semibold text-slate-800 truncate">{student.school_class || "-"} / {student.madrasa_class || "-"}</p>
+                        </div>
+                      </div>
+
+                      {/* EXAM VENUE - Evenly spaced */}
+                      <div className="bg-slate-100 p-1 border border-slate-200 rounded-sm">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-[7px] font-bold uppercase text-slate-500 mb-0.5">Examination Centre</p>
+                            <p className="text-[9px] font-bold text-slate-900 leading-tight">{student.institution || "Main Campus"}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[7px] font-bold uppercase text-slate-500 mb-0.5">Examination Date</p>
+                            <p className="text-[10px] font-bold text-blue-900">{examDate ? new Date(examDate).toLocaleDateString('en-GB') : "As per schedule"}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* RIGHT: PHOTO */}
+                    <div className="w-28 flex-shrink-0">
+                      <div className="bg-gray-50 border-2 border-gray-200 rounded-sm flex items-center justify-center relative overflow-hidden h-[130px]">
+                        {student.photo?.url ? (
+                          <img src={student.photo.url} alt="Student" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-center p-2 opacity-40">
+                            <UserPen className="w-8 h-8 mx-auto mb-1" />
+                            <span className="text-[8px] font-bold uppercase">Affix Photo</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FOOTER */}
+                  <div className="border-t-2 border-slate-800 pt-1 flex justify-between items-end mt-auto">
+                    <div className="flex-1 pr-2">
+                      <p className="text-[9px] font-bold uppercase text-slate-900 mb-0.5">Instructions:</p>
+                      <ul className="text-[8px] text-slate-600 list-disc pl-3 space-y-0.5">
+                        <li>Bring this Hall Ticket and Valid ID Proof.</li>
+                        <li>Report 30 minutes prior to exam time.</li>
+                        <li>No electronic devices allowed inside.</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="w-24 text-center">
+                        <div className="h-4"></div>
+                        <div className="border-t border-slate-800 pt-0.5">
+                          <p className="text-[8px] font-bold uppercase text-slate-900">Candidate Sign</p>
+                        </div>
+                      </div>
+                      <div className="w-28 text-center">
+                        <div className="h-4"></div>
+                        <div className="border-t border-slate-800 pt-0.5">
+                          <p className="text-[8px] font-bold uppercase text-slate-900">Authorized Sign</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* CUTTING GUIDE - BOTTOM */}
+                <div className="absolute bottom-0 left-0 w-full border-b-2 border-dashed border-gray-400 opacity-50"></div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* STUDENTS */}
         <div className={`overflow-x-auto rounded-lg ${loading ? "p-10 shadow-none" : `${admissions && admissions.length > 0 && "shadow-lg"}`

@@ -7,13 +7,15 @@
   font-family: "Ubuntu", sans-serif;
   font-style: normal;
   /* font-optical-sizing: auto; */
-  overflow-x: hidden;
   box-sizing: border-box;
 }
 
 #root {
   background: #f3f3f6;
+  overflow-x: hidden;
 }
+
+
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -60,29 +62,45 @@
   }
 
   #table-print,
-  #table-print * {
+  #table-print *,
+  #hall-ticket-print,
+  #hall-ticket-print * {
     visibility: visible;
   }
 
-  #table-print {
+  #table-print,
+  #hall-ticket-print {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+    display: block !important;
   }
 
   .no-print {
-    display: none
+    display: none;
   }
 
   .fixed {
-    position: static
+    position: static;
+  }
+
+  /* Ensure no scrollbars in print */
+  #hall-ticket-print * {
+    overflow: hidden !important;
   }
 
   @page {
-    size: A4 landscape;
+    size: auto;
     margin: 8mm;
   }
+
+  /* Specific page settings if needed, but 'auto' lets the content/user decide or defaults to printer settings. 
+     Previous was A4 landscape. I will try to respect that for table-print via a class if possible, 
+     but CSS @page is global in the block. 
+     To handle different orientations, we might need a style tag injection, 
+     but for now 'auto' is safer than forcing landscape on hall tickets.
+  */
 
   body {
     font-size: 10px;
@@ -93,10 +111,10 @@
     width: 100%;
   }
 
-  th, td {
+  th,
+  td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
 }
