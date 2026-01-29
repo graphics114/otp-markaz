@@ -34,6 +34,11 @@ const RegisterAdmition = () => {
     syllabus: "",
     school_class: "",
     madrasa_class: "",
+    medium: "",
+    earlier: "",
+    prv_institution: "",
+    inst_contact: "",
+    com_juz: "",
   });
 
   const handleAdmitionChange = (e) => {
@@ -48,7 +53,9 @@ const RegisterAdmition = () => {
   };
 
 
-  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarFile, 
+    // setAvatarFile
+  ] = useState(null);
 
   // const sendWhatsApp = () => {
   //   const phone = editData.whatsapp_number; // 9876543210
@@ -62,10 +69,10 @@ const RegisterAdmition = () => {
   //   window.open(url, "_blank");
   // };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    setAvatarFile(file);
-  };
+  // const handleAvatarChange = (e) => {
+  //   const file = e.target.files[0];
+  //   setAvatarFile(file);
+  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -141,7 +148,7 @@ const RegisterAdmition = () => {
 
   return (<>
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-xl w-full h-full max-w-2xl p-6 relative">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] p-6 relative overflow-y-auto">
         <button onClick={() => dispatch(toggleRegisterAdmition())}
           className="absolute top-4 right-4 text-gray-500 hover:text-red-500 text-xl">
           &times;
@@ -168,7 +175,7 @@ const RegisterAdmition = () => {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
-              DOB <span className="text-red-600">*</span>
+              Date of Birth <span className="text-red-600">*</span>
             </label>
             <input type="date" name="date_of_birth" placeholder="Enter date of birth"
               onChange={handleAdmitionChange} value={editData.date_of_birth} required
@@ -179,7 +186,7 @@ const RegisterAdmition = () => {
             <label className="text-sm font-medium text-gray-700">
               Phone Number <span className="text-red-600">*</span>
             </label>
-            <input type="tel" name="phone_number" placeholder="Enter phone number" pattern="[0-9]{10}" maxLength={10}
+            <input type="number" name="phone_number" placeholder="Enter phone number" pattern="[0-9]{10}" maxLength={10}
               onChange={handleAdmitionChange} value={editData.phone_number} required
               className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
           </div>
@@ -188,7 +195,7 @@ const RegisterAdmition = () => {
             <label className="text-sm font-medium text-gray-700">
               Whatsapp Number <span className="text-red-600">*</span>
             </label>
-            <input type="tel" name="whatsapp_number" placeholder="Enter whatsapp_number" pattern="[0-9]{10}" maxLength={10}
+            <input type="number" name="whatsapp_number" placeholder="Enter whatsapp_number" pattern="[0-9]{10}" maxLength={10}
               onChange={handleAdmitionChange} value={editData.whatsapp_number} required
               className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
           </div>
@@ -228,13 +235,13 @@ const RegisterAdmition = () => {
             </select>
           </div>
 
-          <div className="flex flex-col gap-1">
+          {/* <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Profile Image</label>
             <input type="file" name="avatar" onChange={handleAvatarChange}
               className="p-2 border rounded-lg col-span-1 md:col-span-2 h-[41px]
                         file:mr-4 file:px-4 file:rounded-md file:border-0 file:bg-blue-50
                         file:text-blue-700 file:hover:text-blue-500 focus:outline-none" />
-          </div>
+          </div> */}
 
           <div className="md:col-span-3 pt-2">
             <h3 className="text-lg font-semibold text-gray-800">
@@ -435,7 +442,7 @@ const RegisterAdmition = () => {
 
           <div className="md:col-span-3 pt-2">
             <h3 className="text-lg font-semibold text-gray-800">
-              Institution Details
+              Academic Details
             </h3>
           </div>
 
@@ -465,7 +472,7 @@ const RegisterAdmition = () => {
             </select>
           </div>
 
-          {editData.institution === "Hifzul Quran College" && (
+          {/* {editData.institution === "Hifzul Quran College" && (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
                 Syllabus <span className="text-red-600">*</span>
@@ -487,25 +494,132 @@ const RegisterAdmition = () => {
                 <option value="KERALA" className="text-black">KERALA</option>
               </select>
             </div>
-          )}
+          )} */}
 
           <div className="flex flex-col md:col-span-1 gap-1">
             <label className="text-sm font-medium text-gray-700">
-              School <span className="text-red-600">*</span>
+              Current School Class <span className="text-red-600">*</span>
             </label>
             <input type="text" name="school_class" placeholder="Enter school class"
               onChange={handleAdmitionChange} value={editData.school_class} required
               className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
           </div>
 
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              School Board <span className="text-red-600">*</span>
+            </label>
+
+            <select
+              name="syllabus"
+              value={editData.syllabus}
+              onChange={handleAdmitionChange}
+              required
+              className={`border px-4 py-2 rounded-lg h-[41px] outline-none text-sm
+                ${editData.syllabus === ""
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-white text-black"}
+              `}
+            >
+              <option value="" disabled hidden>Select Course</option>
+              <option value="CBSE" className="text-black">CBSE</option>
+              <option value="KERALA" className="text-black">KERALA</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Medium of Instruction <span className="text-red-600">*</span>
+            </label>
+
+            <select
+              name="medium"
+              value={editData.medium}
+              onChange={handleAdmitionChange}
+              required
+              className={`border px-4 py-2 rounded-lg h-[41px] outline-none text-sm
+                ${editData.medium === ""
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-white text-black"}
+              `}
+            >
+              <option value="" disabled hidden>Select Medium</option>
+              <option value="Malayalam" className="text-black">Malayalam</option>
+              <option value="English" className="text-black">English</option>
+            </select>
+          </div>
+
           <div className="flex flex-col md:col-span-1 gap-1">
             <label className="text-sm font-medium text-gray-700">
-              Madrasa <span className="text-red-600">*</span>
+              Current Madrassa Class <span className="text-red-600">*</span>
             </label>
-            <input type="madrasa_class" name="madrasa_class" placeholder="Enter madrasa class"
+            <input type="madrasa_class" name="madrasa_class" placeholder="Enter madrassa class"
               onChange={handleAdmitionChange} value={editData.madrasa_class} required
               className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
           </div>
+
+          {editData.institution === "Hifzul Quran College" && (
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3 pt-2">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Quranic Studies History
+                </h3>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Have you studied earlier? <span className="text-red-600">*</span>
+                </label>
+
+                <select
+                  name="earlier"
+                  value={editData.earlier}
+                  onChange={handleAdmitionChange}
+                  required
+                  className={`border px-4 py-2 rounded-lg h-[41px] outline-none text-sm
+                ${editData.earlier === ""
+                      ? "bg-gray-100 text-gray-400"
+                      : "bg-white text-black"}
+              `}
+                >
+                  <option value="" disabled hidden>Select</option>
+                  <option value="Yes" className="text-black">Yes</option>
+                  <option value="No" className="text-black">No</option>
+                </select>
+              </div>
+
+              {editData.earlier === "Yes" && (
+                <>
+                <div className="flex flex-col md:col-span-1 gap-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Previous Institution <span className="text-red-600">*</span>
+                  </label>
+                  <input type="prv_institution" name="prv_institution" placeholder="Enter prv institution"
+                    onChange={handleAdmitionChange} value={editData.prv_institution} required
+                    className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
+                </div>
+
+                <div className="flex flex-col md:col-span-1 gap-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Institution Contact <span className="text-red-600">*</span>
+                  </label>
+                  <input type="number" name="inst_contact" placeholder="Enter inst contact" pattern="[0-9]{10}" maxLength={10}
+                    onChange={handleAdmitionChange} value={editData.inst_contact} required
+                    className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
+                </div>
+
+                <div className="flex flex-col md:col-span-1 gap-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Juz Completed <span className="text-red-600">*</span>
+                  </label>
+                  <input type="com_juz" name="com_juz" placeholder="Enter com juz"
+                    onChange={handleAdmitionChange} value={editData.com_juz} required
+                    className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
+                </div>
+                </>
+              )}
+            </div>
+          )}
 
           <button type="submit" className="flex items-center justify-center gap-2 bg-blue-600
                     hover:bg-blue-700 text-white py-2 px-6 rounded col-span-1 md:col-span-3">
@@ -517,7 +631,7 @@ const RegisterAdmition = () => {
                 <span>Registering...</span>
               </>
             ) : (
-              "Register"
+              "Submit Registration"
             )}
           </button>
         </form>

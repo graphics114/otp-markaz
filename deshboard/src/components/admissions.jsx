@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import Header from "./Header";
-import avatar from "../assets/avatar.jpg"
+// import avatar from "../assets/avatar.jpg"
 import { fetchAllAdmissions, deleteAdmition } from "../store/slices/admitionSlice"
 import { useEffect, useState } from "react";
 import { Trash2, UserPen, FolderSearch, Ticket } from "lucide-react";
@@ -114,9 +114,14 @@ const Admissions = () => {
       "Country": s.country,
       "Pin Code": s.pin_code,
       "Institution": s.institution,
-      "Syllabus": s.syllabus,
       "School": s.school_class,
+      "Board": s.syllabus,
+      "Medium": s.medium,
       "Madrasa": s.madrasa_class,
+      "Earlier": s.earlier,
+      "Prv Institution": s.prv_institution,
+      "prv Contact": s.inst_contact,
+      "Complited Juz": s.com_juz,
       "Applayed": s.created_at,
     }));
 
@@ -434,7 +439,7 @@ const Admissions = () => {
               <thead className="bg-blue-100 text-gray-700">
                 <tr>
                   <th className="py-3 px-4 text-left">#</th>
-                  <th className="py-3 px-4 text-left">Image</th>
+                  {/* <th className="py-3 px-4 text-left">Image</th> */}
                   <th className="py-3 px-4 text-left whitespace-nowrap">Candidate Name</th>
                   <th className="py-3 px-4 text-left">DOB</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">Phone Number</th>
@@ -453,9 +458,14 @@ const Admissions = () => {
                   <th className="py-3 px-4 text-left">District</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">Pin Code</th>
                   <th className="py-3 px-4 text-left">Institution</th>
-                  <th className="py-3 px-4 text-left">Syllabus</th>
                   <th className="py-3 px-4 text-left whitespace-nowrap">School</th>
+                  <th className="py-3 px-4 text-left">Board</th>
+                  <th className="py-3 px-4 text-left">Medium</th>
                   <th className="py-3 px-4 text-left">Madrasa</th>
+                  <th className="py-3 px-4 text-left">Earlier</th>
+                  <th className="py-3 px-4 text-left whitespace-nowrap">Prv Institution</th>
+                  <th className="py-3 px-4 text-left whitespace-nowrap">prv Contact</th>
+                  <th className="py-3 px-4 text-left whitespace-nowrap">Complited Juz</th>
                   <th className="py-3 px-4 text-left">Applayed</th>
                   <th className="py-3 px-4 text-left">Edit</th>
                   <th className="py-3 px-4 text-left">Delete</th>
@@ -468,10 +478,10 @@ const Admissions = () => {
                       <td className="py-3 px-4 font-semibold text-gray-600">
                         {(page - 1) * 10 + index + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      {/* <td className="py-3 px-4">
                         <img src={admition?.photo?.url || avatar} alt="avatar"
                           className="w-10 h-10 rounded-md object-cover" />
-                      </td>
+                      </td> */}
                       <td className="py-3 px-4 whitespace-nowrap">{admition.candidate_name}</td>
                       <td className="py-3 px-4">
                         {new Date(admition.date_of_birth).toLocaleDateString("en-IN")}
@@ -492,9 +502,14 @@ const Admissions = () => {
                       <td className="py-3 px-4 whitespace-nowrap">{admition.district}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{admition.pin_code}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{admition.institution}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{admition.syllabus}</td>
                       <td className="py-3 px-4">{admition.school_class}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{admition.syllabus}</td>
+                      <td className="py-3 px-4">{admition.medium}</td>
                       <td className="py-3 px-4">{admition.madrasa_class}</td>
+                      <td className="py-3 px-4">{admition.earlier}</td>
+                      <td className="py-3 px-4">{admition.prv_institution}</td>
+                      <td className="py-3 px-4">{admition.inst_contact}</td>
+                      <td className="py-3 px-4">{admition.com_juz}</td>
                       <td className="py-3 px-4">{new Date(admition.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4">
                         {/* UPDATE */}
@@ -515,6 +530,7 @@ const Admissions = () => {
                       </td>
                     </tr>
                   )
+                  // medium, earlier, prv_institution, inst_contact, com_juz
                 })}
               </tbody>
             </table>
