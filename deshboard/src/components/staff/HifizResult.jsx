@@ -35,15 +35,12 @@ const Hifiz = () => {
   const [hifiz, setHifiz] = useState("");
   const [hizb, setHizb] = useState("");
 
-  useEffect(() => {
-    dispatch(fetchAllExamResults());
-    dispatch(fetchAllStudents());
-    dispatch(hifizDashboardStats());
-  }, [dispatch]);
+  const getRStatus = (result) => {
+    const hifiz = result.hifiz_marks ?? 0;
+    const hizb = result.hizb_marks ?? 0;
 
-  useEffect(() => {
-    setPage(1);
-  }, [search, fromDate, toDate]);
+    return hifiz >= 30 && hizb >= 30 ? "passed" : "failed";
+  };
 
   const isWithinDateRange = (examDate) => {
     if (!examDate) return true;
@@ -56,21 +53,32 @@ const Hifiz = () => {
     return true;
   };
 
+  const filteredResults = results.filter(result =>
+    result.institution === "Hifzul Quran College" &&
+    isWithinDateRange(result.exam_date) &&
+    (
+      (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      getRStatus(result).includes(search.toLowerCase())
+    )
+  );
+
   useEffect(() => {
-    const filtered = results.filter(result =>
-      result.institution === "Hifzul Quran College" &&
-      isWithinDateRange(result.exam_date) &&
-      (
-        (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
-        getRStatus(result).includes(search.toLowerCase())
-      )
-    );
-    const newMax = Math.ceil(filtered.length / 10);
+    dispatch(fetchAllExamResults());
+    dispatch(fetchAllStudents());
+    dispatch(hifizDashboardStats());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, fromDate, toDate]);
+
+  useEffect(() => {
+    const newMax = Math.ceil(filteredResults.length / 10);
     setMaxPage(newMax || 1);
-  }, [results, search, fromDate, toDate]);
+  }, [filteredResults.length]);
 
   useEffect(() => {
     if (maxPage && page > maxPage) {
@@ -101,12 +109,7 @@ const Hifiz = () => {
     dispatch(updateResult(resultId, dataToSave));
   };
 
-  const getRStatus = (result) => {
-    const hifiz = result.hifiz_marks ?? 0;
-    const hizb = result.hizb_marks ?? 0;
 
-    return hifiz >= 30 && hizb >= 30 ? "passed" : "failed";
-  };
 
   // PRINT
   const handlePrint = () => {
@@ -453,18 +456,7 @@ const Hifiz = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {results
-                    .filter(result =>
-                      result.institution === "Hifzul Quran College" &&
-                      isWithinDateRange(result.exam_date) &&
-                      (
-                        (result.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-                        (result.reg_number?.toLowerCase() || "").includes(search.toLowerCase()) ||
-                        (result.joining_batch?.toLowerCase() || "").includes(search.toLowerCase()) ||
-                        (result.result_status?.toLowerCase() || "").includes(search.toLowerCase()) ||
-                        getRStatus(result).includes(search.toLowerCase())
-                      )
-                    )
+                  {filteredResults
                     .slice((page - 1) * 10, page * 10)
                     .map((result, index) => {
                       return (
@@ -518,11 +510,11 @@ const Hifiz = () => {
                               const hizbBlank = isBlank(hizb);
                               const hifizValid = !hifizBlank && Number(hifiz) >= 30;
                               const hizbValid = !hizbBlank && Number(hizb) >= 30;
-                              
+
                               const isPassed = hifiz === 1 || hizb === 1 ||
-                                  (hifizValid && hizbValid) ||
-                                  (hifizBlank && hizbValid) ||
-                                  (hizbBlank && hifizValid);
+                                (hifizValid && hizbValid) ||
+                                (hifizBlank && hizbValid) ||
+                                (hizbBlank && hifizValid);
 
                               return (
                                 <span

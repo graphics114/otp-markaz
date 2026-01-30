@@ -24,39 +24,6 @@ const DawaStudents = () => {
 
   const { isUpdateStudentOpened } = useSelector((state) => state.extra);
 
-  useEffect(() => {
-    dispatch(fetchAllStudents(page));
-  }, [dispatch, page]);
-
-  useEffect(() => {
-    if (totalStudents !== undefined) {
-      const newMax = Math.ceil(totalStudents / 10);
-      setMaxPage(newMax || 1);
-    }
-  }, [totalStudents]);
-
-  useEffect(() => {
-    if (maxPage && page > maxPage) {
-      setPage(maxPage)
-    }
-  }, [maxPage, page]);
-
-  const handleDeleteStudent = (id, reg_number) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: `This student "${reg_number}" will be permanently deleted!`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        dispatch(deleteStudent(id, page));
-      }
-    });
-  };
-
   // INST FILTER
   const Course = [
     "All Course",
@@ -93,6 +60,39 @@ const DawaStudents = () => {
 
     return matchesInstitution && matchesCourse && matchesSearch;
   });
+
+  useEffect(() => {
+    dispatch(fetchAllStudents(page));
+  }, [dispatch, page]);
+
+  useEffect(() => {
+    if (filteredStudents.length !== undefined) {
+      const newMax = Math.ceil(filteredStudents.length / 10);
+      setMaxPage(newMax || 1);
+    }
+  }, [filteredStudents.length]);
+
+  useEffect(() => {
+    if (maxPage && page > maxPage) {
+      setPage(maxPage)
+    }
+  }, [maxPage, page]);
+
+  const handleDeleteStudent = (id, reg_number) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `This student "${reg_number}" will be permanently deleted!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteStudent(id, page));
+      }
+    });
+  };
 
   const handlePDF = () => {
     const element = document.getElementById("table-print");
@@ -340,7 +340,7 @@ const DawaStudents = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredStudents.map((student, index) => {
+                {filteredStudents.slice((page - 1) * 10, page * 10).map((student, index) => {
                   return (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="py-3 px-4 font-semibold text-gray-600">

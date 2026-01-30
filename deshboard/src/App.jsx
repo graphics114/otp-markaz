@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useEffect } from "react";
 
 import { getUser } from "./store/slices/authSlice";
@@ -95,7 +96,7 @@ const App = () => {
       case "Result":
         return <DawaResult />;
       case "Users":
-        return <StaffUsers />; 
+        return <StaffUsers />;
       case "Profile":
         return <Profile />;
       default:
@@ -141,7 +142,7 @@ const App = () => {
 
     // DEFAULT (e.g. Student trying to access dashboard)
     return <Navigate to="/login" replace />;
-  }; 
+  };
 
   return (
     <>
@@ -151,7 +152,18 @@ const App = () => {
           <Route path="/" element={renderRoleLayout()} />
         </Routes>
 
-        <ToastContainer />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
       </Router>
     </>
   );

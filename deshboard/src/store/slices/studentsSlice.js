@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axios";
+import axios from "axios";
 import { toast } from "react-toastify";
 import { toggleUpdateStudent } from "./extraSlice"
 
@@ -197,6 +198,38 @@ export const searchResultsByDate = (from, to) => async (dispatch) => {
   } catch (error) {
     dispatch(studentsSlice.actions.getAllStudentsResultFailed());
     toast.error(error?.response?.data?.message || "Search failed");
+  }
+};
+
+export const enrollStudent = (admissionId, userData, studentData) => async (dispatch) => {
+  dispatch(studentsSlice.actions.updateStudentRequest());
+  try {
+    // 1. Register User (This automatically creates a basic student record in this backend)
+    const noCred = axios.create({
+      baseURL: axiosInstance.defaults.baseURL,
+      withCredentials: false,
+    });
+    const userRes = await noCred.post("/auth/register", userData);
+    const userId = userRes.data.user.id;
+
+    // 2. Fetch the student ID that was automatically created
+    const studentInfo = await axiosInstance.get(`/student/fatchsingle/student/${userId}`);
+    const studentId = studentInfo.data.student.id;
+
+    // 3. Update that student record with all the admission details
+    await axiosInstance.put(`/student/update/student/${studentId}`, studentData);
+
+    // 4. Delete the Admission record
+    await axiosInstance.delete(`/admition/delete/${admissionId}`);
+
+    toast.success(userRes.data.message || "Student enrolled successfully");
+    dispatch(studentsSlice.actions.updateStudentFailed());
+
+    // Clean up or refresh lists as needed
+  } catch (error) {
+    dispatch(studentsSlice.actions.updateStudentFailed());
+    toast.error(error?.response?.data?.message || "Enrollment failed");
+    throw error;
   }
 };
 

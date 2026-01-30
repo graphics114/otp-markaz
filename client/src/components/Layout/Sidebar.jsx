@@ -83,13 +83,14 @@ const Sidebar = () => {
                             </button>
                         </li>
                         <li>
-                            <button
-                                // onClick={() => dispatch(toggleSidebar())} // Future Link
-                                className="w-full flex items-center px-4 py-3 rounded-xl gap-3 text-foreground hover:bg-secondary hover:text-primary transition-all duration-200 group text-left opacity-70 cursor-not-allowed"
+                            <Link
+                                to="/admission"
+                                onClick={() => dispatch(toggleSidebar())}
+                                className="w-full flex items-center px-4 py-3 rounded-xl gap-3 text-foreground hover:bg-secondary hover:text-primary transition-all duration-200 group text-left"
                             >
                                 <ClipboardCheck className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
-                                <span className="font-medium text-sm">Admission (Soon)</span>
-                            </button>
+                                <span className="font-medium text-sm">Admission</span>
+                            </Link>
                         </li>
                     </ul>
                 </div>

@@ -3,18 +3,19 @@ import Header from "./Header";
 // import avatar from "../assets/avatar.jpg"
 import { fetchAllAdmissions, deleteAdmition } from "../store/slices/admitionSlice"
 import { useEffect, useState } from "react";
-import { Trash2, UserPen, FolderSearch, Ticket } from "lucide-react";
+import { Trash2, UserPen, FolderSearch, Ticket, BanknoteArrowDown } from "lucide-react";
 
 import UpdateAdmition from "../pages/updateAdmition";
 import RegisterAdmition from "../pages/registerAdmition";
-import { toggleUpdateAdmition, toggleRegisterAdmition } from "../store/slices/extraSlice";
+import EnrollStudent from "../pages/enrollStudent";
+import { toggleUpdateAdmition, toggleRegisterAdmition, toggleEnrollStudent } from "../store/slices/extraSlice";
 
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 
 const Admissions = () => {
 
-  const { loading, admissions, totalAdmissions } = useSelector((state) => state.admition);
+  const { loading, admissions } = useSelector((state) => state.admition);
   const [selectedAdmition, setSelectedAdmition] = useState(null);
 
   const dispatch = useDispatch();
@@ -22,40 +23,7 @@ const Admissions = () => {
   const [page, setPage] = useState(1);
   const [maxPage, setMaxPage] = useState(null);
 
-  const { isUpdateSAdmitionOpened, isRegisterAdmitionOpend } = useSelector((state) => state.extra);
-
-  useEffect(() => {
-    dispatch(fetchAllAdmissions(page));
-  }, [dispatch, page]);
-
-  useEffect(() => {
-    if (totalAdmissions !== undefined) {
-      const newMax = Math.ceil(totalAdmissions / 10);
-      setMaxPage(newMax || 1);
-    }
-  }, [totalAdmissions]);
-
-  useEffect(() => {
-    if (maxPage && page > maxPage) {
-      setPage(maxPage)
-    }
-  }, [maxPage, page]);
-
-  const handleDeleteAdmition = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: `This candidate will be permanently deleted!`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        dispatch(deleteAdmition(id, page));
-      }
-    });
-  };
+  const { isUpdateSAdmitionOpened, isRegisterAdmitionOpend, isEnrollStudentOpened } = useSelector((state) => state.extra);
 
   const institutions = [
     "All Institutions",
@@ -85,6 +53,39 @@ const Admissions = () => {
 
     return matchesInstitution && matchesSearch;
   });
+
+  useEffect(() => {
+    dispatch(fetchAllAdmissions(page));
+  }, [dispatch, page]);
+
+  useEffect(() => {
+    if (filteredAdmitios.length !== undefined) {
+      const newMax = Math.ceil(filteredAdmitios.length / 10);
+      setMaxPage(newMax || 1);
+    }
+  }, [filteredAdmitios.length]);
+
+  useEffect(() => {
+    if (maxPage && page > maxPage) {
+      setPage(maxPage)
+    }
+  }, [maxPage, page]);
+
+  const handleDeleteAdmition = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `This candidate will be permanently deleted!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteAdmition(id, page));
+      }
+    });
+  };
 
   // EXCEL EXPORT
   const handleExcel = () => {
@@ -469,10 +470,11 @@ const Admissions = () => {
                   <th className="py-3 px-4 text-left">Applayed</th>
                   <th className="py-3 px-4 text-left">Edit</th>
                   <th className="py-3 px-4 text-left">Delete</th>
+                  <th className="py-3 px-4 text-left">Enroll</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredAdmitios.map((admition, index) => {
+                {filteredAdmitios.slice((page - 1) * 10, page * 10).map((admition, index) => {
                   return (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="py-3 px-4 font-semibold text-gray-600">
@@ -528,9 +530,19 @@ const Admissions = () => {
                           <Trash2 className="w-6 h-auto" />
                         </button>
                       </td>
+                      <td className="py-3 px-4">
+                        {/* ENROLL */}
+                        <button onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAdmition(admition);
+                          dispatch(toggleEnrollStudent());
+                        }}
+                          className="text-gray-600 cursor-pointer font-semibold">
+                          <BanknoteArrowDown className="w-6 h-auto" />
+                        </button>
+                      </td>
                     </tr>
                   )
-                  // medium, earlier, prv_institution, inst_contact, com_juz
                 })}
               </tbody>
             </table>
@@ -559,6 +571,7 @@ const Admissions = () => {
     </main>
     {isUpdateSAdmitionOpened && <UpdateAdmition selectedAdmition={selectedAdmition} />}
     {isRegisterAdmitionOpend && <RegisterAdmition />}
+    {isEnrollStudentOpened && <EnrollStudent selectedAdmition={selectedAdmition} />}
   </>)
 };
 

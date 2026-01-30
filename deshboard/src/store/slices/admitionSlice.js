@@ -14,49 +14,49 @@ const admissionsSlice = createSlice({
         selectedAdmition: null,
     },
     reducers: {
-        getAllAdmissionsRequest(state){
+        getAllAdmissionsRequest(state) {
             state.loading = true;
         },
-        getAllAdmissionsSuccess(state, action){
+        getAllAdmissionsSuccess(state, action) {
             state.loading = false;
             state.admissions = action.payload.admissions;
             state.totalAdmissions = action.payload.count || (action.payload.totalAdmissions || 0);
         },
-        getAllAdmissionsFailed(state){
+        getAllAdmissionsFailed(state) {
             state.loading = false;
         },
 
-        updateAdmissionRequest(state){
+        updateAdmissionRequest(state) {
             state.loading = true;
         },
-        updateAdmissionSuccess(state, action){
+        updateAdmissionSuccess(state, action) {
             state.loading = false;
-            state.admissions = state.admissions.map((admission) => 
+            state.admissions = state.admissions.map((admission) =>
                 admission.id === action.payload.id ? action.payload : admission);
         },
-        updateAdmissionFailed(state){
+        updateAdmissionFailed(state) {
             state.loading = false;
         },
 
-        deleteAdmissionRequest(state){
+        deleteAdmissionRequest(state) {
             state.loading = true;
         },
-        deleteAdmissionSuccess(state, action){
+        deleteAdmissionSuccess(state, action) {
             state.loading = false;
             state.admissions = state.admissions.filter(admission => admission.id !== action.payload);
-            state.totalAdmissions = Math.max(0, state.totalAdmissions -1);
+            state.totalAdmissions = Math.max(0, state.totalAdmissions - 1);
         },
-        deleteAdmissionFailed(state){
+        deleteAdmissionFailed(state) {
             state.loading = false;
         },
 
-        admissionRegisterRequest(state){
+        admissionRegisterRequest(state) {
             state.loading = true;
         },
-        admissionRegisterSuccess(state){
+        admissionRegisterSuccess(state) {
             state.loading = false;
         },
-        admissionRegisterFailed(state){
+        admissionRegisterFailed(state) {
             state.loading = false;
         },
     },
@@ -87,28 +87,28 @@ export const updateAdmition = ({ id, data }) => async (dispatch) => {
 }
 
 export const deleteAdmition = (id, page) => async (dispatch, getState) => {
-  dispatch(admissionsSlice.actions.deleteAdmissionRequest());
+    dispatch(admissionsSlice.actions.deleteAdmissionRequest());
 
-  try {
-    const res = await axiosInstance.delete(`/admition/delete/${id}`);
+    try {
+        const res = await axiosInstance.delete(`/admition/delete/${id}`);
 
-    dispatch(admissionsSlice.actions.deleteAdmissionSuccess(id));
-    toast.success(res.data.message || "Deleted successfully");
+        dispatch(admissionsSlice.actions.deleteAdmissionSuccess(id));
+        toast.success(res.data.message || "Deleted successfully");
 
-    const { totalAdmissions } = getState().admition;
+        const { totalAdmissions } = getState().admition;
 
-    const updatedTotal = totalAdmissions - 1;
-    const updatedMaxPage = Math.ceil(updatedTotal / 10) || 1;
-    const validPage = Math.min(page, updatedMaxPage);
+        const updatedTotal = totalAdmissions - 1;
+        const updatedMaxPage = Math.ceil(updatedTotal / 10) || 1;
+        const validPage = Math.min(page, updatedMaxPage);
 
-    dispatch(fetchAllAdmissions(validPage));
+        dispatch(fetchAllAdmissions(validPage));
 
-  } catch (error) {
-    dispatch(admissionsSlice.actions.deleteAdmissionFailed());
-    toast.error(
-      error?.response?.data?.message || "Failed to delete"
-    );
-  }
+    } catch (error) {
+        dispatch(admissionsSlice.actions.deleteAdmissionFailed());
+        toast.error(
+            error?.response?.data?.message || "Failed to delete"
+        );
+    }
 };
 
 export const registerAdmition = (data) => async (dispatch) => {

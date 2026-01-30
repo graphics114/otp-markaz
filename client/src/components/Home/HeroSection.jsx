@@ -91,11 +91,15 @@ const HeroSlider = () => {
                         {text.description}
                     </p>
 
-                    <div className="pt-4">
-                        <Link to="/about" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/30 text-sm md:text-base">
+                    <div className="pt-4 flex flex-wrap justify-center items-center gap-4">
+                        <Link to="/admission" className="w-52 md:w-64 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/30 text-white rounded-full font-semibold hover:bg-white/20 transition-all hover:scale-105 text-sm md:text-base">
+                            Admissions Open
+                        </Link>
+                        <Link to="/about" className="w-52 md:w-64 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/30 text-sm md:text-base">
                             Discover Our Legacy
                             <ArrowRight size={18} />
                         </Link>
+
                     </div>
                 </div>
 

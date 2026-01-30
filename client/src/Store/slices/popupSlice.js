@@ -7,6 +7,7 @@ const popupSlice = createSlice({
         isSidebarOpen: false,
         isAuthPopupOpen:false,
         isNavbarOpened: false,
+        isRegisterAdmitionOpend: false,
     },
 
     reducers: {
@@ -25,8 +26,12 @@ const popupSlice = createSlice({
         toggleNavbar: (state) => {
             state.isNavbarOpened = !state.isNavbarOpened
         },
+
+        toggleRegisterAdmition: (state) => {
+            state.isRegisterAdmitionOpend = !state.isRegisterAdmitionOpend
+        }
     },
 });
 
-export const { toggleComponent, toggleSidebar, toggleAuthPopup, toggleNavbar } = popupSlice.actions;
+export const { toggleComponent, toggleSidebar, toggleAuthPopup, toggleNavbar, toggleRegisterAdmition } = popupSlice.actions;
 export default popupSlice.reducer;

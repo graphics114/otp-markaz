@@ -78,7 +78,7 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
 export const updateStudent = catchAsyncError(async (req, res, next) => {
 
     const { studentID } = req.params;
-     const { reg_number } = req.body;
+    const { reg_number } = req.body;
 
     const studentCheck = await database.query(
         "SELECT id FROM students WHERE id = $1",
@@ -124,34 +124,34 @@ export const updateStudent = catchAsyncError(async (req, res, next) => {
 });
 
 export const deleteStudent = catchAsyncError(async (req, res, next) => {
-  const { studentID } = req.params;
+    const { studentID } = req.params;
 
-  // 1️⃣ Get related user_id
-  const studentRes = await database.query("SELECT user_id FROM students WHERE id = $1",
-    [studentID]);
+    // 1️⃣ Get related user_id
+    const studentRes = await database.query("SELECT user_id FROM students WHERE id = $1",
+        [studentID]);
 
-  if (studentRes.rows.length === 0) {
-    return next(new ErrorHandler("Student not found", 404));
-  }
+    if (studentRes.rows.length === 0) {
+        return next(new ErrorHandler("Student not found", 404));
+    }
 
-  const userId = studentRes.rows[0].user_id;
+    const userId = studentRes.rows[0].user_id;
 
-  // 2️⃣ Delete student
-  await database.query(
-    "DELETE FROM students WHERE id = $1",
-    [studentID]
-  );
+    // 2️⃣ Delete student
+    await database.query(
+        "DELETE FROM students WHERE id = $1",
+        [studentID]
+    );
 
-  // 3️⃣ Delete related user
-  await database.query(
-    "DELETE FROM users WHERE id = $1",
-    [userId]
-  );
+    // 3️⃣ Delete related user
+    await database.query(
+        "DELETE FROM users WHERE id = $1",
+        [userId]
+    );
 
-  res.status(200).json({
-    success: true,
-    message: "Student and related user deleted successfully",
-  });
+    res.status(200).json({
+        success: true,
+        message: "Student and related user deleted successfully",
+    });
 });
 
 export const fetchStudentByUser = catchAsyncError(async (req, res, next) => {

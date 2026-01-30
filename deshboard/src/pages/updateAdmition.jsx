@@ -421,7 +421,7 @@ const UpdateAdmition = ({ selectedAdmition }) => {
                             : "bg-white text-black"}
                         `}
                       >
-                        <option value="" disabled hidden>Select Course</option>
+                        <option value="" disabled hidden>Select board</option>
                         <option value="CBSE" className="text-black">CBSE</option>
                         <option value="KERALA" className="text-black">KERALA</option>
                       </select>

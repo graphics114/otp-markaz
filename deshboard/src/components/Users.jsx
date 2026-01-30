@@ -28,16 +28,42 @@ const Users = () => {
 
     const [maxPage, setMaxPage] = useState(null);
 
+    const institutions = [
+        "All Institutions",
+        "Hifzul Quran College",
+        "Uthmaniyya College...",
+    ];
+
+    const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
+
+    const filteredUsers = (users || []).filter((user) => {
+        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa");
+
+        const matchesInstitution =
+            selectedInstitution === "All Institutions" ||
+            user.institution === selectedInstitution;
+
+        const matchesSearch =
+            user.full_name.toLowerCase().includes(search.toLowerCase()) ||
+            user.username.toLowerCase().includes(search.toLowerCase()) ||
+            user.role.toLowerCase().includes(search.toLowerCase()) ||
+            user.institution?.toLowerCase().includes(search.toLowerCase()) ||
+            user.joining_batch?.toLowerCase().includes(search.toLowerCase()) ||
+            user.created_at.includes(search);
+
+        return matchesRole && matchesInstitution && matchesSearch;
+    });
+
     useEffect(() => {
         dispatch(fetchAllUsers(page));
     }, [dispatch, page]);
 
     useEffect(() => {
-        if (totalUsers !== undefined) {
-            const newMax = Math.ceil(totalUsers / 10);
+        if (filteredUsers.length !== undefined) {
+            const newMax = Math.ceil(filteredUsers.length / 10);
             setMaxPage(newMax || 1);
         }
-    }, [totalUsers]);
+    }, [filteredUsers.length]);
 
     useEffect(() => {
         if (maxPage && page > maxPage) {
@@ -126,31 +152,7 @@ const Users = () => {
         XLSX.writeFile(workbook, "users-list.xlsx");
     };
 
-    const institutions = [
-        "All Institutions",
-        "Hifzul Quran College",
-        "Uthmaniyya College...",
-    ];
 
-    const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
-
-    const filteredUsers = (users || []).filter((user) => {
-        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa");
-
-        const matchesInstitution =
-            selectedInstitution === "All Institutions" ||
-            user.institution === selectedInstitution;
-
-        const matchesSearch =
-            user.full_name.toLowerCase().includes(search.toLowerCase()) ||
-            user.username.toLowerCase().includes(search.toLowerCase()) ||
-            user.role.toLowerCase().includes(search.toLowerCase()) ||
-            user.institution?.toLowerCase().includes(search.toLowerCase()) ||
-            user.joining_batch?.toLowerCase().includes(search.toLowerCase()) ||
-            user.created_at.includes(search);
-
-        return matchesRole && matchesInstitution && matchesSearch;
-    });
 
     return (<>
         <main className="p-[10px] pl-[10px] md:pl-[17rem] w-full">
@@ -238,7 +240,7 @@ const Users = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUsers.map((user, index) => {
+                                {filteredUsers.slice((page - 1) * 10, page * 10).map((user, index) => {
                                     return (
                                         <tr key={index} className="border-t hover:bg-gray-50">
                                             <td className="py-3 px-4 font-semibold text-gray-600">

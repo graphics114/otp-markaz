@@ -27,10 +27,10 @@ export const createAdmissionCandidate = catchAsyncError(async (req, res, next) =
         pin_code,
         aadhar_number,
         blood_group,
-        medium, 
-        earlier, 
-        prv_institution, 
-        inst_contact, 
+        medium,
+        earlier,
+        prv_institution,
+        inst_contact,
         com_juz,
     } = req.body;
 
@@ -95,10 +95,10 @@ export const createAdmissionCandidate = catchAsyncError(async (req, res, next) =
             aadhar_number,
             blood_group,
             whatsapp_number,
-            medium, 
-            earlier, 
-            prv_institution, 
-            inst_contact, 
+            medium,
+            earlier,
+            prv_institution,
+            inst_contact,
             com_juz,
         ]
     );

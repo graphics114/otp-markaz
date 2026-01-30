@@ -19,6 +19,7 @@ import StdSideBar from "./components/Student/SideBar";
 import Profile from "./components/Student/Myprofile";
 import StudentExamResult from "./components/Student/StudentExamResult";
 import Welcom from "./components/Student/Welcom";
+import Admition from "./Pages/admition";
 
 const App = () => {
 
@@ -76,10 +77,11 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/institutions/*" element={<Institutions />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/admission" element={<Admition />} />
         </Routes>
 
         <LoginModal />
-        {!(isAuthenticated && user?.role === "Student" && location.pathname === "/") && <Footer />}
+        {!(isAuthenticated && user?.role === "Student" && location.pathname === "/") && location.pathname !== "/admission" && <Footer />}
       </div>
       <ToastContainer />
     </ThemeProvider>

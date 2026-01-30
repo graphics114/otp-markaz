@@ -13,6 +13,7 @@ const extraSlice = createSlice({
         isDawaCollageOpened: false,
         isUpdateSAdmitionOpened: false,
         isRegisterAdmitionOpend: false,
+        isEnrollStudentOpened: false,
         selectedUser: null,
     },
     reducers: {
@@ -45,6 +46,9 @@ const extraSlice = createSlice({
         },
         toggleRegisterAdmition: (state) => {
             state.isRegisterAdmitionOpend = !state.isRegisterAdmitionOpend
+        },
+        toggleEnrollStudent: (state) => {
+            state.isEnrollStudentOpened = !state.isEnrollStudentOpened
         }
     },
 });
@@ -60,6 +64,7 @@ export const {
     toggleDawaCollage,
     toggleUpdateAdmition,
     toggleRegisterAdmition,
+    toggleEnrollStudent,
 } = extraSlice.actions;
 
 export default extraSlice.reducer;
