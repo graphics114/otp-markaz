@@ -82,7 +82,14 @@ export const updateAdmition = ({ id, data }) => async (dispatch) => {
         dispatch(toggleUpdateAdmition());
     } catch (error) {
         dispatch(admissionsSlice.actions.updateAdmissionFailed());
-        toast.error(error?.response?.data?.message || "Failed to update")
+        const errorMessage = error?.response?.data?.message || "Failed to update";
+        if (errorMessage.toLowerCase().includes("aadhar_number") || errorMessage.toLowerCase().includes("aadhar")) {
+            toast.error("You are already registered");
+        } else if (errorMessage.toLowerCase().includes("duplicate key") || errorMessage.toLowerCase().includes("unique constraint") || errorMessage.toLowerCase().includes("duplicate value")) {
+            toast.error("You are already registered");
+        } else {
+            toast.error(errorMessage);
+        }
     }
 }
 
@@ -126,7 +133,14 @@ export const registerAdmition = (data) => async (dispatch) => {
         toast.success(res.data.message || "Candidate registered successfully");
     } catch (error) {
         dispatch(admissionsSlice.actions.admissionRegisterFailed());
-        toast.error(error?.response?.data?.message || "Registration failed")
+        const errorMessage = error?.response?.data?.message || "Registration failed";
+        if (errorMessage.toLowerCase().includes("aadhar_number") || errorMessage.toLowerCase().includes("aadhar")) {
+            toast.error("You are already registered");
+        } else if (errorMessage.toLowerCase().includes("duplicate key") || errorMessage.toLowerCase().includes("unique constraint") || errorMessage.toLowerCase().includes("duplicate value")) {
+            toast.error("You are already registered");
+        } else {
+            toast.error(errorMessage);
+        }
     }
 }
 

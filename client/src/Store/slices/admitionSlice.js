@@ -42,7 +42,9 @@ export const registerAdmition = (data) => async (dispatch) => {
     } catch (error) {
         dispatch(admissionsSlice.actions.admissionRegisterFailed());
         const errorMessage = error?.response?.data?.message || "Registration failed";
-        if (errorMessage.toLowerCase().includes("duplicate key") || errorMessage.toLowerCase().includes("unique constraint")) {
+        if (errorMessage.toLowerCase().includes("aadhar_number") || errorMessage.toLowerCase().includes("aadhar")) {
+            toast.error("You are already registered");
+        } else if (errorMessage.toLowerCase().includes("duplicate key") || errorMessage.toLowerCase().includes("unique constraint") || errorMessage.toLowerCase().includes("duplicate value")) {
             toast.error("You are already registered");
         } else {
             toast.error(errorMessage);

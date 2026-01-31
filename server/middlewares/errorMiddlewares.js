@@ -9,22 +9,27 @@ export const errorMiddleware = (err, req, res, next) => {
     err.message = err.message || "Internal Server Error";
     err.statusCode = err.statusCode || 500;
 
-    if(err.code === 11000){
+    if (err.code === "11000") {
         const message = "Duplicate value entered";
         err = new ErrorHandler(message, 400);
     }
 
-    if(err.name === "JsonWebTokenError"){
+    if (err.code === "23505") {
+        const message = `Duplicate value: ${err.detail || err.message}`;
+        err = new ErrorHandler(message, 400);
+    }
+
+    if (err.name === "JsonWebTokenError") {
         const message = "Token is invalid, try again";
         err = new ErrorHandler(message, 400);
     }
 
-    if(err.name === "TokenExpiredError"){
+    if (err.name === "TokenExpiredError") {
         const message = "Token is expired, try again";
         err = new ErrorHandler(message, 400);
     }
 
-    const errorMessage = err.errors ? 
+    const errorMessage = err.errors ?
         Object.values(err.errors).map((error) => error.message).join(" ") : err.message;
 
     return res.status(err.statusCode).json({

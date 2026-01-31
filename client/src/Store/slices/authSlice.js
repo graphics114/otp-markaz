@@ -20,6 +20,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.user = action.payload;
       state.isAuthenticated = true;
+      localStorage.setItem("student_is_logged_in", "true");
     },
     loginFailed(state, action) {
       state.loading = false;
@@ -33,11 +34,13 @@ const authSlice = createSlice({
       state.loading = false;
       state.user = action.payload;
       state.isAuthenticated = true;
+      localStorage.setItem("student_is_logged_in", "true");
     },
     getUserFailed(state) {
       state.loading = false;
       state.user = null;
       state.isAuthenticated = false;
+      localStorage.removeItem("student_is_logged_in");
     },
 
     logoutRequest(state) {
@@ -47,6 +50,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.user = null;
       state.isAuthenticated = false;
+      localStorage.removeItem("student_is_logged_in");
     },
     logoutFailed(state) {
       state.loading = false;
@@ -98,6 +102,9 @@ export const login = (data) => async (dispatch) => {
 };
 
 export const getUser = () => async (dispatch) => {
+  if (localStorage.getItem("student_is_logged_in") !== "true") {
+    return;
+  }
   dispatch(authSlice.actions.getUserRequest());
   try {
     const res = await axiosInstance.get("/auth/me")

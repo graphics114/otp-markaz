@@ -168,7 +168,9 @@ const Admission = () => {
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 <Calendar className="w-4 h-4" /> Academic Year 2026-27
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold">Hifzul Quran College</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                <span className="text-gray-700">Ottapalam Markaz</span><br />
+                Hifzul Quran College</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Our simplified Hifz course is designed to help students memorize the Holy Quran
                 with Tajweed and proper pronunciation. We provide a spiritual environment
@@ -295,7 +297,7 @@ const Admission = () => {
                   </p>
                 </div>
 
-                <a href="https://chat.whatsapp.com/J9cgZf1Jca7FqtwpxcBT4c?mode=gi_t" target="_blank" rel="noopener noreferrer"
+                <a href="https://chat.whatsapp.com/Dp3ZKP4Ks79JxvWllJjdgK?mode=gi_t" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-all shadow-lg shadow-green-600/20 active:scale-95">
                   <MessageCircle className="w-5 h-5" />
                   Join WhatsApp Group
