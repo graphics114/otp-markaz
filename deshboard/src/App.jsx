@@ -17,6 +17,7 @@ import Users from "./components/Users";
 import Students from "./components/Students";
 import Result from "./components/Result";
 import Admissions from "./components/admissions";
+import TopStudents from "./components/TopStudents";
 
 // Hifiz Components
 import StaffUsers from "./components/staff/StaffUsers";
@@ -61,6 +62,8 @@ const App = () => {
         return <Admissions />;
       case "Users":
         return <Users />;
+      case "Top Students":
+        return <TopStudents />;
       case "Profile":
         return <Profile />;
       default:

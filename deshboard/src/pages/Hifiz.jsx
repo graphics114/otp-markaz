@@ -18,18 +18,9 @@ const Hifiz = () => {
   const [selectedStatus, setSelectedStatus] = useState({});
 
   const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState(() => {
+  const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    return `${y}-${String(m + 1).padStart(2, "0")}-01`;
-  });
-  const [toDate, setToDate] = useState(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const lastDay = new Date(y, m + 1, 0).getDate();
-    return `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
   const [showConfirm, setShowConfirm] = useState(false);
@@ -55,14 +46,11 @@ const Hifiz = () => {
   };
 
   const isWithinDateRange = (examDate) => {
-    if (!examDate) return true;
-    const date = new Date(examDate).setHours(0, 0, 0, 0);
-    const from = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
-    const to = toDate ? new Date(toDate).setHours(0, 0, 0, 0) : null;
-
-    if (from && date < from) return false;
-    if (to && date > to) return false;
-    return true;
+    if (!selectedMonth) return true;
+    if (!examDate) return false;
+    const date = new Date(examDate);
+    const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    return monthStr === selectedMonth;
   };
 
   const filteredResults = results.filter(result =>
@@ -85,7 +73,7 @@ const Hifiz = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [search, fromDate, toDate]);
+  }, [search, selectedMonth]);
 
   useEffect(() => {
     const newMax = Math.ceil(filteredResults.length / 10);
@@ -418,24 +406,17 @@ const Hifiz = () => {
                                                text-gray-400 w-5 h-5"/>
             </div>
 
-            {/* DATE RANGE */}
+            {/* MONTH PICKER */}
             <div className="flex items-center gap-2">
               <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="border px-4 py-2 rounded-lg text-sm focus:outline-none bg-white shadow-sm"
               />
-              <span className="text-gray-400">to</span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="border px-2 py-2 rounded-lg text-sm focus:outline-none"
-              />
-              {(fromDate || toDate) && (
+              {selectedMonth && (
                 <button
-                  onClick={() => { setFromDate(""); setToDate(""); }}
+                  onClick={() => setSelectedMonth("")}
                   className="text-xs text-red-500 hover:text-red-700 font-medium"
                 >
                   Clear

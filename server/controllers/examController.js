@@ -285,3 +285,70 @@ export const deleteExamResult = catchAsyncError(async (req, res, next) => {
         message: "Exam result deleted successfully",
     });
 });
+
+export const getTopScoringStudents = catchAsyncError(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    const { from, to } = req.query;
+
+    let query = `
+        SELECT
+          u.full_name,
+          s.locality,
+          s.district,
+          s.state,
+          s.joining_batch,
+          ser.total_marks,
+          ser.hifiz_marks,
+          ser.hizb_marks,
+          ser.tajweed_marks,
+          ser.exam_date,
+          s.institution
+        FROM student_exam_results ser
+        JOIN students s ON s.id = ser.student_id
+        JOIN users u ON u.id = s.user_id
+        WHERE ser.total_marks IS NOT NULL
+        AND ser.total_marks > 0
+        AND ser.result_status = 'Published'
+        AND ser.exam_date IS NOT NULL
+    `;
+
+    const params = [];
+    let paramCount = 1;
+
+    if (from && to) {
+        query += ` AND ser.exam_date::date BETWEEN $${paramCount}::date AND $${paramCount + 1}::date`;
+        params.push(from, to);
+        paramCount += 2;
+    } else if (from) {
+        query += ` AND ser.exam_date::date >= $${paramCount}::date`;
+        params.push(from);
+        paramCount++;
+    } else if (to) {
+        query += ` AND ser.exam_date::date <= $${paramCount}::date`;
+        params.push(to);
+        paramCount++;
+    }
+
+    query += ` ORDER BY ser.total_marks DESC, ser.exam_date DESC LIMIT $${paramCount}`;
+    params.push(limit);
+
+    const result = await database.query(query, params);
+
+    const topStudents = result.rows.map(row => ({
+        name: row.full_name,
+        location: [row.locality, row.district, row.state].filter(Boolean).join(", ") || "N/A",
+        batch: row.joining_batch || "N/A",
+        totalMarks: row.total_marks || 0,
+        hifizMarks: row.hifiz_marks,
+        hizbMarks: row.hizb_marks,
+        tajweedMarks: row.tajweed_marks,
+        examDate: row.exam_date,
+        institution: row.institution
+    }));
+
+    res.status(200).json({
+        success: true,
+        count: topStudents.length,
+        students: topStudents
+    });
+});

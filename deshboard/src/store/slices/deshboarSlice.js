@@ -9,6 +9,8 @@ const deshboardSlice = createSlice({
     cards: {},
     today: {},
     charts: {},
+    topStudents: [],
+    topStudentsLoading: false,
   },
   reducers: {
     dashboardStatsRequest: (state) => {
@@ -49,6 +51,17 @@ const deshboardSlice = createSlice({
     dawaDashboardStatsFaile: (state) => {
       state.loading = false;
     },
+
+    topStudentsRequest: (state) => {
+      state.topStudentsLoading = true;
+    },
+    topStudentsSuccess: (state, action) => {
+      state.topStudentsLoading = false;
+      state.topStudents = action.payload.students || [];
+    },
+    topStudentsFail: (state) => {
+      state.topStudentsLoading = false;
+    },
   },
 });
 
@@ -62,6 +75,9 @@ export const {
   dawaDashboardStatsRequest,
   dawaDashboardStatsSuccess,
   dawaDashboardStatsFaile,
+  topStudentsRequest,
+  topStudentsSuccess,
+  topStudentsFail,
 } = deshboardSlice.actions;
 
 export const fetchDashboardStats = () => async (dispatch) => {
@@ -94,6 +110,20 @@ export const dawaDashboardStats = () => async (dispatch) => {
   } catch (error) {
     dispatch(dawaDashboardStatsFaile());
     toast.error(error?.response?.data?.message || "Authentication failed");
+  }
+};
+
+export const fetchTopStudents = (limit = 10, from = null, to = null) => async (dispatch) => {
+  try {
+    dispatch(topStudentsRequest());
+    let url = `/exam/top-students?limit=${limit}`;
+    if (from) url += `&from=${from}`;
+    if (to) url += `&to=${to}`;
+    const res = await axiosInstance.get(url);
+    dispatch(topStudentsSuccess(res.data));
+  } catch (error) {
+    dispatch(topStudentsFail());
+    console.error("Failed to fetch top students:", error);
   }
 };
 
