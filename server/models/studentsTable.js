@@ -2,14 +2,16 @@ import database from "../database/db.js";
 
 export async function createStudentsTable() {
     try {
-        const query =`
+        const query = `
             CREATE TABLE IF NOT EXISTS students (
                 id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 
                 user_id UUID UNIQUE NOT NULL,
 
                 reg_number VARCHAR(50) UNIQUE,
+                roll_number VARCHAR(50),
                 date_of_birth DATE,
+
 
                 phone_number VARCHAR(20),
                 emergency_contact VARCHAR(20),
@@ -52,6 +54,6 @@ export async function createStudentsTable() {
     } catch (error) {
         console.error("Error creating user table:", error);
         process.exit(1);
-        
+
     }
 }

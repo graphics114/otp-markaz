@@ -13,8 +13,10 @@ import studentRouter from "./router/studentsRoutes.js"
 import examRouter from "./router/examRoutes.js"
 import admitionRouter from "./router/admitionRotes.js"
 import adminRouter from "./router/adminRouts.js"
+import attendanceRouter from "./router/attendanceRoutes.js"
 
 const app = express();
+
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -64,8 +66,10 @@ app.use("/api/v1/student", studentRouter);
 app.use("/api/v1/exam", examRouter);
 app.use("/api/v1/admition", admitionRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/attendance", attendanceRouter);
 
 createTables();
+
 
 app.use(errorMiddleware);
 

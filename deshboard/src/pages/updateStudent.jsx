@@ -13,8 +13,10 @@ const UpdateStudent = ({ selectedStudent }) => {
     const [editData, setEditData] = useState({
         studentId: "",
         reg_number: "",
+        roll_number: "",
         date_of_birth: "",
         phone_number: "",
+
         emergency_contact: "",
 
         aadhar_number: "",
@@ -53,9 +55,11 @@ const UpdateStudent = ({ selectedStudent }) => {
                 studentId: selectedStudent.id || "",
 
                 reg_number: selectedStudent.reg_number || "",
+                roll_number: selectedStudent.roll_number || "",
                 date_of_birth: selectedStudent.date_of_birth
                     ? new Date(selectedStudent.date_of_birth).toISOString().split("T")[0]
                     : "",
+
                 phone_number: selectedStudent.phone_number || "",
                 emergency_contact: selectedStudent.emergency_contact || "",
 
@@ -99,8 +103,10 @@ const UpdateStudent = ({ selectedStudent }) => {
 
         const data = {
             reg_number: editData.reg_number,
+            roll_number: editData.roll_number,
             date_of_birth: editData.date_of_birth,
             phone_number: editData.phone_number,
+
             emergency_contact: editData.emergency_contact,
 
             aadhar_number: editData.aadhar_number,
@@ -264,6 +270,15 @@ const UpdateStudent = ({ selectedStudent }) => {
                             onChange={handleStudentChange} value={editData.reg_number} required
                             className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
                     </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                            Roll Number
+                        </label>
+                        <input type="text" name="roll_number" placeholder="Enter roll number"
+                            onChange={handleStudentChange} value={editData.roll_number}
+                            className="border px-4 py-2 rounded-lg placeholder:text-sm focus:outline-none" />
+                    </div>
+
 
                     <div className="flex flex-col gap-1">
                         <label className="text-sm font-medium text-gray-700">

@@ -7,7 +7,7 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
     const { userId } = req.params;
 
     const {
-        reg_number, date_of_birth, phone_number, emergency_contact,
+        reg_number, roll_number, date_of_birth, phone_number, emergency_contact,
         aadhar_number, blood_group,
         father_name, father_phone, father_occupation,
         mother_name, mother_phone, mother_occupation,
@@ -15,6 +15,7 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
         address_line1, address_line2, locality, district, state, country,
         pin_code, joining_year, institution, joining_batch, course_program, other
     } = req.body;
+
 
     if (!reg_number || !date_of_birth || !phone_number) {
         return next(new ErrorHandler("Please provide all required fields", 400));
@@ -46,7 +47,7 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
 
     const result = await database.query(
         `INSERT INTO students (
-            user_id, reg_number, date_of_birth, phone_number, emergency_contact,
+            user_id, reg_number, roll_number, date_of_birth, phone_number, emergency_contact,
             aadhar_number, blood_group,
             father_name, father_phone, father_occupation,
             mother_name, mother_phone, mother_occupation,
@@ -55,11 +56,11 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
             pin_code, joining_year, institution, joining_batch, course_program, other
         ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-            $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,
-            $23,$24,$25,$26,$27
+            $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
+            $24,$25,$26,$27,$28
         ) RETURNING *`,
         [
-            userId, reg_number, date_of_birth, phone_number, emergency_contact,
+            userId, reg_number, roll_number, date_of_birth, phone_number, emergency_contact,
             aadhar_number, blood_group,
             father_name, father_phone, father_occupation,
             mother_name, mother_phone, mother_occupation,
@@ -68,6 +69,7 @@ export const addStudentByUser = catchAsyncError(async (req, res, next) => {
             pin_code, joining_year, institution, joining_batch, course_program, other
         ]
     );
+
 
     res.status(201).json({
         success: true,

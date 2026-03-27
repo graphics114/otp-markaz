@@ -17,125 +17,255 @@ export const downloadResultPDF = (r) => {
     (hifizBlank && hizbValid) ||
     (hizbBlank && hifizValid);
 
-  /* ===== PROFESSIONAL HEADER ===== */
-  doc.setFont("helvetica", "bold");
+  const validHifiz = r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1;
+  const validHizb = r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1;
 
-  doc.setFontSize(20);
-  doc.text("OTTAPALAM MARKAZ", 105, 20, { align: "center" });
+  let totalObtained = 0;
+  let totalMax = 0;
+  let subjectsCount = 0;
 
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "normal");
-  doc.text("Student Exam Result", 105, 27, { align: "center" });
-
-  /* subtle divider line */
-  doc.setDrawColor(180);
-  doc.setLineWidth(0.5);
-  doc.line(40, 32, 170, 32);
-
-  /* ===== STUDENT DETAILS ===== */
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-
-  const leftX = 17;
-  const valueX = 50;
-  let y = 45;
-
-  /* Student Name */
-  doc.text("Student Name :", leftX, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(r.full_name, valueX, y);
-
-  /* Register No */
-  y += 10;
-  doc.setFont("helvetica", "bold");
-  doc.text("Register No :", leftX, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(r.reg_number, valueX, y);
-
-  /* Institution */
-  y += 10;
-  doc.setFont("helvetica", "bold");
-  doc.text("Institution :", leftX, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(r.institution, valueX, y);
-
-  /* ===== MARKS TABLE ===== */
-
-// Helper: display mark or Absent
-const displayMark = (mark) => {
-  return mark === 0 ? "A" : mark;
-};
-
-// Build rows dynamically (HIDE when value is null/undefined/empty or === 1)
-const tableRows = [];
-
-if (r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1) {
-  tableRows.push([
-    "Hifiz",
-    displayMark(r.hifiz_marks),
-  ]);
-}
-
-if (r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1) {
-  tableRows.push([
-    "Hizb",
-    displayMark(r.hizb_marks),
-  ]);
-}
-
-// Total calculation (ignore value === 1)
-const hifizValue = r.hifiz_marks === 1 ? 0 : r.hifiz_marks || 0;
-const hizbValue  = r.hizb_marks === 1 ? 0 : r.hizb_marks || 0;
-const totalValue = hifizValue + hizbValue;
-
-// Show Total only if at least one subject exists
-if (tableRows.length > 0) {
-  tableRows.push([
-    "Total",
-    totalValue === 0 ? "A" : totalValue,
-  ]);
-}
-
-autoTable(doc, {
-  startY: y + 10,
-  head: [["Subject", "Marks"]],
-  body: tableRows,
-  styles: {
-    halign: "center",
-    fontSize: 12,
-  },
-  headStyles: {
-    fillColor: [37, 99, 235],
-    textColor: 255,
-    fontStyle: "bold",
-  },
-  alternateRowStyles: {
-    fillColor: [245, 245, 245],
-  },
-});
-
-  /* ===== RESULT STATUS (CENTER ALIGNED & COLOR) ===== */
-  const resultY = doc.lastAutoTable.finalY + 20;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-
-  if (isPassed) {
-    doc.setTextColor(22, 163, 74); // Green
-    doc.text("RESULT STATUS : PASSED", 105, resultY, { align: "center" });
-  } else {
-    doc.setTextColor(220, 38, 38); // Red
-    doc.text("RESULT STATUS : FAILED", 105, resultY, { align: "center" });
+  if (validHifiz) {
+    totalObtained += r.hifiz_marks === 0 ? 0 : Number(r.hifiz_marks);
+    totalMax += 100;
+    subjectsCount++;
+  }
+  
+  if (validHizb) {
+    totalObtained += r.hizb_marks === 0 ? 0 : Number(r.hizb_marks);
+    totalMax += 100;
+    subjectsCount++;
   }
 
+  const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
+
+  /* ===== PROFESSIONAL HEADER ===== */
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(15, 23, 42); // slate-900
+  doc.text("OTTAPALAM MARKAZ", 105, 20, { align: "center" });
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(71, 85, 105); // slate-500
+  doc.text("Academic Examination Result", 105, 28, { align: "center" });
+
+  // Line
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.setLineWidth(0.5);
+  doc.line(15, 35, 195, 35);
+
+  /* ===== STUDENT DETAILS ===== */
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(15, 42, 180, 28, 3, 3, "F");
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+
+  doc.text("Name:", 20, 52);
+  doc.setFont("helvetica", "normal");
+  doc.text(r.full_name || "N/A", 35, 52);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Reg No:", 110, 52);
+  doc.setFont("helvetica", "normal");
+  doc.text(r.reg_number || "N/A", 128, 52);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Institution:", 20, 62);
+  doc.setFont("helvetica", "normal");
+  doc.text(r.institution || "N/A", 42, 62);
+
+  const formattedDate = r.exam_date ? new Date(r.exam_date).toLocaleDateString("en-GB").replace(/\//g, "-") : "N/A";
+  doc.setFont("helvetica", "bold");
+  doc.text("Date:", 110, 62);
+  doc.setFont("helvetica", "normal");
+  doc.text(formattedDate, 122, 62);
+
+  /* ===== OVERALL PERFORMANCE ===== */
+  let y = 80;
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text("OVERALL PERFORMANCE", 15, y);
+
+  y += 6;
+  // Outer performance box
+  doc.setDrawColor(226, 232, 240);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(15, y, 180, 32, 3, 3, "FD");
+
+  // Status badge
+  if (isPassed) {
+    doc.setFillColor(37, 99, 235); // Blue background from image
+    doc.roundedRect(20, y + 6, 22, 7, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text("Passed", 23, y + 11);
+  } else {
+    doc.setFillColor(239, 68, 68); // Red background
+    doc.roundedRect(20, y + 6, 22, 7, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text("Failed", 25, y + 11);
+  }
+
+  // Stats
+  doc.setTextColor(37, 99, 235); // Blue percentage text
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text(`${overallPercentage}%`, 20, y + 26);
+
+  // Separator line
+  doc.setDrawColor(226, 232, 240);
+  doc.line(70, y + 6, 70, y + 26);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 116, 139);
+  doc.text("Total Marks", 78, y + 14);
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${totalObtained} / ${totalMax}`, 78, y + 23);
+
+  // Separator line 2
+  doc.setDrawColor(226, 232, 240);
+  doc.line(130, y + 6, 130, y + 26);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 116, 139);
+  doc.text("Subjects", 138, y + 14);
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${subjectsCount}`, 138, y + 23);
+
+  y += 45;
+
+  /* ===== SUBJECT-WISE RESULTS ===== */
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text("SUBJECT-WISE RESULTS", 15, y);
+
+  const tableRows = [];
+
+  const createSubjectRow = (name, mark) => {
+      if (mark === null || mark === undefined || mark === "" || mark === 1) return;
+      const isAbsent = mark === 0;
+      const obtained = isAbsent ? 0 : Number(mark);
+      const pass = obtained >= 30; // Assuming 30 is pass
+      const pct = isAbsent ? "0.00" : `${((obtained / 100) * 100).toFixed(2)}`;
+      
+      tableRows.push([
+          name,
+          100, // Max Marks
+          isAbsent ? "A" : obtained, // Obtained
+          `${pct}%`, // Percentage
+          pass ? "Pass" : "Fail" // Status
+      ]);
+  };
+
+  createSubjectRow("Hifiz", r.hifiz_marks);
+  createSubjectRow("Hizb", r.hizb_marks);
+
+  if (tableRows.length > 0) {
+    tableRows.push([
+        "OVERALL",
+        totalMax,
+        totalObtained,
+        `${overallPercentage}%`,
+        isPassed ? "PASSED" : "FAILED"
+    ]);
+  }
+
+  autoTable(doc, {
+    startY: y + 6,
+    head: [["Subject", "Max Marks", "Obtained", "Percentage", "Status"]],
+    body: tableRows,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [248, 250, 252],
+      textColor: [15, 23, 42],
+      fontStyle: "bold",
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+    },
+    bodyStyles: {
+      textColor: [51, 65, 85],
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+      fontSize: 10,
+      cellPadding: 3,
+    },
+    columnStyles: {
+      0: { fontStyle: "bold", textColor: [15, 23, 42] },
+      1: { halign: "center" },
+      2: { halign: "center", fontStyle: "bold" },
+      3: { halign: "center", fontStyle: "bold" }, 
+      4: { halign: "center", fontStyle: "bold" },
+    },
+    didParseCell: function(data) {
+      if (data.section === 'body') {
+          const isLastRow = data.row.index === tableRows.length - 1;
+          
+          if (isLastRow) {
+              data.cell.styles.fillColor = [248, 250, 252];
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.textColor = [15, 23, 42];
+              
+              if (data.column.index === 4) {
+                  if (data.cell.raw === "PASSED") {
+                      data.cell.styles.textColor = [255, 255, 255]; // White Text
+                      data.cell.styles.fillColor = [37, 99, 235]; // Solid Blue Box
+                  } else {
+                      data.cell.styles.textColor = [255, 255, 255]; // White Text
+                      data.cell.styles.fillColor = [239, 68, 68]; // Solid Red Box
+                  }
+              }
+              if (data.column.index === 3) {
+                   data.cell.styles.textColor = [37, 99, 235]; // Blue
+              }
+          } else {
+              if (data.column.index === 3) { // Percentage
+                  const val = parseFloat(data.cell.raw);
+                  if (val === 0) {
+                      data.cell.styles.textColor = [239, 68, 68];
+                  } else {
+                      data.cell.styles.textColor = [22, 163, 74];
+                  }
+              }
+              if (data.column.index === 4) { // Status
+                  if (data.cell.raw === "Pass") {
+                      data.cell.styles.textColor = [255, 255, 255];
+                      data.cell.styles.fillColor = [37, 99, 235];
+                  } else {
+                      data.cell.styles.textColor = [255, 255, 255];
+                      data.cell.styles.fillColor = [239, 68, 68];
+                  }
+              }
+          }
+      }
+    }
+  });
+
   /* ===== FOOTER ===== */
-  doc.setTextColor(120);
+  const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : y + 60;
+  
+  doc.setTextColor(148, 163, 184); // slate-400
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text(
-    "This is a system generated result sheet. No signature required.",
+    "This is a system generated result document. No signature is required.",
     105,
-    285,
+    finalY,
     { align: "center" }
   );
 

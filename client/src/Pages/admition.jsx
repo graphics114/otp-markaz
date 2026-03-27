@@ -68,27 +68,11 @@ const Admission = () => {
   };
 
 
-  const [avatarFile,
-    // setAvatarFile
-  ] = useState(null);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      if (avatarFile) {
-        const formData = new FormData();
-
-        Object.keys(editData).forEach((key) => {
-          formData.append(key, editData[key]);
-        });
-
-        formData.append("photo", avatarFile);
-
-        await dispatch(registerAdmition(formData));
-      } else {
-        await dispatch(registerAdmition(editData));
-      }
+      await dispatch(registerAdmition(editData));
       setRegistration(false);
       setShowSuccess(true);
     } catch (error) {

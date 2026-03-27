@@ -3,7 +3,42 @@
 @tailwind components;
 @tailwind utilities;
 
+.print-header {
+  display: none !important;
+}
+
+#daily-attendance-table .print-header,
+#attendance-report-table .print-header {
+  display: block !important;
+}
+
+/* Print Visibility Classes */
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Support for JS Cloning Print Logic */
+.cloned-print-element {
+  background: white !important;
+}
+
+.cloned-print-element .print-header,
+.cloned-print-element .print-only {
+  display: block !important;
+}
+
+.cloned-print-element .no-print {
+  display: none !important;
+}
+
 * {
+
   font-family: "Ubuntu", sans-serif;
   font-style: normal;
   /* font-optical-sizing: auto; */
@@ -14,8 +49,6 @@
   background: #f3f3f6;
   overflow-x: hidden;
 }
-
-
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

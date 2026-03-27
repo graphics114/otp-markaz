@@ -30,7 +30,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6">
 
             {/* Nav Links */}
-            {/* <div className="flex items-center space-x-4 mr-4 bg-secondary/30 px-4 py-1.5 rounded-full border border-border/50 backdrop-blur-sm">
+            <div className="flex items-center space-x-4 mr-4 bg-secondary/30 px-4 py-1.5 rounded-full border border-border/50 backdrop-blur-sm">
               <NavLink to="/"
                 className={({ isActive }) =>
                   `px-3 py-1 text-sm font-medium transition-all duration-300 rounded-full
@@ -62,10 +62,10 @@ const Navbar = () => {
                 }>
                 Contact
               </NavLink>
-            </div> */}
+            </div>
 
             {/* Action Buttons */}
-            {/* <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <button onClick={toggleTheme}
                 className="p-2.5 rounded-full hover:bg-secondary/80 transition-all duration-300 text-foreground border border-transparent hover:border-border">
                 {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -86,7 +86,7 @@ const Navbar = () => {
                 className="px-5 py-2 text-sm font-semibold text-foreground bg-secondary/50 border border-border rounded-full hover:bg-secondary transition-all duration-300">
                 Admission
               </NavLink>
-            </div> */}
+            </div>
 
           </div>
 
@@ -97,10 +97,10 @@ const Navbar = () => {
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            {/* <button className="p-2 rounded-lg bg-secondary/50 text-foreground hover:bg-secondary transition-colors border border-transparent active:scale-95"
+            <button className="p-2 rounded-lg bg-secondary/50 text-foreground hover:bg-secondary transition-colors border border-transparent active:scale-95"
               onClick={() => dispatch(toggleSidebar())}>
               <Menu className="w-6 h-6" />
-            </button> */}
+            </button>
           </div>
         </div>
       </div>

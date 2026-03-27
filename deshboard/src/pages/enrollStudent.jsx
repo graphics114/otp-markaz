@@ -17,7 +17,9 @@ const EnrollStudent = ({ selectedAdmition }) => {
         // common/student fields
         full_name: "",
         reg_number: "",
+        roll_number: "",
         date_of_birth: "",
+
         phone_number: "",
         emergency_contact: "",
         aadhar_number: "",
@@ -96,7 +98,9 @@ const EnrollStudent = ({ selectedAdmition }) => {
 
         const studentData = {
             reg_number: formData.reg_number,
+            roll_number: formData.roll_number,
             date_of_birth: formData.date_of_birth,
+
             phone_number: formData.phone_number,
             emergency_contact: formData.emergency_contact,
             aadhar_number: formData.aadhar_number,
@@ -183,6 +187,12 @@ const EnrollStudent = ({ selectedAdmition }) => {
                         <input type="text" name="reg_number" placeholder="Registration number"
                             onChange={handleChange} value={formData.reg_number} className="border px-4 py-2 rounded-lg focus:outline-none" required />
                     </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">Roll Number</label>
+                        <input type="text" name="roll_number" placeholder="Roll number"
+                            onChange={handleChange} value={formData.roll_number} className="border px-4 py-2 rounded-lg focus:outline-none" />
+                    </div>
+
 
                     <div className="flex flex-col gap-1">
                         <label className="text-sm font-medium text-gray-700">Joining Year</label>

@@ -1,6 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
 import Header from "../Student/Head";
-import avatar from "../../../public/avatar.jpg"
 import { useState, useEffect } from "react";
 import { updateProfile } from "../../Store/slices/authSlice"
 
@@ -184,8 +183,6 @@ const Profile = () => {
                 {/* PROFILE CARD */}
                 <div className="bg-white shadow-md rounded-2xl p-6 flex flex-col md:flex-row items-center 
                 gap-6 mb-10">
-                    <img src={user?.avatar?.url || avatar} alt={user?.name || avatar}
-                        className="w-32 h-32 rounded-full object-cover border" loading="lazy" />
                     <div>
                         <p className="text-xl font-medium">Name: {user?.full_name}</p>
                         <p className="text-md text-gray-600">Username: {user?.username}</p>
@@ -273,13 +270,7 @@ const Profile = () => {
                                     ))}
                             </select>
                         </div>
-                        <div className="flex flex-col gap-1 md:col-span-1">
-                            <label className="text-sm font-medium text-gray-700">Profile Image</label>
-                            <input type="file" name="avatar" onChange={handleAvatarChange}
-                                className="p-2 border rounded-lg h-[41px] w-full
-                            file:mr-4 file:px-4 file:rounded-md file:border-0 file:bg-blue-50
-                            file:text-blue-700 file:hover:text-blue-500 focus:outline-none" />
-                        </div>
+
 
                         <div className="md:col-span-3 pt-2">
                           <h3 className="text-lg font-semibold text-gray-800">

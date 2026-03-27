@@ -92,6 +92,7 @@ const Admissions = () => {
     // Apply same filters used in UI
     const exportData = filteredAdmitios.map((s, index) => ({
       "Sl No": index + 1,
+      "Admission ID": s.id ? s.id.toString().slice(-6).toUpperCase() : "------",
       "Candidate Name": s.candidate_name,
       "Date of Birth": s.date_of_birth
         ? new Date(s.date_of_birth).toLocaleDateString("en-IN")
@@ -302,128 +303,148 @@ const Admissions = () => {
         {/* PRINT ONLY HALL TICKETS */}
         {printType === 'hallTicket' && (
           <div id="hall-ticket-print" className="hidden">
-            {filteredAdmitios.map((student) => (
-              <div key={student.id} className="w-full h-[92mm] p-2 relative break-inside-avoid flex flex-col justify-center font-sans">
-                {/* CARD CONTAINER */}
-                <div className="border-2 border-slate-800 h-full bg-white relative p-2 flex flex-col gap-1">
+            <style>{`
+              @media print {
+                @page { margin: 5mm; size: A4 portrait; }
+                body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              }
+            `}</style>
+            {filteredAdmitios.map((student, index) => (
+              <div key={student.id}
+                className="w-full font-sans print-hall-ticket-container relative"
+                style={{ height: '135mm', pageBreakInside: 'avoid', breakInside: 'avoid', breakAfter: index % 2 !== 0 ? 'page' : 'auto', padding: '4mm' }}>
 
-                  {/* HEADER - Compacted */}
-                  <div className="flex justify-between items-center border-b-2 border-slate-800 pb-1 mb-1">
-                    <div className="flex items-center gap-2">
-                      {/* Logo: Smaller Square 12x12 */}
-                      <div className="h-12 w-12 flex items-center justify-center p-0.5">
-                        <img src="/logo2.png" alt="Logo" className="w-full h-full object-contain" />
+                {/* CARD CONTAINER */}
+                <div className="border border-blue-900 h-full bg-white relative p-4 flex flex-col overflow-hidden rounded-xl shadow-[inset_0_0_0_2px_#1e3a8a]">
+
+                  {/* Background Watermark */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-5 select-none pointer-events-none">
+                    <img src="/logo2.png" alt="watermark" className="w-[50%] object-contain grayscale" />
+                  </div>
+
+                  {/* HEADER */}
+                  <div className="flex justify-between items-start border-b-2 pb-2 mb-3 shrink-0 relative z-10">
+                    <div className="flex items-center gap-4">
+                      {/* Logo */}
+                      <div className="h-16 w-16 p-1 bg-white rounded-full border-2 border-blue-100 flex items-center justify-center">
+                        <img src="/logo2.png" alt="Logo" className="w-[85%] h-[85%] object-contain" />
                       </div>
-                      <div>
-                        <h1 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">OTTAPALAM MARKAZ</h1>
-                        <h2 className="text-base font-bold uppercase tracking-tight leading-none text-slate-900 mt-0.5">{student.institution || "Institution"}</h2>
-                        <p className="text-[8px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">Entrance Examination Hall Ticket</p>
+                      <div className="flex flex-col">
+                        <h1 className="text-[11px] font-bold text-blue-900 uppercase tracking-[0.2em] leading-none mb-1">Ottapalam Markaz</h1>
+                        <h2 className="text-xl font-extrabold uppercase tracking-tight text-blue-950 mt-0.5">{student.institution || "Institution"}</h2>
+                        <div className="mt-1.5 bg-blue-900 text-white px-2.5 py-1 inline-block rounded w-max shadow-sm">
+                          <p className="text-[10px] font-bold uppercase tracking-widest leading-none">Entrance Examination Hall Ticket</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-sm">
-                        <p className="text-[8px] font-bold text-slate-500 uppercase leading-none">Admition Id</p>
-                        <p className="text-base font-mono font-bold text-slate-900 leading-none mt-0.5">{student.id ? student.id.toString().slice(-6) : "------"}</p>
+                    {/* Admition ID */}
+                    <div className="text-center rounded-lg border-2 border-blue-900 bg-blue-50 overflow-hidden shrink-0 min-w-[130px] shadow-sm">
+                      <div className="bg-blue-900 text-white py-1.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider leading-none">Admission ID</p>
+                      </div>
+                      <div className="p-2.5">
+                        <p className="text-xl font-mono font-bold text-blue-950 leading-none">{student.id ? student.id.toString().slice(-6).toUpperCase() : "------"}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* BODY CONTENT */}
-                  <div className="flex gap-2 flex-1 min-h-0">
-                    {/* LEFT: INFO - Distributed Spacing */}
-                    <div className="flex-1 flex flex-col justify-between pt-0 pb-1">
+                  <div className="flex-1 flex flex-col justify-between relative z-10 mb-2">
 
-                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">Candidate Name</span>
-                        <span className="text-sm font-bold text-slate-900 uppercase truncate leading-tight">
-                          {student.candidate_name}
-                          {student.locality && <span className="text-[10px] text-slate-500 font-semibold ml-1">, {student.locality}</span>}
+                    {/* Basic Info Grid */}
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-4 pr-10">
+
+                      <div className="col-span-2 flex items-baseline border-b border-gray-300 pb-1.5">
+                        <span className="w-40 text-[11px] font-bold text-slate-500 uppercase">Candidate Name</span>
+                        <span className="text-lg font-bold text-slate-900 uppercase leading-snug">
+                          : {student.candidate_name}
+                          {student.locality && <span className="text-sm font-semibold text-slate-600 ml-1.5 align-baseline">, {student.locality}</span>}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">Father's Name</span>
-                        <span className="text-[10px] font-semibold text-slate-800 truncate">{student.father_name}</span>
+                      <div className="col-span-1 flex items-baseline border-b border-gray-300 pb-1.5">
+                        <span className="w-32 text-[10px] font-bold text-slate-500 uppercase">Father's Name</span>
+                        <span className="flex-1 text-sm font-bold text-slate-800 uppercase">
+                          : {student.father_name || "-"}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-[100px_1fr] items-center border-b border-dotted border-gray-300 pb-0.5">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">Institution</span>
-                        <span className="text-[10px] font-semibold text-slate-800 truncate">{student.institution || "General"}</span>
+                      <div className="col-span-1 flex items-baseline border-b border-gray-300 pb-1.5">
+                        <span className="w-32 text-[10px] font-bold text-slate-500 uppercase">Institution</span>
+                        <span className="flex-1 text-sm font-bold text-slate-800 uppercase">
+                          : {student.institution || "General"}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-0.5">
-                        <div className="bg-slate-50 p-1 rounded border border-slate-100">
-                          <p className="text-[8px] font-bold text-slate-400 uppercase">Date of Birth</p>
-                          <p className="text-[10px] font-semibold text-slate-800">{student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 p-1 rounded border border-slate-100">
-                          <p className="text-[8px] font-bold text-slate-400 uppercase">School / Madrasa</p>
-                          <p className="text-[10px] font-semibold text-slate-800 truncate">{student.school_class || "-"} / {student.madrasa_class || "-"}</p>
-                        </div>
+                      <div className="col-span-1 flex items-baseline border-b border-gray-300 pb-1.5">
+                        <span className="w-32 text-[10px] font-bold text-slate-500 uppercase">Date of Birth</span>
+                        <span className="flex-1 text-sm font-bold text-slate-800 uppercase">
+                          : {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString("en-IN") : "N/A"}
+                        </span>
                       </div>
 
-                      {/* EXAM VENUE - Evenly spaced */}
-                      <div className="bg-slate-100 p-1 border border-slate-200 rounded-sm">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-[7px] font-bold uppercase text-slate-500 mb-0.5">Examination Centre</p>
-                            <p className="text-[9px] font-bold text-slate-900 leading-tight">{student.institution || "Main Campus"}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[7px] font-bold uppercase text-slate-500 mb-0.5">Examination Date</p>
-                            <p className="text-[10px] font-bold text-blue-900">{examDate ? new Date(examDate).toLocaleDateString('en-GB') : "As per schedule"}</p>
-                          </div>
-                        </div>
+                      <div className="col-span-1 flex items-baseline border-b border-gray-300 pb-1.5">
+                        <span className="w-32 text-[10px] font-bold text-slate-500 uppercase">School / Madrasa</span>
+                        <span className="flex-1 text-sm font-bold text-slate-800 uppercase">
+                          : {student.school_class || "-"} / {student.madrasa_class || "-"}
+                        </span>
                       </div>
 
                     </div>
 
-                    {/* RIGHT: PHOTO */}
-                    <div className="w-28 flex-shrink-0">
-                      <div className="bg-gray-50 border-2 border-gray-200 rounded-sm flex items-center justify-center relative overflow-hidden h-[130px]">
-                        {student.photo?.url ? (
-                          <img src={student.photo.url} alt="Student" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="text-center p-2 opacity-40">
-                            <UserPen className="w-8 h-8 mx-auto mb-1" />
-                            <span className="text-[8px] font-bold uppercase">Affix Photo</span>
-                          </div>
-                        )}
+                    {/* Venue Box */}
+                    <div className="mt-4 flex justify-between items-center border border-blue-200 rounded-lg p-3 shadow-sm">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-0.5 tracking-wide">Examination Centre</p>
+                        <p className="text-sm font-bold text-blue-950 uppercase">{student.institution || "Main Campus"}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase text-slate-500 mb-0.5 tracking-wide">Examination Date</p>
+                        <p className="text-base font-bold text-blue-800">{examDate ? new Date(examDate).toLocaleDateString('en-GB') : "As per schedule"}</p>
                       </div>
                     </div>
+
                   </div>
 
                   {/* FOOTER */}
-                  <div className="border-t-2 border-slate-800 pt-1 flex justify-between items-end mt-auto">
-                    <div className="flex-1 pr-2">
-                      <p className="text-[9px] font-bold uppercase text-slate-900 mb-0.5">Instructions:</p>
-                      <ul className="text-[8px] text-slate-600 list-disc pl-3 space-y-0.5">
-                        <li>Bring this Hall Ticket and Valid ID Proof.</li>
-                        <li>Report 30 minutes prior to exam time.</li>
-                        <li>No electronic devices allowed inside.</li>
+                  <div className="border-t-2 border-blue-900 pt-2 flex justify-between items-end mt-auto relative z-10 shrink-0">
+                    <div className="flex-1 pr-6">
+                      <p className="text-[11px] font-extrabold uppercase text-slate-900 mb-2">Important Instructions :</p>
+                      <ul className="text-[9px] text-slate-700 list-decimal pl-4 space-y-1 font-semibold leading-relaxed">
+                        <li>Candidate must carry a printed copy of this Hall Ticket and a Valid ID proof.</li>
+                        <li>Report at the examination centre 30 minutes prior to the commencement of the exam.</li>
+                        <li>Electronic devices, smart watches, and unauthorized materials are strictly prohibited inside the hall.</li>
                       </ul>
                     </div>
 
-                    <div className="flex gap-4">
-                      <div className="w-24 text-center">
-                        <div className="h-4"></div>
-                        <div className="border-t border-slate-800 pt-0.5">
-                          <p className="text-[8px] font-bold uppercase text-slate-900">Candidate Sign</p>
+                    <div className="flex gap-8 items-end">
+                      <div className="w-36 text-center">
+                        <div className="h-12 border-b border-dashed border-gray-300 mb-1"></div>
+                        <div className="border-t-2 border-slate-500 pt-1">
+                          <p className="text-[10px] font-bold uppercase text-slate-800">Candidate's Sign</p>
                         </div>
                       </div>
-                      <div className="w-28 text-center">
-                        <div className="h-4"></div>
-                        <div className="border-t border-slate-800 pt-0.5">
-                          <p className="text-[8px] font-bold uppercase text-slate-900">Authorized Sign</p>
+                      <div className="w-36 text-center relative">
+                        {/* Fake Stamp Visualizer */}
+                        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-12 h-12 border-[3px] border-blue-600/20 rounded-full flex items-center justify-center pointer-events-none">
+                          <span className="text-[5px] text-blue-600/30 uppercase font-bold transform -rotate-12">Authorized</span>
+                        </div>
+                        <div className="h-12 border-b border-dashed border-gray-300 mb-1"></div>
+                        <div className="border-t-2 border-slate-500 pt-1">
+                          <p className="text-[10px] font-bold uppercase text-slate-800">Authorized Signatory</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                </div>
+                  {/* Visual cut line shown randomly if needed, disabled for raw print */}
+                  {index % 2 === 0 && (
+                    <div className="absolute -bottom-4 left-0 w-full flex items-center justify-center opacity-30 select-none">
+                      <span className="text-xs text-slate-500 tracking-[0.5em] font-mono">------------------------------------</span>
+                    </div>
+                  )}
 
-                {/* CUTTING GUIDE - BOTTOM */}
-                <div className="absolute bottom-0 left-0 w-full border-b-2 border-dashed border-gray-400 opacity-50"></div>
+                </div>
               </div>
             ))}
           </div>

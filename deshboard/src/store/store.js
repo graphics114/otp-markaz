@@ -6,6 +6,7 @@ import adminReducer from "./slices/adminSlice.js";
 import studentsReducer from "./slices/studentsSlice.js";
 import admissionsReducer from "./slices/admitionSlice.js";
 import deshboardReducer from "./slices/deshboarSlice.js"
+import attendanceReducer from "./slices/attendanceSlice.js";
 
 export const store = configureStore({
     reducer: {
@@ -15,5 +16,6 @@ export const store = configureStore({
         std: studentsReducer,
         admition: admissionsReducer,
         desh: deshboardReducer,
+        attendance: attendanceReducer,
     },
 });

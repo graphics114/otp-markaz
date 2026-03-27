@@ -14,7 +14,7 @@ import html2pdf from "html2pdf.js";
 
 const Students = () => {
 
-  const { loading, students, totalStudents } = useSelector((state) => state.std);
+  const { loading, students } = useSelector((state) => state.std);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const dispatch = useDispatch();
@@ -119,7 +119,9 @@ const Students = () => {
       "Sl No": index + 1,
       "Full Name": s.full_name,
       "Register Number": s.reg_number,
+      "Roll Number": s.roll_number,
       "Date of Birth": s.date_of_birth
+
         ? new Date(s.date_of_birth).toLocaleDateString("en-IN")
         : "",
       "Phone Number": s.phone_number,
@@ -256,7 +258,9 @@ const Students = () => {
                 <th className="border">#</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Name</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Reg No</th>
+                <th className="border px-1 py-0.5 whitespace-nowrap">Roll No</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Phone</th>
+
                 <th className="border px-1 py-0.5 whitespace-nowrap">Course</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">UIDAI</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Father Name</th>
@@ -272,7 +276,9 @@ const Students = () => {
                   <td className="border text-center">{i + 1}</td>
                   <td className="border p-2">{s.full_name}</td>
                   <td className="border p-2">{s.reg_number}</td>
+                  <td className="border p-2">{s.roll_number}</td>
                   <td className="border p-2">{s.phone_number}</td>
+
                   <td className="border p-2">{s.joining_batch}</td>
                   <td className="border p-2">{s.aadhar_number}</td>
                   <td className="border p-2">{s.father_name}</td>
@@ -299,7 +305,9 @@ const Students = () => {
                   <th className="py-3 px-4 text-left">Image</th>
                   <th className="py-3 px-4 text-left">Name</th>
                   <th className="py-3 px-4 text-left">Reg No</th>
+                  <th className="py-3 px-4 text-left whitespace-nowrap">Roll No</th>
                   <th className="py-3 px-4 text-left">DOB</th>
+
                   <th className="py-3 px-4 text-left whitespace-nowrap">Phone Number</th>
                   <th className="py-3 px-4 text-left">Emergency</th>
                   <th className="py-3 px-4 text-left">UIDAI</th>
@@ -341,9 +349,11 @@ const Students = () => {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">{student.full_name}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{student.reg_number}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{student.roll_number}</td>
                       <td className="py-3 px-4">
                         {new Date(student.date_of_birth).toLocaleDateString("en-IN")}
                       </td>
+
                       <td className="py-3 px-4">{student.phone_number}</td>
                       <td className="py-3 px-4">{student.emergency_contact}</td>
                       <td className="py-3 px-4">{student.aadhar_number}</td>

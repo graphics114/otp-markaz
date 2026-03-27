@@ -28,6 +28,7 @@ export const createAdmissionCandidate = catchAsyncError(async (req, res, next) =
         aadhar_number,
         blood_group,
         medium,
+        syllabus,
         earlier,
         prv_institution,
         inst_contact,
@@ -66,11 +67,11 @@ export const createAdmissionCandidate = catchAsyncError(async (req, res, next) =
             phone_number, guardian_phone,
             father_name, mother_name, guardian_name,
             address_line1, address_line2, locality, district, state, country, pin_code,
-            aadhar_number, blood_group, whatsapp_number, medium, earlier, prv_institution, 
+            aadhar_number, blood_group, whatsapp_number, medium, syllabus, earlier, prv_institution, 
             inst_contact, com_juz
         ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,
-            $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27
+            $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28
         ) RETURNING *`,
         [
             candidate_name,
@@ -96,6 +97,7 @@ export const createAdmissionCandidate = catchAsyncError(async (req, res, next) =
             blood_group,
             whatsapp_number,
             medium,
+            syllabus,
             earlier,
             prv_institution,
             inst_contact,

@@ -35,6 +35,13 @@ export async function createAdmissionTable() {
             aadhar_number VARCHAR(20) UNIQUE,
             blood_group VARCHAR(5),
 
+            medium VARCHAR(50),
+            syllabus VARCHAR(150),
+            earlier VARCHAR(10),
+            prv_institution VARCHAR(150),
+            inst_contact VARCHAR(20),
+            com_juz VARCHAR(50),
+
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         `;

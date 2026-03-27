@@ -18,6 +18,8 @@ import Students from "./components/Students";
 import Result from "./components/Result";
 import Admissions from "./components/admissions";
 import TopStudents from "./components/TopStudents";
+import Attendance from "./components/Attendance";
+
 
 // Hifiz Components
 import StaffUsers from "./components/staff/StaffUsers";
@@ -66,6 +68,9 @@ const App = () => {
         return <TopStudents />;
       case "Profile":
         return <Profile />;
+      case "Attendance":
+        return <Attendance />;
+
       default:
         return <Deshboard />;
     }
@@ -84,8 +89,11 @@ const App = () => {
         return <StaffUsers />;
       case "Profile":
         return <Profile />;
+      case "Attendance":
+        return <Attendance />;
       default:
         return <HifizDeshboard />;
+
     }
   };
 
@@ -102,8 +110,11 @@ const App = () => {
         return <StaffUsers />;
       case "Profile":
         return <Profile />;
+      case "Attendance":
+        return <Attendance />;
       default:
         return <DawaDeshboard />;
+
     }
   };
 

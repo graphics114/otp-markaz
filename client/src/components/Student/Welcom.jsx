@@ -1,16 +1,41 @@
 import { useSelector } from "react-redux";
 import Header from "../Student/Head";
-import { User, GraduationCap, BookOpen, Calendar, Quote, ChevronRight } from "lucide-react";
+import { User, GraduationCap, BookOpen, Calendar, Quote, ChevronRight, ClipboardCheck, ChartBar } from "lucide-react";
 import { useState, useEffect } from "react";
+import { axiosInstance } from "../../lib/axios.js";
 
 const Welcom = () => {
     const { user } = useSelector((state) => state.auth);
     const [dateString, setDateString] = useState("");
+    const [attendanceSummary, setAttendanceSummary] = useState(null);
 
     useEffect(() => {
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         setDateString(new Date().toLocaleDateString('en-US', options));
+        fetchAttendanceSummary();
     }, []);
+
+    const fetchAttendanceSummary = async () => {
+        try {
+            // Set end_date to today and start_date to 30 days ago
+            const end_date = new Date().toISOString().split('T')[0];
+            const start_date = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0];
+
+            const { data } = await axiosInstance.get("/attendance/my-attendance", {
+                params: { start_date, end_date }
+            });
+
+            if (data.success) {
+                setAttendanceSummary({
+                    latest: data.latest,
+                    stats: data.stats
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching attendance summary:", error);
+        }
+    };
+
 
     return (
         <main className="p-[10px] pl-[10px] md:pl-[17rem] w-full bg-gray-50 min-h-screen">
@@ -47,21 +72,6 @@ const Welcom = () => {
 
                     {/* MINI PROFILE SUMMARY */}
                     <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center h-full">
-                        <div className="w-20 h-20 rounded-full bg-gray-700 mb-4 overflow-hidden border-4 border-gray-600">
-                            <img
-                                src={user?.avatar?.url}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
-                            />
-                            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400 hidden">
-                                {user?.full_name?.charAt(0)}
-                            </div>
-                        </div>
                         <h3 className="text-xl font-bold">{user?.full_name}</h3>
                         <p className="text-gray-400 text-sm mb-6">
                             {user?.student_details?.reg_number || user?.reg_number || "No Reg No"}
@@ -82,9 +92,83 @@ const Welcom = () => {
                     </div>
                 </div>
 
+                {/* ATTENDANCE SUMMARY */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    {/* LATEST STATUS */}
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center justify-between ring-1 ring-gray-200/50">
+                        <div className="flex items-center gap-4">
+                            <div className={`p-3 rounded-2xl ${attendanceSummary?.latest?.status ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                <ClipboardCheck className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Latest Attendance</p>
+                                <h4 className="text-lg font-bold text-gray-800">
+                                    {attendanceSummary?.latest ? (attendanceSummary.latest.status ? "Present" : "Absent") : "No Data"}
+                                </h4>
+                                <p className="text-xs text-gray-400 italic">
+                                    {attendanceSummary?.latest ? new Date(attendanceSummary.latest.attendance_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : "---"}
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-300" />
+                    </div>
+
+                    {/* MONTHLY SUMMARY */}
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 ring-1 ring-gray-200/50">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
+                                    <ChartBar className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Attendance (Last 30 Days)</p>
+                                    <h4 className="text-2xl font-black text-gray-800">
+                                        {attendanceSummary?.stats?.percentage || "0.00"}%
+                                    </h4>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase">Status</p>
+                                <p className={`text-xs font-bold ${Number(attendanceSummary?.stats?.percentage) >= 75 ? 'text-green-600' : 'text-orange-600'}`}>
+                                    {Number(attendanceSummary?.stats?.percentage) >= 75 ? 'Good' : 'Low'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                            <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100/50 group hover:bg-green-50 transition-colors">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                    <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Present</p>
+                                </div>
+                                <p className="text-2xl font-black text-green-700">
+                                    {attendanceSummary?.stats?.present_days || 0}
+                                    {/* <span className="text-xs font-medium text-green-600 ml-1">Days</span> */}
+                                </p>
+                            </div>
+                            <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100/50 group hover:bg-red-50 transition-colors">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                    <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Absent</p>
+                                </div>
+                                <p className="text-2xl font-black text-red-700">
+                                    {attendanceSummary?.stats?.absent_days || 0}
+                                    {/* <span className="text-xs font-medium text-red-600 ml-1">Days</span> */}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="w-full h-2 bg-gray-100 rounded-full mt-6 overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-1000 ${Number(attendanceSummary?.stats?.percentage) >= 75 ? 'bg-green-500' : 'bg-orange-500'}`}
+                                style={{ width: `${attendanceSummary?.stats?.percentage || 0}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     );
-}
+};
 
 export default Welcom;

@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Menu } from "lucide-react";
 import { toggleNavbar } from "../../Store/slices/popupSlice";
-import avatar from "../../../public/avatar.jpg";
 
 const Header = () => {
     const { user } = useSelector((state) => state.auth);
@@ -19,8 +18,6 @@ const Header = () => {
 
         <div className="flex gap-3 items-center">
             <Menu className="block md:hidden" onClick={()=> dispatch(toggleNavbar())} />
-                <img src={user?.avatar?.url || avatar} alt={user?.name || avatar}
-                    className="w-14 h-14 rounded-full object-cover" />
         </div>
     </header>
     </>);

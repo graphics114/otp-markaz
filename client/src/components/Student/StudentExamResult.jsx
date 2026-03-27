@@ -2,8 +2,45 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyExamResult } from "../../Store/slices/examResultSlice";
 import { downloadResultPDF } from "../../utils/resultPdf";
-import { ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, CheckCircle, FileText } from "lucide-react";
 import Header from "./Head";
+
+const SubjectResultCard = ({ subjectName, obtainedMarks, maxMarks = 100 }) => {
+  if (obtainedMarks === null || obtainedMarks === undefined || obtainedMarks === "") return null;
+
+  const isAbsent = obtainedMarks === 0;
+  const passed = !isAbsent && Number(obtainedMarks) >= 30; // Assuming 30 is passing
+  const percentage = isAbsent ? "0.00" : ((Number(obtainedMarks) / maxMarks) * 100).toFixed(2);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <CheckCircle size={18} className="text-green-600" />
+          <span className="font-semibold text-gray-800">{subjectName}</span>
+        </div>
+        <span className={`px-3 py-1 text-xs font-bold rounded-md ${passed ? "bg-blue-600 text-white" : "bg-red-600 text-white"}`}>
+          {passed ? "Pass" : "Fail"}
+        </span>
+      </div>
+
+      <div className="flex justify-between items-center mt-2 px-2">
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-500 mb-1">Obtained</span>
+          <span className="text-lg font-bold text-gray-900">{isAbsent ? "A" : obtainedMarks}</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-500 mb-1">Max</span>
+          <span className="text-lg font-bold text-gray-900">{maxMarks}</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <span className="text-xs text-gray-500 mb-1">Percentage</span>
+          <span className={`text-lg font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{percentage}%</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Sub-component for individual result card
 const ResultCard = ({ result }) => {
@@ -13,13 +50,34 @@ const ResultCard = ({ result }) => {
   const hizbBlank = isBlank(result.hizb_marks);
   const hifizValid = !hifizBlank && Number(result.hifiz_marks) >= 30;
   const hizbValid = !hizbBlank && Number(result.hizb_marks) >= 30;
-  
+
   const isPassed =
     result.hifiz_marks === 1 ||
     result.hizb_marks === 1 ||
     (hifizValid && hizbValid) ||
     (hifizBlank && hizbValid) ||
     (hizbBlank && hifizValid);
+
+  const validHifiz = result.hifiz_marks !== null && result.hifiz_marks !== undefined && result.hifiz_marks !== "" && result.hifiz_marks !== 1;
+  const validHizb = result.hizb_marks !== null && result.hizb_marks !== undefined && result.hizb_marks !== "" && result.hizb_marks !== 1;
+
+  let totalObtained = 0;
+  let totalMax = 0;
+  let subjectsCount = 0;
+
+  if (validHifiz) {
+    totalObtained += result.hifiz_marks === 0 ? 0 : Number(result.hifiz_marks);
+    totalMax += 100;
+    subjectsCount++;
+  }
+
+  if (validHizb) {
+    totalObtained += result.hizb_marks === 0 ? 0 : Number(result.hizb_marks);
+    totalMax += 100;
+    subjectsCount++;
+  }
+
+  const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden transition-all duration-300 hover:shadow-md">
@@ -48,62 +106,45 @@ const ResultCard = ({ result }) => {
 
       {/* Collapsible Content */}
       {isOpen && (
-        <div className="p-6 bg-background animate-fade-in-up">
-          <div className="flex sm:hidden justify-between items-center mb-6">
-            <span className="text-sm font-medium text-muted-foreground mr-2">Status:</span>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${isPassed
-              ? "bg-green-100 text-green-700 border-green-200"
-              : "bg-red-100 text-red-700 border-red-200"
-              }`}>
-              {isPassed ? "PASSED" : "FAILED"}
-            </span>
+        <div className="p-4 sm:p-6 bg-gray-50/50 animate-fade-in-up border-t border-border">
+
+          {/* Overall Performance */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText size={18} className="text-gray-800" />
+              <h4 className="font-bold text-gray-800">Overall Performance</h4>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+              <span className={`px-3 py-1 text-xs font-bold rounded-md inline-block mb-3 ${isPassed ? "bg-blue-600 text-white" : "bg-red-600 text-white"}`}>
+                {isPassed ? "Passed" : "Failed"}
+              </span>
+
+              <div className="mb-2">
+                <p className="text-sm text-gray-500">{subjectsCount} subjects</p>
+              </div>
+
+              <div className="mb-1">
+                <span className="text-3xl font-bold text-blue-600">{overallPercentage}%</span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{totalObtained} / {totalMax} marks</p>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Marks Card 1 */}
-            {result.hifiz_marks !== null && result.hifiz_marks !== undefined && result.hifiz_marks !== "" && (
-  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-100 dark:border-blue-800 flex flex-col items-center">
-    <span className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">
-      Hifiz Marks
-    </span>
+          {/* Subject-wise Results */}
+          <div className="mb-4">
+            <h4 className="font-bold text-gray-800 mb-3 ml-1">Subject-wise Results</h4>
 
-    {result.hifiz_marks === 0 ? (
-      <span className="text-2xl font-bold text-red-600 mt-2">
-        Absent
-      </span>
-    ) : (
-      <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
-        {result.hifiz_marks}
-      </span>
-    )}
-  </div>
-)}
-
-
-            {/* Marks Card 2 */}
-            {result.hizb_marks !== null && result.hizb_marks !== undefined && result.hizb_marks !== "" && (
-  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-100 dark:border-purple-800 flex flex-col items-center">
-    <span className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">
-      Hizb Marks
-    </span>
-
-    {result.hizb_marks === 0 ? (
-      <span className="text-2xl font-bold text-red-600 mt-2">
-        Absent
-      </span>
-    ) : (
-      <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-2">
-        {result.hizb_marks}
-      </span>
-    )}
-  </div>
-)}
-
-</div>
-
+            <div className="flex flex-col gap-4">
+              <SubjectResultCard subjectName="Hifiz" obtainedMarks={result.hifiz_marks === 1 ? null : result.hifiz_marks} />
+              <SubjectResultCard subjectName="Hizb" obtainedMarks={result.hizb_marks === 1 ? null : result.hizb_marks} />
+            </div>
+          </div>
 
           {/* Footer Info */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 border-t border-border gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 border-t border-gray-200 gap-4 mt-6">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Student Name</p>
               <p className="font-medium text-foreground">{result.full_name}</p>

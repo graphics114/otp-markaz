@@ -53,9 +53,9 @@ const RegisterAdmition = () => {
   };
 
 
-  const [avatarFile, 
-    // setAvatarFile
-  ] = useState(null);
+  // const [avatarFile, 
+  //   // setAvatarFile
+  // ] = useState(null);
 
   // const sendWhatsApp = () => {
   //   const phone = editData.whatsapp_number; // 9876543210
@@ -76,24 +76,8 @@ const RegisterAdmition = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (avatarFile) {
-      const formData = new FormData();
-
-      Object.keys(editData).forEach((key) => {
-        formData.append(key, editData[key]);
-      });
-
-      formData.append("photo", avatarFile);
-
-      dispatch(registerAdmition(formData));
-      dispatch(toggleRegisterAdmition())
-      // sendWhatsApp();
-    } else {
-      dispatch(registerAdmition(editData));
-      dispatch(toggleRegisterAdmition())
-      // sendWhatsApp();
-    }
+    dispatch(registerAdmition(editData));
+    dispatch(toggleRegisterAdmition());
   };
 
   const BLOOD_GROUPS = [

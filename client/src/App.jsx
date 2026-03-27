@@ -19,7 +19,9 @@ import StdSideBar from "./components/Student/SideBar";
 import Profile from "./components/Student/Myprofile";
 import StudentExamResult from "./components/Student/StudentExamResult";
 import Welcom from "./components/Student/Welcom";
+import StudentAttendance from "./components/Student/StudentAttendance";
 import Admition from "./Pages/admition";
+
 
 const App = () => {
 
@@ -41,8 +43,11 @@ const App = () => {
         return <Profile />;
       case "Result":
         return <StudentExamResult />;
+      case "Attendance":
+        return <StudentAttendance />;
       default:
         return <Welcom />;
+
     }
   };
 

@@ -11,6 +11,8 @@ const SideBar = () => {
 
     const [activeLink, setActiveLink] = useState(0);
     const [isResultDropdownOpen, setIsResultDropdownOpen] = useState(false);
+    const [isStudentsDropdownOpen, setIsStudentsDropdownOpen] = useState(false);
+
 
     const Links = [
         {
@@ -19,7 +21,12 @@ const SideBar = () => {
         },
         {
             icon: <GraduationCap />,
-            title: "Students"
+            title: "Students",
+            isDropdown: true,
+            subLinks: [
+                { title: "Students", icon: <GraduationCap className="w-4 h-4" /> },
+                { title: "Attendance", icon: <ClipboardCheck className="w-4 h-4" /> },
+            ]
         },
         {
             icon: <ClipboardCheck />,
@@ -42,7 +49,9 @@ const SideBar = () => {
             icon: <User />,
             title: "Profile"
         },
+
     ];
+
 
 
     const { isNavbarOpened } = useSelector((state) => state.extra);
@@ -79,20 +88,27 @@ const SideBar = () => {
                 </div>
 
                 {Links.map((item, index) => {
+                    const isOpen = item.title === "Result" ? isResultDropdownOpen :
+                        item.title === "Students" ? isStudentsDropdownOpen : false;
+                    const toggle = () => {
+                        if (item.title === "Result") setIsResultDropdownOpen(!isResultDropdownOpen);
+                        if (item.title === "Students") setIsStudentsDropdownOpen(!isStudentsDropdownOpen);
+                    };
+
                     if (item.isDropdown) {
                         return (
                             <div key={index} className="space-y-1">
                                 <button
-                                    onClick={() => setIsResultDropdownOpen(!isResultDropdownOpen)}
+                                    onClick={toggle}
                                     className={`hover:bg-gray-200 w-full transition-all duration-300 flex items-center justify-between rounded-md cursor-pointer px-3 py-3 gap-2`}
                                 >
                                     <div className="flex items-center gap-2">
                                         {item.icon} {item.title}
                                     </div>
-                                    {isResultDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                 </button>
 
-                                {isResultDropdownOpen && (
+                                {isOpen && (
                                     <div className="ml-4 pl-2 border-l border-gray-100 space-y-1 overflow-hidden transition-all">
                                         {item.subLinks.map((sub, subIdx) => (
                                             <button
@@ -113,6 +129,7 @@ const SideBar = () => {
                             </div>
                         );
                     }
+
 
                     return (
                         <button onClick={() => {
