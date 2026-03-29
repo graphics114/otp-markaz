@@ -5,6 +5,7 @@ const DawaResult = ({ onBack }) => {
     const courses = [
         { id: "HI1", name: "HI 1", color: "from-blue-500 to-indigo-600" },
         { id: "HI2", name: "HI 2", color: "from-indigo-500 to-purple-600" },
+        { id: "HI3", name: "HI 3", color: "from-violet-500 to-fuchsia-600" },
         { id: "HS1", name: "HS 1", color: "from-purple-500 to-pink-600" },
         { id: "HS2", name: "HS 2", color: "from-pink-500 to-rose-600" },
         { id: "BS1", name: "BS 1", color: "from-orange-500 to-red-600" },
@@ -85,7 +86,7 @@ const DawaResult = ({ onBack }) => {
                         <div className="mt-6 md:mt-0 flex gap-4">
                             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                                 <p className="text-xs text-gray-400 uppercase font-bold">Courses</p>
-                                <p className="text-2xl font-bold">09</p>
+                                <p className="text-2xl font-bold">10</p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
                                 <p className="text-xs text-gray-400 uppercase font-bold">Action</p>

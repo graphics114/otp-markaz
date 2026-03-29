@@ -29,6 +29,7 @@ const DawaStudents = () => {
     "All Course",
     "HI1",
     "HI2",
+    "HI3",
     "HS1",
     "HS2",
     "BS1",

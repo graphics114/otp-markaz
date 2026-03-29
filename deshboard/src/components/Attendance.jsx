@@ -104,7 +104,7 @@ const Attendance = () => {
         },
         {
             instu: "Uthmaniyya College...",
-            batches: ["HI1", "HI2", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
+            batches: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
         },
     ];
 
