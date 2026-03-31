@@ -58,7 +58,10 @@ export const fetchStudentsForAttendance = catchAsyncError(async (req, res, next)
          FROM students s
          JOIN users u ON s.user_id = u.id
          WHERE s.institution = $1 AND s.joining_batch = $2
-         ORDER BY s.roll_number ASC, u.full_name ASC`,
+         ORDER BY
+           NULLIF(regexp_replace(COALESCE(s.roll_number, ''), '\\D', '', 'g'), '')::int NULLS LAST,
+           s.roll_number ASC NULLS LAST,
+           u.full_name ASC`,
         [institution, joining_batch]
     );
 
@@ -134,7 +137,10 @@ export const fetchAttendanceReport = catchAsyncError(async (req, res, next) => {
         FROM students s
         JOIN users u ON s.user_id = u.id
         WHERE s.institution = $1 AND s.joining_batch = $2
-        ORDER BY s.roll_number ASC, u.full_name ASC
+        ORDER BY
+          NULLIF(regexp_replace(COALESCE(s.roll_number, ''), '\\D', '', 'g'), '')::int NULLS LAST,
+          s.roll_number ASC NULLS LAST,
+          u.full_name ASC
     `;
     const studentsResult = await database.query(studentsQuery, [institution, joining_batch]);
     const students = studentsResult.rows;

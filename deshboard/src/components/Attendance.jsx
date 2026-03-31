@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "./Header";
 import {
@@ -18,6 +18,7 @@ const Attendance = () => {
     const { user } = useSelector((state) => state.auth);
     const { loading, programs, students, attendanceData, attendanceReport } = useSelector((state) => state.attendance);
 
+    const isAdmin = user?.role === "Admin";
 
     const [activeTab, setActiveTab] = useState("mark"); // "mark" or "report"
 
@@ -39,6 +40,27 @@ const Attendance = () => {
     const [newProgramName, setNewProgramName] = useState("");
     const [localAttendance, setLocalAttendance] = useState({}); // {student_id: status}
 
+    const sortedStudents = useMemo(() => {
+        const getRollNum = (v) => {
+            const str = (v ?? "").toString();
+            const digits = str.replace(/\D/g, "");
+            return digits ? Number.parseInt(digits, 10) : Number.POSITIVE_INFINITY;
+        };
+
+        return [...students].sort((a, b) => {
+            const ar = getRollNum(a?.roll_number);
+            const br = getRollNum(b?.roll_number);
+            if (ar !== br) return ar - br;
+
+            const as = (a?.roll_number ?? "").toString();
+            const bs = (b?.roll_number ?? "").toString();
+            const byStr = as.localeCompare(bs, undefined, { numeric: true, sensitivity: "base" });
+            if (byStr !== 0) return byStr;
+
+            return (a?.full_name ?? "").localeCompare(b?.full_name ?? "", undefined, { sensitivity: "base" });
+        });
+    }, [students]);
+
     // Role-based institution locking
     useEffect(() => {
         if (user?.role === "Hifiz") {
@@ -53,6 +75,13 @@ const Attendance = () => {
     useEffect(() => {
         dispatch(fetchPrograms());
     }, [dispatch]);
+
+    // Staff should not access admin-only views (report/details)
+    useEffect(() => {
+        if (!isAdmin && activeTab !== "mark") {
+            setActiveTab("mark");
+        }
+    }, [isAdmin, activeTab]);
 
     // Marking logic
     useEffect(() => {
@@ -80,15 +109,15 @@ const Attendance = () => {
     }, [dispatch, filters.program_id, filters.attendance_date]);
 
     useEffect(() => {
-        if (students.length > 0) {
+        if (sortedStudents.length > 0) {
             const initial = {};
-            students.forEach(s => {
+            sortedStudents.forEach(s => {
                 const existing = attendanceData?.find(a => a.student_id === s.id);
                 initial[s.id] = existing !== undefined ? existing.status : true;
             });
             setLocalAttendance(initial);
         }
-    }, [students, attendanceData]);
+    }, [sortedStudents, attendanceData]);
 
     // Report logic
     const handleFetchReport = () => {
@@ -217,22 +246,26 @@ const Attendance = () => {
                             <ListChecks className="w-4 h-4" />
                             Mark Attendance
                         </button>
-                        <button
-                            onClick={() => setActiveTab("report")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "report" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
-                                }`}
-                        >
-                            <BarChart3 className="w-4 h-4" />
-                            Percentage View
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("details")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
-                                }`}
-                        >
-                            <UserSearch className="w-4 h-4" />
-                            Student Details
-                        </button>
+                        {isAdmin && (
+                            <>
+                                <button
+                                    onClick={() => setActiveTab("report")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "report" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <BarChart3 className="w-4 h-4" />
+                                    Percentage View
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("details")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <UserSearch className="w-4 h-4" />
+                                    Student Details
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -252,7 +285,7 @@ const Attendance = () => {
                                             name="institution"
                                             value={filters.institution}
                                             onChange={handleFilterChange}
-                                            disabled={user?.role !== "Admin"}
+                                            disabled={!isAdmin}
                                             className="border p-2 rounded-lg bg-gray-50 outline disabled:bg-gray-100 disabled:text-gray-500"
                                         >
                                             <option value="">Select Institution</option>
@@ -281,24 +314,26 @@ const Attendance = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-600">
-                                    <BookOpen className="w-5 h-5" />
-                                    Programs
-                                </h2>
-                                <form onSubmit={handleAddProgram} className="flex gap-2 mb-4">
-                                    <input type="text" placeholder="New program..." value={newProgramName} onChange={(e) => setNewProgramName(e.target.value)} className="flex-1 border p-2 rounded-lg text-sm outline-none" />
-                                    <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"><Plus className="w-5 h-5" /></button>
-                                </form>
-                                <div className="max-h-48 overflow-y-auto space-y-2 text-sm">
-                                    {programs.map(p => (
-                                        <div key={p.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg group">
-                                            <span className="text-gray-700 font-medium">{p.program_name}</span>
-                                            <button onClick={() => dispatch(deleteProgram(p.id))} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    ))}
+                            {isAdmin && (
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-600">
+                                        <BookOpen className="w-5 h-5" />
+                                        Programs
+                                    </h2>
+                                    <form onSubmit={handleAddProgram} className="flex gap-2 mb-4">
+                                        <input type="text" placeholder="New program..." value={newProgramName} onChange={(e) => setNewProgramName(e.target.value)} className="flex-1 border p-2 rounded-lg text-sm outline-none" />
+                                        <button type="submit" className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition"><Plus className="w-5 h-5" /></button>
+                                    </form>
+                                    <div className="max-h-48 overflow-y-auto space-y-2 text-sm">
+                                        {programs.map(p => (
+                                            <div key={p.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg group">
+                                                <span className="text-gray-700 font-medium">{p.program_name}</span>
+                                                <button onClick={() => dispatch(deleteProgram(p.id))} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Right: List */}
@@ -308,11 +343,13 @@ const Attendance = () => {
                                     <div>
                                         <h2 className="text-lg font-semibold">Student List</h2>
                                         {filters.institution && (
-                                            <p className="text-xs text-blue-600 font-bold">{filters.institution} - Batch {filters.joining_batch}</p>
+                                            <p className="text-xs text-blue-600 font-bold">
+                                                {filters.institution} - Batch {filters.joining_batch || 'N/A'}
+                                            </p>
                                         )}
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        {students.length > 0 && (
+                                        {sortedStudents.length > 0 && (
                                             <button
                                                 onClick={handlePrintMarking}
                                                 className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition"
@@ -328,40 +365,42 @@ const Attendance = () => {
                                     </div>
                                 </div>
                                 <div className="overflow-x-auto" id="daily-attendance-table">
-                                    {/* Professional Print Header (Daily Attendance) */}
-                                    <div className="print-header p-8 border-b-2 border-gray-100 mb-8 bg-white">
-                                        <div className="flex justify-between items-start mb-8">
-                                            <div>
-                                                <h1 className="text-xl font-black text-blue-900 tracking-tighter uppercase">Attendance Sheet</h1>
+                                    {/* Professional Print Header (Daily Attendance) - Admin only */}
+                                    {isAdmin && (
+                                        <div className="print-header p-8 border-b-2 border-gray-100 mb-8 bg-white">
+                                            <div className="flex justify-between items-start mb-8">
+                                                <div>
+                                                    <h1 className="text-xl font-black text-blue-900 tracking-tighter uppercase">Attendance Sheet</h1>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Official Record</p>
+                                                    <p className="text-xs text-blue-600 font-bold mt-1">Date: {filters.attendance_date}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Official Record</p>
-                                                <p className="text-xs text-blue-600 font-bold mt-1">Date: {filters.attendance_date}</p>
-                                            </div>
-                                        </div>
 
-                                        <div className="grid grid-cols-2 gap-x-12 gap-y-4 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
-                                            <div className="space-y-3">
-                                                <p className="text-sm font-medium text-gray-600">Institution: <span className="font-black text-gray-900 ml-1 pb-0.5">{filters.institution || 'N/A'}</span></p>
-                                                <p className="text-sm font-medium text-gray-600">Program: <span className="font-black text-gray-900 ml-1 pb-0.5">{programs.find(p => p.id === filters.program_id)?.program_name || 'N/A'}</span></p>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <p className="text-sm font-medium text-gray-600">Batch: <span className="font-black text-gray-900 ml-1 pb-0.5">{filters.joining_batch || 'N/A'}</span></p>
-                                                <div className="flex gap-6 items-center mt-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm border border-green-600"></div>
-                                                        <span className="text-xs font-black text-green-700">{Object.values(localAttendance).filter(v => v !== false).length}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm border border-red-600"></div>
-                                                        <span className="text-xs font-black text-red-700">{Object.values(localAttendance).filter(v => v === false).length}</span>
+                                            <div className="grid grid-cols-2 gap-x-12 gap-y-4 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+                                                <div className="space-y-3">
+                                                    <p className="text-sm font-medium text-gray-600">Institution: <span className="font-black text-gray-900 ml-1 pb-0.5">{filters.institution || 'N/A'}</span></p>
+                                                    <p className="text-sm font-medium text-gray-600">Program: <span className="font-black text-gray-900 ml-1 pb-0.5">{programs.find(p => p.id === filters.program_id)?.program_name || 'N/A'}</span></p>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <p className="text-sm font-medium text-gray-600">Batch: <span className="font-black text-gray-900 ml-1 pb-0.5">{filters.joining_batch || 'N/A'}</span></p>
+                                                    <div className="flex gap-6 items-center mt-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm border border-green-600"></div>
+                                                            <span className="text-xs font-black text-green-700">{Object.values(localAttendance).filter(v => v !== false).length}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm border border-red-600"></div>
+                                                            <span className="text-xs font-black text-red-700">{Object.values(localAttendance).filter(v => v === false).length}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {students.length > 0 ? (
+                                    {sortedStudents.length > 0 ? (
                                         <div className="p-2">
                                             {/* UI ONLY: ALIGNED SUMMARY */}
                                             <div className="flex items-center gap-6 mb-8 p-3 bg-white rounded-2xl shadow-sm border border-gray-100 max-w-fit mx-auto no-print">
@@ -383,13 +422,13 @@ const Attendance = () => {
 
                                                 {/* TOTAL */}
                                                 <div className="flex items-center gap-2 pl-2">
-                                                    <span className="text-xl font-black text-blue-600 leading-none">{students.length}</span>
+                                                    <span className="text-xl font-black text-blue-600 leading-none">{sortedStudents.length}</span>
                                                 </div>
                                             </div>
 
                                             {/* UI ONLY: ATTENDANCE GRID */}
                                             <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3 pb-4 no-print px-6">
-                                                {students.map((s) => (
+                                                {sortedStudents.map((s) => (
                                                     <button
                                                         key={s.id}
                                                         onClick={() => toggleStatus(s.id)}
@@ -415,7 +454,7 @@ const Attendance = () => {
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-gray-50">
-                                                        {students.map((s) => (
+                                                        {sortedStudents.map((s) => (
                                                             <tr key={s.id} className="border-b border-gray-50">
                                                                 <td className="py-4 px-6 text-center font-bold text-blue-600 text-sm">{s.roll_number || '-'}</td>
                                                                 <td className="py-4 px-6 text-sm font-black text-gray-800 uppercase tracking-tight">{s.full_name}</td>
@@ -447,7 +486,7 @@ const Attendance = () => {
                                         </div>
                                     )}
                                 </div>
-                                {students.length > 0 && (
+                                {sortedStudents.length > 0 && (
                                     <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                                         <p className="text-xs text-gray-500 italic">Mark status and click save</p>
                                         <button onClick={handleSave} disabled={loading || !filters.program_id} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50">Save</button>
@@ -471,7 +510,7 @@ const Attendance = () => {
                                         name="institution"
                                         value={reportFilters.institution}
                                         onChange={handleReportFilterChange}
-                                        disabled={user?.role !== "Admin"}
+                                        disabled={!isAdmin}
                                         className="border p-2 rounded-lg bg-gray-50 outline-none text-sm disabled:bg-gray-100 disabled:text-gray-500"
                                     >
                                         <option value="">Select Institution</option>
@@ -537,25 +576,27 @@ const Attendance = () => {
                                 )}
                             </div>
                             <div className="overflow-x-auto" id="attendance-report-table">
-                                {/* Professional Print Header (Percentage Report) */}
-                                <div className="print-header p-8 border-b-2 border-gray-100 mb-8 bg-white uppercase">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div>
-                                            <h1 className="text-xl font-black text-blue-900 tracking-tighter">Attendance Performance Report</h1>
+                                {/* Professional Print Header (Percentage Report) - Admin only */}
+                                {isAdmin && (
+                                    <div className="print-header p-8 border-b-2 border-gray-100 mb-8 bg-white uppercase">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div>
+                                                <h1 className="text-xl font-black text-blue-900 tracking-tighter">Attendance Performance Report</h1>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Analytical Record</p>
+                                                <p className="text-xs text-blue-600 font-bold mt-1">Period: {reportFilters.start_date} to {reportFilters.end_date}</p>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Analytical Record</p>
-                                            <p className="text-xs text-blue-600 font-bold mt-1">Period: {reportFilters.start_date} to {reportFilters.end_date}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-2 gap-x-12 gap-y-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                                        <p className="text-sm font-medium text-gray-600 tracking-tight">Institution: <span className="font-black text-gray-900 ml-1">{reportFilters.institution || 'ALL'}</span></p>
-                                        <p className="text-sm font-medium text-gray-600 tracking-tight">Batch Identifier: <span className="font-black text-gray-900 ml-1">{reportFilters.joining_batch || 'ALL'}</span></p>
-                                        <p className="text-sm font-medium text-gray-600 tracking-tight">Program Focus: <span className="font-black text-gray-900 ml-1">{reportFilters.program_id === 'all' ? 'Unified (All Programs)' : (programs.find(p => p.id === reportFilters.program_id)?.program_name || 'N/A')}</span></p>
-                                        <p className="text-sm font-black text-blue-700 italic tracking-tighter">Generated on {new Date().toLocaleDateString()}</p>
+                                        <div className="grid grid-cols-2 gap-x-12 gap-y-4 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                                            <p className="text-sm font-medium text-gray-600 tracking-tight">Institution: <span className="font-black text-gray-900 ml-1">{reportFilters.institution || 'ALL'}</span></p>
+                                            <p className="text-sm font-medium text-gray-600 tracking-tight">Batch Identifier: <span className="font-black text-gray-900 ml-1">{reportFilters.joining_batch || 'ALL'}</span></p>
+                                            <p className="text-sm font-medium text-gray-600 tracking-tight">Program Focus: <span className="font-black text-gray-900 ml-1">{reportFilters.program_id === 'all' ? 'Unified (All Programs)' : (programs.find(p => p.id === reportFilters.program_id)?.program_name || 'N/A')}</span></p>
+                                            <p className="text-sm font-black text-blue-700 italic tracking-tighter">Generated on {new Date().toLocaleDateString()}</p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
 
                                 {loading ? (
