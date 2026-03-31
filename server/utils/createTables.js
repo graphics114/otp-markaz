@@ -3,12 +3,14 @@ import { createStudentsTable } from "../models/studentsTable.js"
 import { createAdmissionTable } from "../models/admissionTable.js"
 import { createExamResultsTable } from "../models/examResultsTable.js"
 import { createResultPublishTable } from "../models/resultPublishTable.js"
+import { allowDuplicateRollNumbers } from "./migrations/allowDuplicateRollNumbers.js"
 
 
 export const createTables = async () => {
     try {
         await createUserTable();
         await createStudentsTable();
+        await allowDuplicateRollNumbers();
         await createAdmissionTable();
         await createResultPublishTable();
         await createExamResultsTable();

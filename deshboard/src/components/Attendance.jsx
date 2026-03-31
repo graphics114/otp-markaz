@@ -208,10 +208,10 @@ const Attendance = () => {
                         <p className="text-sm text-gray-600">Track and manage student attendance and reports</p>
                     </div>
 
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+                    <div className="flex flex-wrap bg-white p-1 rounded-xl shadow-sm border border-gray-100 gap-1">
                         <button
                             onClick={() => setActiveTab("mark")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "mark" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "mark" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
                                 }`}
                         >
                             <ListChecks className="w-4 h-4" />
@@ -219,7 +219,7 @@ const Attendance = () => {
                         </button>
                         <button
                             onClick={() => setActiveTab("report")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "report" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "report" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
                                 }`}
                         >
                             <BarChart3 className="w-4 h-4" />
@@ -227,7 +227,7 @@ const Attendance = () => {
                         </button>
                         <button
                             onClick={() => setActiveTab("details")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full sm:w-auto justify-center ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-gray-50"
                                 }`}
                         >
                             <UserSearch className="w-4 h-4" />
