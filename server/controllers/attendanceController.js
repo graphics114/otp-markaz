@@ -53,17 +53,25 @@ export const fetchStudentsForAttendance = catchAsyncError(async (req, res, next)
         return next(new ErrorHandler("Institution and Batch are required", 400));
     }
 
-    const result = await database.query(
-        `SELECT s.id, u.full_name, s.reg_number, s.roll_number 
+    let queryStr = `SELECT s.id, u.full_name, s.reg_number, s.roll_number, s.joining_batch 
          FROM students s
          JOIN users u ON s.user_id = u.id
-         WHERE s.institution = $1 AND s.joining_batch = $2
-         ORDER BY
+         WHERE s.institution = $1`;
+    
+    let queryParams = [institution];
+
+    if (joining_batch && joining_batch !== "all") {
+        queryParams.push(joining_batch);
+        queryStr += ` AND s.joining_batch = $${queryParams.length}`;
+    }
+
+    queryStr += ` ORDER BY
+           s.joining_batch ASC,
            NULLIF(regexp_replace(COALESCE(s.roll_number, ''), '\\D', '', 'g'), '')::int NULLS LAST,
            s.roll_number ASC NULLS LAST,
-           u.full_name ASC`,
-        [institution, joining_batch]
-    );
+           u.full_name ASC`;
+
+    const result = await database.query(queryStr, queryParams);
 
 
     res.status(200).json({
@@ -132,17 +140,26 @@ export const fetchAttendanceReport = catchAsyncError(async (req, res, next) => {
     }
 
     // First fetch students in the batch
-    const studentsQuery = `
-        SELECT s.id, u.full_name, s.reg_number, s.roll_number 
+    let studentsQueryStr = `
+        SELECT s.id, u.full_name, s.reg_number, s.roll_number, s.joining_batch
         FROM students s
         JOIN users u ON s.user_id = u.id
-        WHERE s.institution = $1 AND s.joining_batch = $2
-        ORDER BY
+        WHERE s.institution = $1
+    `;
+    let studentsQueryParams = [institution];
+
+    if (joining_batch && joining_batch !== "all") {
+        studentsQueryParams.push(joining_batch);
+        studentsQueryStr += ` AND s.joining_batch = $${studentsQueryParams.length}`;
+    }
+
+    studentsQueryStr += ` ORDER BY
+          s.joining_batch ASC,
           NULLIF(regexp_replace(COALESCE(s.roll_number, ''), '\\D', '', 'g'), '')::int NULLS LAST,
           s.roll_number ASC NULLS LAST,
           u.full_name ASC
     `;
-    const studentsResult = await database.query(studentsQuery, [institution, joining_batch]);
+    const studentsResult = await database.query(studentsQueryStr, studentsQueryParams);
     const students = studentsResult.rows;
 
     if (students.length === 0) {

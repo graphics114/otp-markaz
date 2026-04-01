@@ -174,6 +174,7 @@ const Attendance = () => {
         const data = attendanceReport.map(row => ({
             "Roll No": row.roll_number || '-',
             "Student Name": row.full_name,
+            "Batch": row.joining_batch || '-',
             "Total Attendance": row.total_days,
             "Present": row.present_days,
             "Percentage (%)": row.percentage
@@ -297,6 +298,7 @@ const Attendance = () => {
                                         <label className="text-xs font-bold text-gray-500 uppercase">Batch</label>
                                         <select name="joining_batch" value={filters.joining_batch} onChange={handleFilterChange} disabled={!filters.institution} className="border p-2 rounded-lg bg-gray-50 outline-none disabled:opacity-50">
                                             <option value="">Select Batch</option>
+                                            <option value="all">All Batches</option>
                                             {institutions.find(i => i.instu === filters.institution)?.batches.map(b => <option key={b} value={b}>{b}</option>)}
                                         </select>
                                     </div>
@@ -522,6 +524,7 @@ const Attendance = () => {
                                     <label className="text-xs font-bold text-gray-500 uppercase">Batch</label>
                                     <select name="joining_batch" value={reportFilters.joining_batch} onChange={handleReportFilterChange} disabled={!reportFilters.institution} className="border p-2 rounded-lg bg-gray-50 outline-none text-sm disabled:opacity-50">
                                         <option value="">Select Batch</option>
+                                        <option value="all">All Batches</option>
                                         {institutions.find(i => i.instu === reportFilters.institution)?.batches.map(b => <option key={b} value={b}>{b}</option>)}
                                     </select>
                                 </div>
@@ -611,6 +614,7 @@ const Attendance = () => {
                                                 <tr>
                                                     <th className="py-4 px-6 text-center w-24">Roll No</th>
                                                     <th className="py-4 px-6 text-left">Student Name</th>
+                                                    <th className="py-4 px-6 text-center w-24">Batch</th>
                                                     <th className="py-4 px-6 text-center w-32">Total</th>
                                                     <th className="py-4 px-6 text-center w-24 text-green-600">Present</th>
                                                     <th className="py-4 px-6 text-center w-24 text-red-500">Absent</th>
@@ -622,6 +626,7 @@ const Attendance = () => {
                                                     <tr key={row.id} className="hover:bg-blue-50/30 transition-colors border-b border-gray-50">
                                                         <td className="py-4 px-6 text-center font-bold text-blue-600 tracking-wider bg-blue-50/20 text-sm">{row.roll_number || '-'}</td>
                                                         <td className="py-4 px-6 text-left font-black text-gray-800 uppercase text-xs tracking-tight">{row.full_name}</td>
+                                                        <td className="py-4 px-6 text-center text-gray-700 font-bold text-sm bg-gray-50/50">{row.joining_batch || '-'}</td>
                                                         <td className="py-4 px-6 text-center text-gray-600 text-sm font-bold">{row.total_days}</td>
                                                         <td className="py-4 px-6 text-center text-green-600 font-bold text-sm tracking-tighter">{row.present_days}</td>
                                                         <td className="py-4 px-6 text-center text-red-500 font-bold text-sm tracking-tighter">{row.total_days - row.present_days}</td>
