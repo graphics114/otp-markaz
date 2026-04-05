@@ -298,7 +298,6 @@ const Attendance = () => {
                                         <label className="text-xs font-bold text-gray-500 uppercase">Batch</label>
                                         <select name="joining_batch" value={filters.joining_batch} onChange={handleFilterChange} disabled={!filters.institution} className="border p-2 rounded-lg bg-gray-50 outline-none disabled:opacity-50">
                                             <option value="">Select Batch</option>
-                                            <option value="all">All Batches</option>
                                             {institutions.find(i => i.instu === filters.institution)?.batches.map(b => <option key={b} value={b}>{b}</option>)}
                                         </select>
                                     </div>
