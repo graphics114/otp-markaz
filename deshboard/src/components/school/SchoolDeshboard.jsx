@@ -4,14 +4,14 @@ import Header from "../DeshHeader";
 import CountUp from "react-countup";
 import { Users, GraduationCap, ClipboardList, FileText } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { dawaDashboardStats } from "../../store/slices/deshboarSlice";
+import { schoolDashboardStats } from "../../store/slices/deshboarSlice";
 
-const DawaDeshboard = () => {
+const SchoolDeshboard = () => {
   const dispatch = useDispatch();
   const { cards, loading } = useSelector((state) => state.desh);
 
   useEffect(() => {
-    dispatch(dawaDashboardStats());
+    dispatch(schoolDashboardStats());
   }, [dispatch]);
 
   /* STAT CARDS */
@@ -24,13 +24,13 @@ const DawaDeshboard = () => {
     },
     {
       title: "Students",
-      value: cards?.dawa_students || 0,
+      value: cards?.school_students || 0,
       icon: GraduationCap,
       color: "bg-green-100 text-green-600",
     },
     {
       title: "Admissions",
-      value: cards?.dawa_admissions || 0,
+      value: cards?.school_admissions || 0,
       icon: ClipboardList,
       color: "bg-purple-100 text-purple-600",
     },
@@ -44,11 +44,11 @@ const DawaDeshboard = () => {
 
   /* GRAPH DATA */
   const studentsData = [
-    { name: "Uthmaniyya College...", value: cards?.dawa_students || 0 },
+    { name: "Academic", value: cards?.school_students || 0 },
   ];
 
   const admissionsData = [
-    { name: "Uthmaniyya College of Excellence", value: cards?.dawa_admissions || 0 },
+    { name: "Academic", value: cards?.school_admissions || 0 },
   ];
 
   const resultData = [
@@ -225,4 +225,4 @@ const DawaDeshboard = () => {
   );
 };
 
-export default DawaDeshboard;
+export default SchoolDeshboard;

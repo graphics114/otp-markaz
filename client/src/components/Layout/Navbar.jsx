@@ -82,10 +82,10 @@ const Navbar = () => {
                   Student Login
                 </button>
               )}
-              <NavLink to="/admission"
+              {/* <NavLink to="/admission"
                 className="px-5 py-2 text-sm font-semibold text-foreground bg-secondary/50 border border-border rounded-full hover:bg-secondary transition-all duration-300">
                 Admission
-              </NavLink>
+              </NavLink> */}
             </div>
 
           </div>

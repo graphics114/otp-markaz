@@ -52,6 +52,10 @@ const StaffUserRegister = () => {
                 "BS5",
             ],
         },
+        {
+            instu: "Academic",
+            courses: [],
+        },
     ];
 
     const selectedinstuObj = institutions.find(

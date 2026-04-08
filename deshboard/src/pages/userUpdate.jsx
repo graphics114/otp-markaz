@@ -92,6 +92,10 @@ const UserUpdate = ({ selectedUser }) => {
                 "BS5",
             ],
         },
+        {
+            instu: "Academic",
+            courses: [],
+        },
     ];
 
     const selectedinstuObj = institutions.find(
@@ -137,6 +141,7 @@ const UserUpdate = ({ selectedUser }) => {
                             <option value="Student">Student</option>
                             <option value="Hifiz">Hifiz</option>
                             <option value="Dawa">Dawa</option>
+                            <option value="School">School</option>
                         </select>
                     </div>
 

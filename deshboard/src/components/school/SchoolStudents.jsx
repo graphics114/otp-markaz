@@ -1,20 +1,20 @@
 import { useDispatch, useSelector } from "react-redux";
-import Header from "./Header";
-import avatar from "../assets/avatar.jpg"
-import { fetchAllStudents, deleteStudent } from "../store/slices/studentsSlice"
+import Header from "../Header";
+import avatar from "../../assets/avatar.jpg"
+import { fetchAllStudents, deleteStudent } from "../../store/slices/studentsSlice"
 import { useEffect, useState } from "react";
 import { Trash2, UserPen, FolderSearch } from "lucide-react";
 
-import UpdateStudent from "../pages/updateStudent";
-import { toggleUpdateStudent } from "../store/slices/extraSlice";
+import UpdateStudent from "../../pages/updateStudent";
+import { toggleUpdateStudent } from "../../store/slices/extraSlice";
 
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import html2pdf from "html2pdf.js";
 
-const Students = () => {
+const SchoolStudents = () => {
 
-  const { loading, students } = useSelector((state) => state.std);
+  const { loading, students, totalStudents } = useSelector((state) => state.std);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const dispatch = useDispatch();
@@ -24,22 +24,32 @@ const Students = () => {
 
   const { isUpdateStudentOpened } = useSelector((state) => state.extra);
 
-  const institutions = [
-    "All Institutions",
-    "Hifzul Quran College",
-    "Uthmaniyya College...",
-    "Academic",
+  // INST FILTER
+  const Course = [
+    "All Course",
+    "HI1",
+    "HI2",
+    "HI3",
+    "HS1",
+    "HS2",
+    "BS1",
+    "BS2",
+    "BS3",
+    "BS4",
+    "BS5",
   ];
 
-  // INST FILTER
-  const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
+  const [selectedCours, setSelectedCours] = useState("All Course");
   const [search, setSearch] = useState("");
 
   const filteredStudents = students.filter((student) => {
     // Institution filter
     const matchesInstitution =
-      selectedInstitution === "All Institutions" ||
-      student.institution === selectedInstitution;
+      student.institution === "Academic";
+
+    // Course filter
+    const matchesCourse =
+      selectedCours === "All Course" || student.joining_batch === selectedCours;
 
     // Global search (ALL FIELDS)
     const searchText = search.toLowerCase();
@@ -49,7 +59,7 @@ const Students = () => {
       .toLowerCase()
       .includes(searchText);
 
-    return matchesInstitution && matchesSearch;
+    return matchesInstitution && matchesCourse && matchesSearch;
   });
 
   useEffect(() => {
@@ -92,7 +102,7 @@ const Students = () => {
     html2pdf()
       .set({
         margin: [0.2, 0.2, 0.2, 0.2],
-        filename: "hifiz-students.pdf",
+        filename: "school-students.pdf",
         image: { type: "jpeg", quality: 1 },
         html2canvas: {
           scale: 3,
@@ -120,9 +130,7 @@ const Students = () => {
       "Sl No": index + 1,
       "Full Name": s.full_name,
       "Register Number": s.reg_number,
-      "Roll Number": s.roll_number,
       "Date of Birth": s.date_of_birth
-
         ? new Date(s.date_of_birth).toLocaleDateString("en-IN")
         : "",
       "Phone Number": s.phone_number,
@@ -167,7 +175,7 @@ const Students = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
 
-    XLSX.writeFile(workbook, "students-full-data.xlsx");
+    XLSX.writeFile(workbook, "School students-full-data.xlsx");
   };
 
   return (<>
@@ -197,16 +205,16 @@ const Students = () => {
                       text-gray-400 w-5 h-5" />
           </div>
 
-          {/* INST FILER */}
+          {/* COURSE FILTER */}
           <div className="relative w-full sm:w-48">
             <select
-              value={selectedInstitution}
-              onChange={(e) => setSelectedInstitution(e.target.value)}
+              value={selectedCours}
+              onChange={(e) => setSelectedCours(e.target.value)}
               className="w-full border px-4 py-2 rounded-lg focus:outline-none
-                                 placeholder:text-sm h-11">
-              {institutions.map((inst) => (
-                <option key={inst} value={inst}>
-                  {inst}
+                                 placeholder:text-sm h-11 cursor-pointer">
+              {Course.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
@@ -249,19 +257,18 @@ const Students = () => {
           </h2>
 
           <p style={{ textAlign: "center", fontSize: "12px", lineHeight: "2", }} className="mb-2">
-            Institution: {selectedInstitution} <br />
+            Institution: Hifzul Quran College <br />
             Date: {new Date().toLocaleDateString()}
           </p>
 
-          <table className="w-full border-collapse border text-[10px]">
+          <table className="w-full border-collapse border text-[10px]"
+            style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px", }}>
             <thead>
               <tr>
-                <th className="border">#</th>
+                <th className="border mb-1">#</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Name</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Reg No</th>
-                <th className="border px-1 py-0.5 whitespace-nowrap">Roll No</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Phone</th>
-
                 <th className="border px-1 py-0.5 whitespace-nowrap">Course</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">UIDAI</th>
                 <th className="border px-1 py-0.5 whitespace-nowrap">Father Name</th>
@@ -277,9 +284,7 @@ const Students = () => {
                   <td className="border text-center">{i + 1}</td>
                   <td className="border p-2">{s.full_name}</td>
                   <td className="border p-2">{s.reg_number}</td>
-                  <td className="border p-2">{s.roll_number}</td>
                   <td className="border p-2">{s.phone_number}</td>
-
                   <td className="border p-2">{s.joining_batch}</td>
                   <td className="border p-2">{s.aadhar_number}</td>
                   <td className="border p-2">{s.father_name}</td>
@@ -306,9 +311,7 @@ const Students = () => {
                   <th className="py-3 px-4 text-left">Image</th>
                   <th className="py-3 px-4 text-left">Name</th>
                   <th className="py-3 px-4 text-left">Reg No</th>
-                  <th className="py-3 px-4 text-left whitespace-nowrap">Roll No</th>
                   <th className="py-3 px-4 text-left">DOB</th>
-
                   <th className="py-3 px-4 text-left whitespace-nowrap">Phone Number</th>
                   <th className="py-3 px-4 text-left">Emergency</th>
                   <th className="py-3 px-4 text-left">UIDAI</th>
@@ -350,11 +353,9 @@ const Students = () => {
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">{student.full_name}</td>
                       <td className="py-3 px-4 whitespace-nowrap">{student.reg_number}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{student.roll_number}</td>
                       <td className="py-3 px-4">
                         {new Date(student.date_of_birth).toLocaleDateString("en-IN")}
                       </td>
-
                       <td className="py-3 px-4">{student.phone_number}</td>
                       <td className="py-3 px-4">{student.emergency_contact}</td>
                       <td className="py-3 px-4">{student.aadhar_number}</td>
@@ -428,4 +429,4 @@ const Students = () => {
   </>)
 };
 
-export default Students;
+export default SchoolStudents;

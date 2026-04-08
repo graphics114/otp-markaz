@@ -9,6 +9,7 @@ const attendanceSlice = createSlice({
         programs: [],
         students: [],
         attendanceData: [], // {student_id, status}
+        yesterdayAttendanceData: [], // For yellow highlight if absent yesterday
         attendanceReport: [], // For percentage view
         studentDetailedAttendance: null, // For single student details
     },
@@ -18,6 +19,9 @@ const attendanceSlice = createSlice({
         },
         clearAttendanceData(state) {
             state.attendanceData = [];
+        },
+        clearYesterdayAttendanceData(state) {
+            state.yesterdayAttendanceData = [];
         },
 
         getProgramsSuccess(state, action) {
@@ -31,6 +35,9 @@ const attendanceSlice = createSlice({
         getAttendanceDataSuccess(state, action) {
             state.loading = false;
             state.attendanceData = action.payload;
+        },
+        getYesterdayAttendanceDataSuccess(state, action) {
+            state.yesterdayAttendanceData = action.payload;
         },
         getAttendanceReportSuccess(state, action) {
             state.loading = false;
@@ -103,6 +110,15 @@ export const fetchAttendanceData = (params) => async (dispatch) => {
     } catch (error) {
         dispatch(attendanceSlice.actions.attendanceFailed());
         toast.error(error?.response?.data?.message || "Failed to fetch attendance data");
+    }
+};
+
+export const fetchYesterdayAttendanceData = (params) => async (dispatch) => {
+    try {
+        const res = await axiosInstance.get("/attendance/get", { params });
+        dispatch(attendanceSlice.actions.getYesterdayAttendanceDataSuccess(res.data.attendance));
+    } catch (error) {
+        // Silent fail for yesterday's data
     }
 };
 

@@ -442,3 +442,123 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     }
   });
 });
+
+export const schoolDashboardStats = catchAsyncError(async (req, res) => {
+
+  const totalUsers = await database.query(`
+    SELECT COUNT(*) FROM users u
+    JOIN students s ON u.id = s.user_id
+    WHERE s.institution = $1
+  `, ["Academic"]);
+
+  const totalStudents = await database.query(`SELECT COUNT(*) FROM students WHERE institution = $1`, ["Academic"]);
+  const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates WHERE institution = $1`, ["Academic"]);
+
+  const totalResults = await database.query(`
+  SELECT COUNT(*) 
+  FROM student_exam_results ser
+  JOIN students s ON s.id = ser.student_id
+  WHERE s.institution = $1
+  AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
+  `, ["Academic"]);
+
+  const resultStatus = await database.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE ser.result_status = 'Published') AS published,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Pending') AS pending
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    WHERE s.institution = $1
+    AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
+  `, ["Academic"]);
+
+  const studentsByInstitution = await database.query(`
+    SELECT COUNT(*) AS school_students
+    FROM students
+    WHERE institution = $1
+  `, ["Academic"]);
+
+  const admissionsByInstitution = await database.query(`
+    SELECT
+      COUNT(*) FILTER (WHERE institution = $1) AS school_admissions
+    FROM admission_candidates
+  `, ["Academic"]);
+
+
+  const latestAttendance = await database.query(`
+    WITH latest_session AS (
+        SELECT a.program_id, a.attendance_date
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        WHERE s.institution = $1
+        ORDER BY a.attendance_date DESC, a.created_at DESC
+        LIMIT 1
+    )
+    SELECT 
+        p.program_name,
+        a.attendance_date,
+        COUNT(*) FILTER (WHERE a.status = true) AS present_count,
+        COUNT(*) FILTER (WHERE a.status = false) AS absent_count
+    FROM attendance a
+    JOIN programs p ON a.program_id = p.id
+    JOIN students s ON a.student_id = s.id
+    JOIN latest_session ls ON a.program_id = ls.program_id AND a.attendance_date = ls.attendance_date
+    WHERE s.institution = $1
+    GROUP BY p.program_name, a.attendance_date
+  `, ["Academic"]);
+
+  const batchAttendance = await database.query(`
+    WITH latest_batch_session AS (
+        SELECT DISTINCT ON (s.joining_batch)
+            s.joining_batch, 
+            a.attendance_date, 
+            a.program_id
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        WHERE s.institution = $1
+        ORDER BY s.joining_batch, a.attendance_date DESC, a.created_at DESC
+    )
+    SELECT 
+        lbs.joining_batch, 
+        lbs.attendance_date as max_date,
+        COUNT(*) FILTER (WHERE a.status = true) AS present,
+        COUNT(*) FILTER (WHERE a.status = false) AS absent
+    FROM latest_batch_session lbs
+    JOIN students s ON s.joining_batch = lbs.joining_batch AND s.institution = $1
+    JOIN attendance a ON a.student_id = s.id AND a.attendance_date = lbs.attendance_date AND a.program_id = lbs.program_id
+    GROUP BY lbs.joining_batch, lbs.attendance_date
+    ORDER BY lbs.attendance_date DESC, lbs.joining_batch
+  `, ["Academic"]);
+
+
+  res.status(200).json({
+    success: true,
+    cards: {
+      total_users: Number(totalUsers.rows[0].count),
+      total_students: Number(totalStudents.rows[0].count),
+      total_admissions: Number(totalAdmissions.rows[0].count),
+      total_results: Number(totalResults.rows[0].count),
+
+      published_results: Number(resultStatus.rows[0].published),
+      pending_results: Number(resultStatus.rows[0].pending),
+
+      school_students: Number(studentsByInstitution.rows[0].school_students),
+      school_admissions: Number(admissionsByInstitution.rows[0].school_admissions),
+
+      latest_attendance: latestAttendance.rows[0] ? {
+        program_name: latestAttendance.rows[0].program_name,
+        date: latestAttendance.rows[0].attendance_date,
+        present: Number(latestAttendance.rows[0].present_count),
+        absent: Number(latestAttendance.rows[0].absent_count)
+      } : null,
+
+      batch_attendance: batchAttendance.rows.map(row => ({
+        institution: "Academic",
+        batch: row.joining_batch,
+        date: row.max_date,
+        present: Number(row.present),
+        absent: Number(row.absent)
+      }))
+    }
+  });
+});

@@ -10,7 +10,7 @@ export async function createUserTable() {
                 username VARCHAR(100) UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 
-                role VARCHAR(10) DEFAULT 'Student' CHECK (role IN ('Admin', 'Hifiz', 'Dawa', 'Student')),
+                role VARCHAR(10) DEFAULT 'Student' CHECK (role IN ('Admin', 'Hifiz', 'Dawa', 'School', 'Student')),
                 
                 avatar JSONB DEFAULT NULL,
                 

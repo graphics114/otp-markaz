@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Header from "./Header";
 import {
     fetchPrograms, addProgram, deleteProgram,
-    fetchStudentsForAttendance, fetchAttendanceData, submitAttendance,
+    fetchStudentsForAttendance, fetchAttendanceData, fetchYesterdayAttendanceData, submitAttendance,
     fetchAttendanceReport, clearAttendanceData
 } from "../store/slices/attendanceSlice";
 
@@ -16,7 +16,7 @@ import StudentDetailedAttendance from "./StudentDetailedAttendance";
 const Attendance = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
-    const { loading, programs, students, attendanceData, attendanceReport } = useSelector((state) => state.attendance);
+    const { loading, programs, students, attendanceData, yesterdayAttendanceData, attendanceReport } = useSelector((state) => state.attendance);
 
     const isAdmin = user?.role === "Admin";
 
@@ -105,6 +105,15 @@ const Attendance = () => {
                 program_id: filters.program_id,
                 attendance_date: filters.attendance_date
             }));
+
+            const yesterday = new Date(filters.attendance_date);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split("T")[0];
+            
+            dispatch(fetchYesterdayAttendanceData({
+                program_id: filters.program_id,
+                attendance_date: yesterdayStr
+            }));
         }
     }, [dispatch, filters.program_id, filters.attendance_date]);
 
@@ -134,6 +143,10 @@ const Attendance = () => {
         {
             instu: "Uthmaniyya College...",
             batches: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
+        },
+        {
+            instu: "Academic",
+            batches: [],
         },
     ];
 
@@ -428,20 +441,27 @@ const Attendance = () => {
                                             </div>
 
                                             {/* UI ONLY: ATTENDANCE GRID */}
-                                            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3 pb-4 no-print px-6">
-                                                {sortedStudents.map((s) => (
+                                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 pb-4 no-print px-6">
+                                                {sortedStudents.map((s) => {
+                                                    const isAbsentYesterday = yesterdayAttendanceData && yesterdayAttendanceData.some(a => a.student_id === s.id && a.status === false);
+                                                    let bgColorClass = "bg-green-600 text-white";
+                                                    if (localAttendance[s.id] === false) {
+                                                        bgColorClass = "bg-red-600 text-white";
+                                                    } else if (isAbsentYesterday) {
+                                                        bgColorClass = "bg-yellow-500 text-white";
+                                                    }
+
+                                                    return (
                                                     <button
                                                         key={s.id}
                                                         onClick={() => toggleStatus(s.id)}
                                                         title={s.full_name}
-                                                        className={`aspect-square flex items-center justify-center rounded-sm font-black text-xl transition-all transform active:scale-95 ${localAttendance[s.id] !== false
-                                                            ? "bg-green-600 text-white"
-                                                            : "bg-red-600 text-white"
-                                                            }`}
+                                                        className={`aspect-square flex flex-col items-center justify-center p-1 rounded-sm transition-all transform active:scale-95 ${bgColorClass}`}
                                                     >
-                                                        {s.roll_number || '-'}
+                                                        <span className="font-black text-xl border-b border-white/30 w-full text-center pb-1 mb-1">{s.roll_number || '-'}</span>
+                                                        <span className="text-[10px] font-bold text-center leading-tight line-clamp-2 w-full px-1">{s.full_name}</span>
                                                     </button>
-                                                ))}
+                                                )})}
                                             </div>
 
                                             {/* PRINT ONLY: DATA TABLE */}

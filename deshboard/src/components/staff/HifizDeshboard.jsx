@@ -119,38 +119,10 @@ const StaffDeshboard = () => {
             </div>
 
             {/* ANALYTICS CHARTS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-
-              {/* STUDENTS */}
-              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-base sm:text-lg mb-1">Students by Institution</h3>
-                <p className="text-xs text-gray-500 mb-3 sm:mb-4">Institution-wise enrolled students</p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={studentsData}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* ADMISSIONS */}
-              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-base sm:text-lg mb-1">Admissions by Institution</h3>
-                <p className="text-xs text-gray-500 mb-3 sm:mb-4">Current admission distribution</p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={admissionsData}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
 
               {/* RESULTS PIE */}
-              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 sm:col-span-2 lg:col-span-1">
+              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
                 <h3 className="font-semibold text-base sm:text-lg mb-1">Results Status</h3>
                 <p className="text-xs text-gray-500 mb-3 sm:mb-4">Published vs Pending (This Month)</p>
                 <ResponsiveContainer width="100%" height={220}>
