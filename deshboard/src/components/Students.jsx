@@ -28,7 +28,6 @@ const Students = () => {
     "All Institutions",
     "Hifzul Quran College",
     "Uthmaniyya College...",
-    "Academic",
   ];
 
   // INST FILTER

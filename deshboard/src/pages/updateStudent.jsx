@@ -216,10 +216,6 @@ const UpdateStudent = ({ selectedStudent }) => {
                 "BS5",
             ],
         },
-        {
-            instu: "Academic",
-            courses: [],
-        },
     ];
 
     const selectedinstuObj = institutions.find(

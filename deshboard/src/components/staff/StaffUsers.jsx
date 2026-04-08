@@ -31,7 +31,6 @@ const StaffUsers = () => {
     "All Institutions",
     "Hifzul Quran College",
     "Uthmaniyya College...",
-    "Academic",
   ];
 
   const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");

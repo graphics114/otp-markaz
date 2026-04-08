@@ -28,10 +28,7 @@ import HifizResult from "./components/staff/HifizResult";
 import HifizStudents from "./components/staff/HifizStudents";
 import HifizDeshboard from "./components/staff/HifizDeshboard";
 
-//School Components
-import SchoolDeshboard from "./components/school/SchoolDeshboard";
-import SchoolStudents from "./components/school/SchoolStudents";
-import SchoolResult from "./components/school/SchoolResult";
+
 
 //Dawa Components
 import DawaDeshboard from "./components/dawa/DawaDeshboard";
@@ -123,25 +120,7 @@ const App = () => {
     }
   };
 
-  /* SCHOOL DASHBOARD CONTENT */
-  const schoolRenderDashboardContent = () => {
-    switch (openedComponent) {
-      case "Deshboard":
-        return <SchoolDeshboard />;
-      case "Students":
-        return <SchoolStudents />;
-      case "Result":
-        return <SchoolResult />;
-      case "Users":
-        return <StaffUsers />;
-      case "Profile":
-        return <Profile />;
-      case "Attendance":
-        return <Attendance />;
-      default:
-        return <SchoolDeshboard />;
-    }
-  };
+
 
   /*  ROLE BASED LAYOUT  */
   const renderRoleLayout = () => {
@@ -149,7 +128,7 @@ const App = () => {
       return <Navigate to="/login" replace />;
     }
 
-    // ADMIN & SCHOOL
+    // ADMIN
     if (user?.role === "Admin") {
       return (
         <div className="flex min-h-screen">
@@ -180,15 +159,6 @@ const App = () => {
     }
 
 
-    //SCHOOL
-    if (user?.role === "School") {
-      return (
-        <div className="flex min-h-screen">
-          <StaffSideBar />
-          {schoolRenderDashboardContent()}
-        </div>
-      );
-    }
     // DEFAULT (e.g. Student trying to access dashboard)
     return <Navigate to="/login" replace />;
   };

@@ -1,12 +1,12 @@
 import express from "express";
-import { fetchAllUsers, fetchSingleUser, updateUserRole, deleteUser, adminDashboardStats, hifizDashboardStats, dawaDashboardStats, schoolDashboardStats
+import { fetchAllUsers, fetchSingleUser, updateUserRole, deleteUser, adminDashboardStats, hifizDashboardStats, dawaDashboardStats
   } from "../controllers/adminController.js";
 import { authorizedRoles, isAuthenticated } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.use(isAuthenticated);
-router.use(authorizedRoles("Admin", "Hifiz", "Dawa", "School"));
+router.use(authorizedRoles("Admin", "Hifiz", "Dawa"));
 
 router.get("/users", fetchAllUsers);
 router.get("/users/:userId", fetchSingleUser);
@@ -15,6 +15,6 @@ router.delete("/users/delete/:userId", deleteUser);
 router.get("/dashboard/stats", adminDashboardStats);
 router.get("/hifiz/deshboard/status", hifizDashboardStats);
 router.get("/dawa/deshboard/status", dawaDashboardStats);
-router.get("/school/deshboard/status", schoolDashboardStats);
+
 
 export default router;

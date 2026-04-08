@@ -52,18 +52,7 @@ const deshboardSlice = createSlice({
       state.loading = false;
     },
 
-    schoolDashboardStatsRequest: (state) => {
-      state.loading = true;
-    },
-    schoolDashboardStatsSuccess: (state, action) => {
-      state.loading = false;
-      state.cards = action.payload.cards;
-      state.today = action.payload.today;
-      state.charts = action.payload.charts;
-    },
-    schoolDashboardStatsFaile: (state) => {
-      state.loading = false;
-    },
+
 
     topStudentsRequest: (state) => {
       state.topStudentsLoading = true;
@@ -88,9 +77,7 @@ export const {
   dawaDashboardStatsRequest,
   dawaDashboardStatsSuccess,
   dawaDashboardStatsFaile,
-  schoolDashboardStatsRequest,
-  schoolDashboardStatsSuccess,
-  schoolDashboardStatsFaile,
+
   topStudentsRequest,
   topStudentsSuccess,
   topStudentsFail,
@@ -129,16 +116,7 @@ export const dawaDashboardStats = () => async (dispatch) => {
   }
 };
 
-export const schoolDashboardStats = () => async (dispatch) => {
-  try {
-    dispatch(schoolDashboardStatsRequest());
-    const res = await axiosInstance.get("/admin/school/deshboard/status");
-    dispatch(schoolDashboardStatsSuccess(res.data));
-  } catch (error) {
-    dispatch(schoolDashboardStatsFaile());
-    toast.error(error?.response?.data?.message || "Authentication failed");
-  }
-};
+
 
 export const fetchTopStudents = (limit = 10, from = null, to = null) => async (dispatch) => {
   try {

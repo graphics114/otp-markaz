@@ -32,13 +32,12 @@ const Users = () => {
         "All Institutions",
         "Hifzul Quran College",
         "Uthmaniyya College...",
-        "Academic",
     ];
 
     const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
 
     const filteredUsers = (users || []).filter((user) => {
-        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa" || user.role === "School");
+        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa");
 
         const matchesInstitution =
             selectedInstitution === "All Institutions" ||
