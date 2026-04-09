@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern E-commerce Design System with Glassmorphism */
+
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@100..900&display=swap');
+/* Modern E-commerce Design System with Glassmorphism */
 
 @layer utilities {
   .font-malayalam {
