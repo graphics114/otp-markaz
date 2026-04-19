@@ -39,6 +39,7 @@ const Attendance = () => {
 
     const [newProgramName, setNewProgramName] = useState("");
     const [localAttendance, setLocalAttendance] = useState({}); // {student_id: status}
+    const [statusFilter, setStatusFilter] = useState("all"); // "all" | "present" | "absent"
 
     const sortedStudents = useMemo(() => {
         const getRollNum = (v) => {
@@ -356,7 +357,7 @@ const Attendance = () => {
                         {/* Right: List */}
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[400px]">
-                                <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                                <div className="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center sticky top-0 bg-white z-10 gap-3">
                                     <div>
                                         <h2 className="text-lg font-semibold">Student List</h2>
                                         {filters.institution && (
@@ -365,21 +366,56 @@ const Attendance = () => {
                                             </p>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        {sortedStudents.length > 0 && (
-                                            <button
-                                                onClick={handlePrintMarking}
-                                                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition"
-                                            >
-                                                <Printer className="w-4 h-4" />
-                                                PDF
-                                            </button>
-                                        )}
-                                        <div className="hidden md:flex gap-4">
-                                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500"></div><span className="text-xs font-bold text-gray-500">PRESENT</span></div>
-                                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span className="text-xs font-bold text-gray-500">ABSENT</span></div>
-                                        </div>
-                                    </div>
+
+                                    {/* STATUS FILTER TOGGLE + PDF — Admin only */}
+                                    {isAdmin && (
+                                        <>
+                                            <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1 no-print">
+                                                <button
+                                                    onClick={() => setStatusFilter("all")}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                                        statusFilter === "all"
+                                                            ? "bg-blue-600 text-white shadow"
+                                                            : "text-gray-500 hover:bg-gray-200"
+                                                    }`}
+                                                >
+                                                    All ({sortedStudents.length})
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter("present")}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                                        statusFilter === "present"
+                                                            ? "bg-green-600 text-white shadow"
+                                                            : "text-gray-500 hover:bg-gray-200"
+                                                    }`}
+                                                >
+                                                    Present ({Object.values(localAttendance).filter(v => v !== false).length})
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter("absent")}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                                        statusFilter === "absent"
+                                                            ? "bg-red-600 text-white shadow"
+                                                            : "text-gray-500 hover:bg-gray-200"
+                                                    }`}
+                                                >
+                                                    Absent ({Object.values(localAttendance).filter(v => v === false).length})
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                {sortedStudents.length > 0 && (
+                                                    <button
+                                                        onClick={handlePrintMarking}
+                                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition"
+                                                    >
+                                                        <Printer className="w-4 h-4" />
+                                                        PDF
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="overflow-x-auto" id="daily-attendance-table">
                                     {/* Professional Print Header (Daily Attendance) - Admin only */}
@@ -445,7 +481,13 @@ const Attendance = () => {
 
                                             {/* UI ONLY: ATTENDANCE GRID */}
                                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 pb-4 no-print px-6">
-                                                {sortedStudents.map((s) => {
+                                                {sortedStudents
+                                                    .filter(s => {
+                                                        if (statusFilter === "present") return localAttendance[s.id] !== false;
+                                                        if (statusFilter === "absent") return localAttendance[s.id] === false;
+                                                        return true;
+                                                    })
+                                                    .map((s) => {
                                                     const isAbsentYesterday = yesterdayAttendanceData && yesterdayAttendanceData.some(a => a.student_id === s.id && a.status === false);
                                                     let bgColorClass = "bg-green-600 text-white";
                                                     if (localAttendance[s.id] === false) {
@@ -465,32 +507,121 @@ const Attendance = () => {
                                                         <span className="text-[10px] font-bold text-center leading-tight line-clamp-2 w-full px-1">{s.full_name}</span>
                                                     </button>
                                                 )})}
+                                                {sortedStudents.filter(s => {
+                                                    if (statusFilter === "present") return localAttendance[s.id] !== false;
+                                                    if (statusFilter === "absent") return localAttendance[s.id] === false;
+                                                    return false;
+                                                }).length === 0 && statusFilter !== "all" && (
+                                                    <div className="col-span-full py-10 text-center text-gray-400">
+                                                        <p className="text-xs font-bold">No {statusFilter} students found</p>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            {/* PRINT ONLY: DATA TABLE */}
-                                            <div className="print-only mt-2">
-                                                <table className="w-full border-collapse border-b border-gray-100">
-                                                    <thead>
-                                                        <tr className="bg-gray-50/80 border-t border-b border-gray-200">
-                                                            <th className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-24">Roll No</th>
-                                                            <th className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase text-left">Student Name</th>
-                                                            <th className="py-4 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-32">Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-gray-50">
-                                                        {sortedStudents.map((s) => (
-                                                            <tr key={s.id} className="border-b border-gray-50">
-                                                                <td className="py-4 px-6 text-center font-bold text-blue-600 text-sm">{s.roll_number || '-'}</td>
-                                                                <td className="py-4 px-6 text-sm font-black text-gray-800 uppercase tracking-tight">{s.full_name}</td>
-                                                                <td className="py-4 px-6 text-center">
-                                                                    <span className={`text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter ${localAttendance[s.id] !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                                        {localAttendance[s.id] !== false ? 'Present' : 'Absent'}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                            {/* PRINT ONLY: RESPECTS STATUS FILTER */}
+                                            <div className="print-only mt-2 px-2">
+
+                                                {/* ── ALL: single combined table with Status column ── */}
+                                                {statusFilter === "all" && (
+                                                    <div className="mb-8">
+                                                        <table className="w-full border-collapse border-b border-gray-100">
+                                                            <thead>
+                                                                <tr className="bg-gray-50/80 border-t border-b border-gray-200">
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-12">#</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-24">Roll No</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-left">Student Name</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-32">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-gray-50">
+                                                                {sortedStudents.map((s, idx) => (
+                                                                    <tr key={s.id} className="border-b border-gray-50">
+                                                                        <td className="py-3 px-6 text-center text-xs text-gray-400 font-bold">{idx + 1}</td>
+                                                                        <td className="py-3 px-6 text-center font-bold text-blue-600 text-sm">{s.roll_number || '-'}</td>
+                                                                        <td className="py-3 px-6 text-sm font-black text-gray-800 uppercase tracking-tight">{s.full_name}</td>
+                                                                        <td className="py-3 px-6 text-center">
+                                                                            <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ${localAttendance[s.id] !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                                                {localAttendance[s.id] !== false ? 'Present' : 'Absent'}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+
+                                                {/* ── PRESENT ONLY TABLE ── */}
+                                                {statusFilter === "present" && (
+                                                    <div className="mb-8">
+                                                        <div className="flex items-center gap-3 mb-3 px-2">
+                                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                            <h3 className="text-sm font-black text-green-700 uppercase tracking-widest">Present Students</h3>
+                                                            <span className="ml-auto text-xs font-black bg-green-100 text-green-700 px-3 py-0.5 rounded-full">
+                                                                {sortedStudents.filter(s => localAttendance[s.id] !== false).length}
+                                                            </span>
+                                                        </div>
+                                                        <table className="w-full border-collapse">
+                                                            <thead>
+                                                                <tr className="bg-green-50 border-t border-b border-green-200">
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-12">#</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-24">Roll No</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-left">Student Name</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-green-50">
+                                                                {sortedStudents
+                                                                    .filter(s => localAttendance[s.id] !== false)
+                                                                    .map((s, idx) => (
+                                                                        <tr key={s.id} className="border-b border-green-50">
+                                                                            <td className="py-3 px-6 text-center text-xs text-gray-400 font-bold">{idx + 1}</td>
+                                                                            <td className="py-3 px-6 text-center font-bold text-blue-600 text-sm">{s.roll_number || '-'}</td>
+                                                                            <td className="py-3 px-6 text-sm font-black text-gray-800 uppercase tracking-tight">{s.full_name}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                {sortedStudents.filter(s => localAttendance[s.id] !== false).length === 0 && (
+                                                                    <tr><td colSpan={3} className="py-4 text-center text-xs text-gray-400 italic">No present students</td></tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+
+                                                {/* ── ABSENT ONLY TABLE ── */}
+                                                {statusFilter === "absent" && (
+                                                    <div className="mb-8">
+                                                        <div className="flex items-center gap-3 mb-3 px-2">
+                                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                                            <h3 className="text-sm font-black text-red-700 uppercase tracking-widest">Absent Students</h3>
+                                                            <span className="ml-auto text-xs font-black bg-red-100 text-red-700 px-3 py-0.5 rounded-full">
+                                                                {sortedStudents.filter(s => localAttendance[s.id] === false).length}
+                                                            </span>
+                                                        </div>
+                                                        <table className="w-full border-collapse">
+                                                            <thead>
+                                                                <tr className="bg-red-50 border-t border-b border-red-200">
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-12">#</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-center w-24">Roll No</th>
+                                                                    <th className="py-3 px-6 text-[10px] font-black text-gray-400 uppercase text-left">Student Name</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-red-50">
+                                                                {sortedStudents
+                                                                    .filter(s => localAttendance[s.id] === false)
+                                                                    .map((s, idx) => (
+                                                                        <tr key={s.id} className="border-b border-red-50">
+                                                                            <td className="py-3 px-6 text-center text-xs text-gray-400 font-bold">{idx + 1}</td>
+                                                                            <td className="py-3 px-6 text-center font-bold text-blue-600 text-sm">{s.roll_number || '-'}</td>
+                                                                            <td className="py-3 px-6 text-sm font-black text-gray-800 uppercase tracking-tight">{s.full_name}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                {sortedStudents.filter(s => localAttendance[s.id] === false).length === 0 && (
+                                                                    <tr><td colSpan={3} className="py-4 text-center text-xs text-gray-400 italic">No absent students</td></tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
 
                                                 {/* Print Only: Signatures */}
                                                 <div className="mt-20 grid grid-cols-2 gap-24 px-12">
