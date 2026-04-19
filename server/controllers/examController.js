@@ -32,10 +32,21 @@ import database from "../database/db.js";
 
 export const updateExamResult = catchAsyncError(async (req, res, next) => {
     const { resultId } = req.params;
-    let { hifiz_marks, hizb_marks, result_status } = req.body;
+    let {
+        hifiz_marks, hizb_marks, result_status,
+        competitions, description, presentation_skill,
+        writing_skill, reading_skill, attendance, total_marks
+    } = req.body;
 
     if (hifiz_marks === "") hifiz_marks = null;
     if (hizb_marks === "") hizb_marks = null;
+    if (competitions === "") competitions = null;
+    if (presentation_skill === "") presentation_skill = null;
+    if (writing_skill === "") writing_skill = null;
+    if (reading_skill === "") reading_skill = null;
+    if (attendance === "") attendance = null;
+    if (total_marks === "") total_marks = null;
+    if (description === "") description = null;
 
     const updates = [];
     const values = [];
@@ -43,18 +54,43 @@ export const updateExamResult = catchAsyncError(async (req, res, next) => {
 
     if (hifiz_marks !== undefined) {
         updates.push(`hifiz_marks = $${paramCount}`);
-        values.push(hifiz_marks);
-        paramCount++;
+        values.push(hifiz_marks); paramCount++;
     }
     if (hizb_marks !== undefined) {
         updates.push(`hizb_marks = $${paramCount}`);
-        values.push(hizb_marks);
-        paramCount++;
+        values.push(hizb_marks); paramCount++;
     }
     if (result_status !== undefined) {
         updates.push(`result_status = $${paramCount}`);
-        values.push(result_status);
-        paramCount++;
+        values.push(result_status); paramCount++;
+    }
+    if (competitions !== undefined) {
+        updates.push(`competitions = $${paramCount}`);
+        values.push(competitions); paramCount++;
+    }
+    if (description !== undefined) {
+        updates.push(`description = $${paramCount}`);
+        values.push(description); paramCount++;
+    }
+    if (presentation_skill !== undefined) {
+        updates.push(`presentation_skill = $${paramCount}`);
+        values.push(presentation_skill); paramCount++;
+    }
+    if (writing_skill !== undefined) {
+        updates.push(`writing_skill = $${paramCount}`);
+        values.push(writing_skill); paramCount++;
+    }
+    if (reading_skill !== undefined) {
+        updates.push(`reading_skill = $${paramCount}`);
+        values.push(reading_skill); paramCount++;
+    }
+    if (attendance !== undefined) {
+        updates.push(`attendance = $${paramCount}`);
+        values.push(attendance); paramCount++;
+    }
+    if (total_marks !== undefined) {
+        updates.push(`total_marks = $${paramCount}`);
+        values.push(total_marks); paramCount++;
     }
 
     if (updates.length === 0) {
@@ -86,6 +122,7 @@ export const fetchAllExamResults = catchAsyncError(async (req, res) => {
     const result = await database.query(
         `SELECT
           ser.id AS result_id,
+          ser.student_id,
           ser.exam_date,
 
           u.full_name,
@@ -97,7 +134,13 @@ export const fetchAllExamResults = catchAsyncError(async (req, res) => {
           ser.hizb_marks,
           ser.tajweed_marks,
           ser.total_marks,
-          ser.result_status
+          ser.result_status,
+          ser.competitions,
+          ser.description,
+          ser.presentation_skill,
+          ser.writing_skill,
+          ser.reading_skill,
+          ser.attendance
 
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id
@@ -212,25 +255,36 @@ export const fetchMyExamResult = catchAsyncError(async (req, res, next) => {
 
 export const addExamResult = catchAsyncError(async (req, res) => {
     const { studentId } = req.params;
-    let { hifiz_marks, hizb_marks, tajweed_marks, exam_date } = req.body;
+    let {
+        hifiz_marks, hizb_marks, tajweed_marks, exam_date,
+        competitions, description, presentation_skill,
+        writing_skill, reading_skill, attendance, total_marks
+    } = req.body;
 
     if (hifiz_marks === "") hifiz_marks = null;
     if (hizb_marks === "") hizb_marks = null;
     if (tajweed_marks === "") tajweed_marks = null;
+    if (competitions === "") competitions = null;
+    if (description === "") description = null;
+    if (presentation_skill === "") presentation_skill = null;
+    if (writing_skill === "") writing_skill = null;
+    if (reading_skill === "") reading_skill = null;
+    if (attendance === "") attendance = null;
+    if (total_marks === "") total_marks = null;
 
     const result = await database.query(
-        `
-    INSERT INTO student_exam_results
-    (student_id, exam_date, hifiz_marks, hizb_marks, tajweed_marks)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING *
-    `,
+        `INSERT INTO student_exam_results
+        (student_id, exam_date, hifiz_marks, hizb_marks, tajweed_marks,
+         competitions, description, presentation_skill, writing_skill,
+         reading_skill, attendance, total_marks)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING *`,
         [
             studentId,
             exam_date || new Date(),
-            hifiz_marks,
-            hizb_marks,
-            tajweed_marks
+            hifiz_marks, hizb_marks, tajweed_marks,
+            competitions, description, presentation_skill,
+            writing_skill, reading_skill, attendance, total_marks
         ]
     );
 

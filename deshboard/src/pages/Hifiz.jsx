@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { axiosInstance } from "../lib/axios";
 
 const Hifiz = () => {
 
@@ -37,6 +38,37 @@ const Hifiz = () => {
   const [examDate, setExamDate] = useState("");
   const [hifiz, setHifiz] = useState("");
   const [hizb, setHizb] = useState("");
+  const [competitions, setCompetitions] = useState("");
+  const [description, setDescription] = useState("");
+  const [presentationSkill, setPresentationSkill] = useState("");
+  const [writingSkill, setWritingSkill] = useState("");
+  const [readingSkill, setReadingSkill] = useState("");
+  const [attendance, setAttendance] = useState("");
+
+  const calcTotal = (resultId, result) => {
+    const get = (field, fallback) => {
+      const s = selectedStatus[resultId]?.[field];
+      return Number(s !== undefined ? s : (fallback ?? 0)) || 0;
+    };
+    return (
+      get("hifiz_marks", result?.hifiz_marks) +
+      get("hizb_marks", result?.hizb_marks) +
+      get("competitions", result?.competitions) +
+      get("presentation_skill", result?.presentation_skill) +
+      get("writing_skill", result?.writing_skill) +
+      get("reading_skill", result?.reading_skill) +
+      get("attendance", result?.attendance)
+    );
+  };
+
+  const modalTotal =
+    (Number(hifiz) || 0) +
+    (Number(hizb) || 0) +
+    (Number(competitions) || 0) +
+    (Number(presentationSkill) || 0) +
+    (Number(writingSkill) || 0) +
+    (Number(readingSkill) || 0) +
+    (Number(attendance) || 0);
 
   const getRStatus = (result) => {
     const hifiz = result.hifiz_marks ?? 0;
@@ -104,10 +136,75 @@ const Hifiz = () => {
     const dataToSave = { ...selectedStatus[resultId] };
     if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = null;
     if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = null;
+    if (dataToSave.competitions === "") dataToSave.competitions = null;
+    if (dataToSave.presentation_skill === "") dataToSave.presentation_skill = null;
+    if (dataToSave.writing_skill === "") dataToSave.writing_skill = null;
+    if (dataToSave.reading_skill === "") dataToSave.reading_skill = null;
+    if (dataToSave.attendance === "") dataToSave.attendance = null;
+
+    dataToSave.total_marks = calcTotal(resultId, selectedStatus[resultId]);
 
     dispatch(updateResult(resultId, dataToSave));
   };
 
+
+  const handleAutoAttendance = async () => {
+    if (!selectedMonth) {
+      toast.error("Please select a month first");
+      return;
+    }
+    
+    try {
+      const parts = selectedMonth.split("-");
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const lastDay = new Date(year, month, 0).getDate();
+      
+      const start_date = `${selectedMonth}-01`;
+      const end_date = `${selectedMonth}-${lastDay}`;
+      
+      const res = await axiosInstance.get("/attendance/report", {
+        params: {
+          program_id: "all",
+          start_date,
+          end_date,
+          institution: "Hifzul Quran College",
+          joining_batch: "all"
+        }
+      });
+      
+      const reportData = res.data.report;
+      if (!reportData || reportData.length === 0) {
+        toast.warning("No attendance records found for this month");
+        return;
+      }
+      
+      const newStatusMap = { ...selectedStatus };
+      let updatedCount = 0;
+      
+      filteredResults.forEach((resItem) => {
+        const studentId = resItem.student_id;
+        const studentReport = reportData.find(r => r.id === studentId);
+        
+        if (studentReport && studentReport.total_days > 0) {
+          const attendanceMark = Math.round((studentReport.present_days / studentReport.total_days) * 10);
+          
+          newStatusMap[resItem.result_id] = {
+            ...(newStatusMap[resItem.result_id] || {}),
+            attendance: attendanceMark
+          };
+          updatedCount++;
+        }
+      });
+      
+      setSelectedStatus(newStatusMap);
+      toast.success(`Generated attendance marks for ${updatedCount} students. Don't forget to save!`);
+      
+    } catch (error) {
+      toast.error("Failed to generate attendance marks");
+      console.error(error);
+    }
+  };
 
 
   // PRINT
@@ -139,9 +236,15 @@ const Hifiz = () => {
         <td>${result.full_name}</td>
         <td>${result.joining_batch}</td>
         <td>${result.reg_number}</td>
-        <td>${result.hifiz_marks}</td>
-        <td>${result.hizb_marks}</td>
-        <td>${(result.hifiz_marks || 0) + (result.hizb_marks || 0)}</td>
+        <td>${result.hifiz_marks ?? ""}</td>
+        <td>${result.hizb_marks ?? ""}</td>
+        <td>${result.competitions ?? ""}</td>
+        <td>${result.description ?? ""}</td>
+        <td>${result.presentation_skill ?? ""}</td>
+        <td>${result.writing_skill ?? ""}</td>
+        <td>${result.reading_skill ?? ""}</td>
+        <td>${result.attendance ?? ""}</td>
+        <td>${(result.hifiz_marks || 0) + (result.hizb_marks || 0) + (result.competitions || 0) + (result.presentation_skill || 0) + (result.writing_skill || 0) + (result.reading_skill || 0) + (result.attendance || 0)}</td>
         <td>${getRStatus(result).toUpperCase()}</td>
       </tr>
     `).join("");
@@ -179,6 +282,12 @@ const Hifiz = () => {
                   <th>Reg No</th>
                   <th>Hifiz</th>
                   <th>Hizb</th>
+                  <th>Competitions</th>
+                  <th>Description</th>
+                  <th>Presentation</th>
+                  <th>Writing</th>
+                  <th>Reading</th>
+                  <th>Attendance</th>
                   <th>Total</th>
                   <th>Status</th>
                 </tr>
@@ -210,7 +319,13 @@ const Hifiz = () => {
         "Course": r.joining_batch,
         "Hifiz": r.hifiz_marks,
         "Hizb": r.hizb_marks,
-        "Total": (r.hifiz_marks || 0) + (r.hizb_marks || 0),
+        "Competitions": r.competitions,
+        "Description": r.description,
+        "Presentation": r.presentation_skill,
+        "Writing": r.writing_skill,
+        "Reading": r.reading_skill,
+        "Attendance": r.attendance,
+        "Total": (r.hifiz_marks || 0) + (r.hizb_marks || 0) + (r.competitions || 0) + (r.presentation_skill || 0) + (r.writing_skill || 0) + (r.reading_skill || 0) + (r.attendance || 0),
         "Result": getRStatus(r).toUpperCase(),
       }));
 
@@ -242,16 +357,22 @@ const Hifiz = () => {
         )
       );
 
-      const tableColumn = ["#", "Month", "Name", "Course", "Reg No", "Hifiz", "Hizb", "Total", "Status"];
+      const tableColumn = ["#", "Month", "Name", "Course", "Reg No", "Hifiz", "Hizb", "Comp", "Desc", "Pres", "Writ", "Read", "Att", "Total", "Status"];
       const tableRows = filteredResults.map((result, index) => [
         index + 1,
         new Date(result.exam_date).toLocaleString("default", { month: "long" }),
         result.full_name,
         result.joining_batch,
         result.reg_number,
-        result.hifiz_marks,
-        result.hizb_marks,
-        (result.hifiz_marks || 0) + (result.hizb_marks || 0),
+        result.hifiz_marks ?? "",
+        result.hizb_marks ?? "",
+        result.competitions ?? "",
+        result.description ?? "",
+        result.presentation_skill ?? "",
+        result.writing_skill ?? "",
+        result.reading_skill ?? "",
+        result.attendance ?? "",
+        (result.hifiz_marks || 0) + (result.hizb_marks || 0) + (result.competitions || 0) + (result.presentation_skill || 0) + (result.writing_skill || 0) + (result.reading_skill || 0) + (result.attendance || 0),
         getRStatus(result).toUpperCase()
       ]);
 
@@ -357,6 +478,13 @@ const Hifiz = () => {
         exam_date: examDate,
         hifiz_marks: hifiz === "" ? null : (hifiz ? Number(hifiz) : null),
         hizb_marks: hizb === "" ? null : (hizb ? Number(hizb) : null),
+        competitions: competitions === "" ? null : (competitions ? Number(competitions) : null),
+        description: description === "" ? null : description,
+        presentation_skill: presentationSkill === "" ? null : (presentationSkill ? Number(presentationSkill) : null),
+        writing_skill: writingSkill === "" ? null : (writingSkill ? Number(writingSkill) : null),
+        reading_skill: readingSkill === "" ? null : (readingSkill ? Number(readingSkill) : null),
+        attendance: attendance === "" ? null : (attendance ? Number(attendance) : null),
+        total_marks: modalTotal
       })
     );
 
@@ -366,6 +494,12 @@ const Hifiz = () => {
     setExamDate("");
     setHifiz("");
     setHizb("");
+    setCompetitions("");
+    setDescription("");
+    setPresentationSkill("");
+    setWritingSkill("");
+    setReadingSkill("");
+    setAttendance("");
     setShowAddModal(false);
   };
 
@@ -397,13 +531,13 @@ const Hifiz = () => {
           {/* HEADER SIDE */}
           <div className="flex flex-col sm:flex-row items-center gap-2 mb-6">
             {/* SEARCH */}
-            <div className="relative w-full sm:w-40">
-              <input type="text" placeholder="Search by name, reg number, course or status..."
+            <div className="relative w-full sm:w-36">
+              <input type="text" placeholder="Search..."
                 value={search} onChange={(e) => setSearch(e.target.value)}
-                className="w-full border px-4 py-1.5 rounded-lg pl-10
-                                   placeholder:text-sm focus:outline-none" />
-              <FolderSearch className="absolute left-3 top-1/2 -translate-y-1/2
-                                               text-gray-400 w-5 h-5"/>
+                className="w-full h-[34px] border px-3 py-1.5 rounded-lg pl-9
+                                   placeholder:text-sm focus:outline-none text-sm" />
+              <FolderSearch className="absolute left-2.5 top-1/2 -translate-y-1/2
+                                               text-gray-400 w-4 h-4"/>
             </div>
 
             {/* MONTH PICKER */}
@@ -412,7 +546,7 @@ const Hifiz = () => {
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border px-4 py-2 rounded-lg text-sm focus:outline-none bg-white shadow-sm"
+                className="w-full sm:w-36 h-[34px] border px-3 py-1.5 rounded-lg text-sm focus:outline-none bg-white shadow-sm"
               />
               {selectedMonth && (
                 <button
@@ -424,7 +558,7 @@ const Hifiz = () => {
               )}
             </div>
 
-            <div className="flex gap-2 sm:ml-auto">
+            <div className="flex gap-1.5 flex-wrap sm:ml-auto">
 
               {/* TOGGLE PUBLISH AND PANDING */}
               <button
@@ -435,14 +569,14 @@ const Hifiz = () => {
               </button>
 
               {/* PRINT */}
-              <button onClick={handlePrint} className="px-4 py-2 bg-gray-700 text-white rounded">
+              <button onClick={handlePrint} className="px-3 py-1.5 bg-gray-700 text-white rounded text-sm">
                 Print
               </button>
 
               {/* EXCEL */}
               <button
                 onClick={handleExcel}
-                className="px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
               >
                 Excel
               </button>
@@ -450,15 +584,23 @@ const Hifiz = () => {
               {/* PDF */}
               <button
                 onClick={handlePDF}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
               >
                 PDF
+              </button>
+
+              {/* AUTO ATTENDANCE */}
+              <button
+                onClick={handleAutoAttendance}
+                className="px-3 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 whitespace-nowrap text-sm"
+              >
+                Auto
               </button>
 
               {/* ADD RESULT */}
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap text-sm"
               >
                 + Add Result
               </button>
@@ -483,6 +625,12 @@ const Hifiz = () => {
                     <th className="py-3 px-4 text-left">Reg No</th>
                     <th className="py-3 px-4 text-left">Hifiz</th>
                     <th className="py-3 px-4 text-left">Hizb</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Competitions</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Description</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Presentation</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Writing</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Reading</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Attendance</th>
                     <th className="py-3 px-4 text-left">Total</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">R Status</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap actions-col">P Status</th>
@@ -525,12 +673,52 @@ const Hifiz = () => {
                               className="text-center w-10 focus:outline-none 
                                                     bg-transparent" />
                           </td>
+                          {/* COMPETITIONS */}
+                          <td className="py-3 px-4">
+                            <input type="number" min="0"
+                              value={selectedStatus[result.result_id]?.competitions !== undefined ? selectedStatus[result.result_id].competitions : (result.competitions ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "competitions", e.target.value)}
+                              className="text-center w-12 focus:outline-none bg-transparent" />
+                          </td>
+                          {/* DESCRIPTION */}
+                          <td className="py-3 px-4">
+                            <input type="text"
+                              value={selectedStatus[result.result_id]?.description !== undefined ? selectedStatus[result.result_id].description : (result.description ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "description", e.target.value)}
+                              className="w-24 focus:outline-none bg-transparent border-b border-gray-200 text-xs" />
+                          </td>
+                          {/* PRESENTATION SKILL */}
+                          <td className="py-3 px-4">
+                            <input type="number" min="0"
+                              value={selectedStatus[result.result_id]?.presentation_skill !== undefined ? selectedStatus[result.result_id].presentation_skill : (result.presentation_skill ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "presentation_skill", e.target.value)}
+                              className="text-center w-12 focus:outline-none bg-transparent" />
+                          </td>
+                          {/* WRITING SKILL */}
+                          <td className="py-3 px-4">
+                            <input type="number" min="0"
+                              value={selectedStatus[result.result_id]?.writing_skill !== undefined ? selectedStatus[result.result_id].writing_skill : (result.writing_skill ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "writing_skill", e.target.value)}
+                              className="text-center w-12 focus:outline-none bg-transparent" />
+                          </td>
+                          {/* READING SKILL */}
+                          <td className="py-3 px-4">
+                            <input type="number" min="0"
+                              value={selectedStatus[result.result_id]?.reading_skill !== undefined ? selectedStatus[result.result_id].reading_skill : (result.reading_skill ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "reading_skill", e.target.value)}
+                              className="text-center w-12 focus:outline-none bg-transparent" />
+                          </td>
+                          {/* ATTENDANCE */}
+                          <td className="py-3 px-4">
+                            <input type="number" min="0"
+                              value={selectedStatus[result.result_id]?.attendance !== undefined ? selectedStatus[result.result_id].attendance : (result.attendance ?? "")}
+                              onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
+                              className="text-center w-12 focus:outline-none bg-transparent" />
+                          </td>
                           <td className="py-3 px-4 font-bold text-gray-700">
-                            {(() => {
-                              const hifiz = Number(selectedStatus[result.result_id]?.hifiz_marks ?? (result.hifiz_marks || 0));
-                              const hizb = Number(selectedStatus[result.result_id]?.hizb_marks ?? (result.hizb_marks || 0));
-                              return hifiz + hizb;
-                            })()}
+                            <span className="inline-block w-14 text-center font-black text-blue-700 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 text-sm">
+                              {calcTotal(result.result_id, result)}
+                            </span>
                           </td>
                           <td className="py-3 px-4">
                             {(() => {
@@ -667,8 +855,8 @@ const Hifiz = () => {
         </div>
 
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-xl w-full max-w-md">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
 
               <h2 className="text-lg font-bold mb-4">Add New Exam Result</h2>
 
@@ -712,21 +900,26 @@ const Hifiz = () => {
                 className="w-full border p-2 mb-3 rounded"
               />
 
-              <input
-                type="number"
-                placeholder="Hifiz Marks"
-                value={hifiz}
-                onChange={(e) => setHifiz(e.target.value)}
-                className="w-full border p-2 mb-3 rounded"
-              />
+              <input type="number" placeholder="Hifiz Marks" value={hifiz} onChange={(e) => setHifiz(e.target.value)} className="w-full border p-2 mb-3 rounded" />
+              <input type="number" placeholder="Hizb Marks" value={hizb} onChange={(e) => setHizb(e.target.value)} className="w-full border p-2 mb-3 rounded" />
 
-              <input
-                type="number"
-                placeholder="Hizb Marks"
-                value={hizb}
-                onChange={(e) => setHizb(e.target.value)}
-                className="w-full border p-2 mb-4 rounded"
-              />
+              <hr className="my-3" />
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Additional Fields</p>
+
+              <input type="number" placeholder="Competitions" value={competitions} onChange={(e) => setCompetitions(e.target.value)} className="w-full border p-2 mb-3 rounded" />
+              <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border p-2 mb-3 rounded text-sm resize-none" />
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <input type="number" placeholder="Presentation" value={presentationSkill} onChange={(e) => setPresentationSkill(e.target.value)} className="border p-2 rounded text-sm" />
+                <input type="number" placeholder="Writing" value={writingSkill} onChange={(e) => setWritingSkill(e.target.value)} className="border p-2 rounded text-sm" />
+                <input type="number" placeholder="Reading" value={readingSkill} onChange={(e) => setReadingSkill(e.target.value)} className="border p-2 rounded text-sm" />
+              </div>
+              <input type="number" placeholder="Attendance" value={attendance} onChange={(e) => setAttendance(e.target.value)} className="w-full border p-2 mb-4 rounded" />
+
+              {/* Auto-computed Total */}
+              <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded px-4 py-3 mb-4">
+                <span className="text-sm font-bold text-gray-600">Total Marks (Auto)</span>
+                <span className="text-2xl font-black text-blue-700">{modalTotal}</span>
+              </div>
 
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowAddModal(false)}>Cancel</button>

@@ -1,7 +1,11 @@
 import Header from "../Header";
 import { BookOpenCheck, ChevronRight } from 'lucide-react';
+import { useState } from "react";
+import UthmaniyyaBatchResult from "./UthmaniyyaBatchResult";
 
 const DawaResult = ({ onBack }) => {
+    const [selectedCourse, setSelectedCourse] = useState(null);
+
     const courses = [
         { id: "HI1", name: "HI 1", color: "from-blue-500 to-indigo-600" },
         { id: "HI2", name: "HI 2", color: "from-indigo-500 to-purple-600" },
@@ -14,6 +18,16 @@ const DawaResult = ({ onBack }) => {
         { id: "BS4", name: "BS 4", color: "from-emerald-500 to-teal-600" },
         { id: "BS5", name: "BS 5", color: "from-cyan-500 to-blue-600" },
     ];
+
+    // If a course is selected, show its mark entry page
+    if (selectedCourse) {
+        return (
+            <UthmaniyyaBatchResult
+                course={selectedCourse}
+                onBack={() => setSelectedCourse(null)}
+            />
+        );
+    }
 
     return (
         <main className="p-[10px] pl-[10px] md:pl-[17rem] w-full min-h-screen bg-gray-50/50">
@@ -40,13 +54,14 @@ const DawaResult = ({ onBack }) => {
                     {courses.map((course) => (
                         <button
                             key={course.id}
+                            onClick={() => setSelectedCourse(course.id)}
                             className="group relative overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col items-start p-6 text-left"
                         >
                             {/* Gradient Background Decoration */}
                             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${course.color} opacity-10 rounded-bl-full transform translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-500`} />
 
                             {/* Icon Container */}
-                            <div className={`mb-4 p-3 rounded-xl bg-gradient-to-br ${course.color} text-white shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-300`}>
+                            <div className={`mb-4 p-3 rounded-xl bg-gradient-to-br ${course.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                                 <BookOpenCheck className="w-6 h-6" />
                             </div>
 
@@ -71,7 +86,7 @@ const DawaResult = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* QUICK STATS/INFO SECTION (Optional Aesthetic Addition) */}
+            {/* QUICK STATS/INFO SECTION */}
             <div className="px-6 pb-12">
                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
                     <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
@@ -80,7 +95,7 @@ const DawaResult = ({ onBack }) => {
                     </div>
                     <div className="relative z-10 md:flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-bold">Manage Results Effeciently</h2>
+                            <h2 className="text-2xl font-bold">Manage Results Efficiently</h2>
                             <p className="text-gray-400 mt-2 max-w-md">Access detailed analytics and individual student reports for all courses in Uthmaniyya College of Excellence.</p>
                         </div>
                         <div className="mt-6 md:mt-0 flex gap-4">
