@@ -319,7 +319,14 @@ const Attendance = () => {
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
-                                        <input type="date" name="attendance_date" value={filters.attendance_date} onChange={handleFilterChange} className="border p-2 rounded-lg bg-gray-50 outline-none" />
+                                        <input
+                                            type="date"
+                                            name="attendance_date"
+                                            value={filters.attendance_date}
+                                            onChange={handleFilterChange}
+                                            disabled={!isAdmin}
+                                            className="border p-2 rounded-lg bg-gray-50 outline-none disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                        />
                                     </div>
                                 </div>
                             </div>
