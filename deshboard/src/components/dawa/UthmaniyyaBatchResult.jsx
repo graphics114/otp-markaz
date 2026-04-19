@@ -258,13 +258,13 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         <td>${new Date(r.exam_date).toLocaleString("default", { month: "long" })}</td>
         <td>${r.full_name}</td>
         <td>${r.reg_number}</td>
-        <td>${r.total_marks ?? ""}</td>
         <td>${r.competitions ?? ""}</td>
         <td>${r.description ?? ""}</td>
         <td>${r.presentation_skill ?? ""}</td>
         <td>${r.writing_skill ?? ""}</td>
         <td>${r.reading_skill ?? ""}</td>
         <td>${r.attendance ?? ""}</td>
+        <td>${r.total_marks ?? ""}</td>
         <td>${getRStatus(r).toUpperCase()}</td>
         <td>${r.result_status ?? ""}</td>
       </tr>`).join("");
@@ -284,9 +284,9 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         <p>Exam Results | Print Date: ${printDate}</p>
         <table><thead><tr>
           <th>#</th><th>Month</th><th>Name</th><th>Reg No</th>
-          <th>Total</th><th>Competition</th><th>Description</th>
-          <th>Presentation</th><th>Writing</th><th>Reading</th>
-          <th>Attendance</th><th>R Status</th><th>P Status</th>
+          <th>Competition</th><th>Description</th><th>Presentation Skill</th>
+          <th>Writing Skill</th><th>Reading Skill</th><th>Attendance</th>
+          <th>Total</th><th>R Status</th><th>P Status</th>
         </tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
     win.document.close();
@@ -302,13 +302,13 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
       Month: new Date(r.exam_date).toLocaleString("default", { month: "long" }),
       Name: r.full_name,
       "Reg No": r.reg_number,
-      "Total Marks": r.total_marks,
       Competitions: r.competitions,
       Description: r.description,
-      Presentation: r.presentation_skill,
-      Writing: r.writing_skill,
-      Reading: r.reading_skill,
+      "Presentation Skill": r.presentation_skill,
+      "Writing Skill": r.writing_skill,
+      "Reading Skill": r.reading_skill,
       Attendance: r.attendance,
+      "Total Marks": r.total_marks,
       "R Status": getRStatus(r).toUpperCase(),
       "P Status": r.result_status,
     }));
@@ -328,18 +328,18 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         startY: 32,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [241, 245, 249], textColor: 0 },
-        head: [["#", "Month", "Name", "Reg No", "Total", "Competition", "Description", "Presentation", "Writing", "Reading", "Attendance", "R Status", "P Status"]],
+        head: [["#", "Month", "Name", "Reg No", "Competition", "Description", "Presentation Skill", "Writing Skill", "Reading Skill", "Attendance", "Total", "R Status", "P Status"]],
         body: filteredResults.map((r, i) => [
           i + 1,
           new Date(r.exam_date).toLocaleString("default", { month: "long" }),
           r.full_name, r.reg_number,
-          r.total_marks ?? "",
           r.competitions ?? "",
           r.description ?? "",
           r.presentation_skill ?? "",
           r.writing_skill ?? "",
           r.reading_skill ?? "",
           r.attendance ?? "",
+          r.total_marks ?? "",
           getRStatus(r).toUpperCase(),
           r.result_status ?? "",
         ]),
@@ -441,13 +441,13 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Month</th>
                       <th className="py-3 px-3 text-left text-sm">Name</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Reg No</th>
-                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Total Marks</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Competition</th>
                       <th className="py-3 px-3 text-left text-sm">Description</th>
-                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Presentation</th>
-                      <th className="py-3 px-3 text-left text-sm">Writing</th>
-                      <th className="py-3 px-3 text-left text-sm">Reading</th>
+                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Presentation Skill</th>
+                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Writing Skill</th>
+                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Reading Skill</th>
                       <th className="py-3 px-3 text-left text-sm">Attendance</th>
+                      <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Total Marks</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">R Status</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">P Status</th>
                       <th className="py-3 px-3 text-left text-sm">Save</th>
@@ -463,13 +463,6 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                         </td>
                         <td className="py-2 px-3 text-sm whitespace-nowrap">{result.full_name}</td>
                         <td className="py-2 px-3 text-sm whitespace-nowrap">{result.reg_number}</td>
-
-                        {/* TOTAL MARKS — auto-computed, read-only */}
-                        <td className="py-2 px-3">
-                          <span className="inline-block w-14 text-center font-black text-blue-700 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 text-sm">
-                            {calcTotal(result.result_id, result)}
-                          </span>
-                        </td>
 
                         {/* COMPETITIONS */}
                         <td className="py-2 px-3">
@@ -517,6 +510,13 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                             value={selectedStatus[result.result_id]?.attendance !== undefined ? selectedStatus[result.result_id].attendance : (result.attendance ?? "")}
                             onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
                             className="w-14 text-center focus:outline-none bg-transparent border-b border-gray-300 text-sm" />
+                        </td>
+
+                        {/* TOTAL MARKS — auto-computed, read-only */}
+                        <td className="py-2 px-3">
+                          <span className="inline-block w-14 text-center font-black text-blue-700 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 text-sm">
+                            {calcTotal(result.result_id, result)}
+                          </span>
                         </td>
 
                         {/* R STATUS */}
@@ -594,48 +594,78 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
           <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
             <h2 className="text-lg font-bold mb-4">Add Result — {course}</h2>
 
-            {/* Student Select */}
-            <select
-              value={selectedStudent}
-              onChange={(e) => setSelectedStudent(e.target.value)}
-              className="w-full border p-2 mb-3 rounded text-sm"
-            >
-              <option value="">Select Student</option>
-              {courseStudents.map((s) => (
-                <option key={s.id} value={s.id}>{s.full_name} ({s.reg_number})</option>
-              ))}
-            </select>
-
             {/* Exam Date */}
-            <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)}
-              className="w-full border p-2 mb-3 rounded text-sm" />
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Exam Date</label>
+              <input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)}
+                className="w-full border p-2 rounded text-sm" />
+            </div>
+
+            {/* Student Select */}
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Student</label>
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="w-full border p-2 rounded text-sm"
+                disabled={!examDate}
+              >
+                <option value="">{!examDate ? "Please select Exam Date first" : "Select Student"}</option>
+                {courseStudents.filter(s => {
+                  if (!examDate) return false;
+                  const modalMonth = examDate.substring(0, 7);
+                  const hasResult = results.some(r => r.student_id === s.id && r.exam_date && r.exam_date.substring(0, 7) === modalMonth);
+                  return !hasResult;
+                }).map((s) => (
+                  <option key={s.id} value={s.id}>{s.full_name} ({s.reg_number})</option>
+                ))}
+              </select>
+            </div>
 
             <hr className="my-3" />
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Additional Fields</p>
 
-            <input type="number" placeholder="Competitions" value={competitions}
-              onChange={(e) => setCompetitions(e.target.value)}
-              className="w-full border p-2 mb-3 rounded text-sm" />
-
-            <textarea placeholder="Description" value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2} className="w-full border p-2 mb-3 rounded text-sm resize-none" />
-
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <input type="number" placeholder="Presentation" value={presentationSkill}
-                onChange={(e) => setPresentationSkill(e.target.value)}
-                className="border p-2 rounded text-sm" />
-              <input type="number" placeholder="Writing" value={writingSkill}
-                onChange={(e) => setWritingSkill(e.target.value)}
-                className="border p-2 rounded text-sm" />
-              <input type="number" placeholder="Reading" value={readingSkill}
-                onChange={(e) => setReadingSkill(e.target.value)}
-                className="border p-2 rounded text-sm" />
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Competitions</label>
+              <input type="number" placeholder="Competitions Marks" value={competitions}
+                onChange={(e) => setCompetitions(e.target.value)}
+                className="w-full border p-2 rounded text-sm" />
             </div>
 
-            <input type="number" placeholder="Attendance" value={attendance}
-              onChange={(e) => setAttendance(e.target.value)}
-              className="w-full border p-2 mb-3 rounded text-sm" />
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+              <textarea placeholder="Description" value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2} className="w-full border p-2 rounded text-sm resize-none" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 mb-1">Pres Skill</label>
+                <input type="number" placeholder="Pres Skill" value={presentationSkill}
+                  onChange={(e) => setPresentationSkill(e.target.value)}
+                  className="w-full border p-2 rounded text-sm" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 mb-1">Writ Skill</label>
+                <input type="number" placeholder="Writ Skill" value={writingSkill}
+                  onChange={(e) => setWritingSkill(e.target.value)}
+                  className="w-full border p-2 rounded text-sm" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 mb-1">Read Skill</label>
+                <input type="number" placeholder="Read Skill" value={readingSkill}
+                  onChange={(e) => setReadingSkill(e.target.value)}
+                  className="w-full border p-2 rounded text-sm" />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Attendance Marks</label>
+              <input type="number" placeholder="Attendance" value={attendance}
+                onChange={(e) => setAttendance(e.target.value)}
+                className="w-full border p-2 rounded text-sm" />
+            </div>
 
             {/* Auto-computed Total */}
             <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded px-4 py-3 mb-4">

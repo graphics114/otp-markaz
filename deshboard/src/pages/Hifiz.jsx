@@ -284,9 +284,9 @@ const Hifiz = () => {
                   <th>Hizb</th>
                   <th>Competitions</th>
                   <th>Description</th>
-                  <th>Presentation</th>
-                  <th>Writing</th>
-                  <th>Reading</th>
+                  <th>Presentation Skill</th>
+                  <th>Writing Skill</th>
+                  <th>Reading Skill</th>
                   <th>Attendance</th>
                   <th>Total</th>
                   <th>Status</th>
@@ -321,9 +321,9 @@ const Hifiz = () => {
         "Hizb": r.hizb_marks,
         "Competitions": r.competitions,
         "Description": r.description,
-        "Presentation": r.presentation_skill,
-        "Writing": r.writing_skill,
-        "Reading": r.reading_skill,
+        "Presentation Skill": r.presentation_skill,
+        "Writing Skill": r.writing_skill,
+        "Reading Skill": r.reading_skill,
         "Attendance": r.attendance,
         "Total": (r.hifiz_marks || 0) + (r.hizb_marks || 0) + (r.competitions || 0) + (r.presentation_skill || 0) + (r.writing_skill || 0) + (r.reading_skill || 0) + (r.attendance || 0),
         "Result": getRStatus(r).toUpperCase(),
@@ -357,7 +357,7 @@ const Hifiz = () => {
         )
       );
 
-      const tableColumn = ["#", "Month", "Name", "Course", "Reg No", "Hifiz", "Hizb", "Comp", "Desc", "Pres", "Writ", "Read", "Att", "Total", "Status"];
+      const tableColumn = ["#", "Month", "Name", "Course", "Reg No", "Hifiz", "Hizb", "Comp", "Desc", "Pres Skill", "Writ Skill", "Read Skill", "Att", "Total", "Status"];
       const tableRows = filteredResults.map((result, index) => [
         index + 1,
         new Date(result.exam_date).toLocaleString("default", { month: "long" }),
@@ -627,9 +627,9 @@ const Hifiz = () => {
                     <th className="py-3 px-4 text-left">Hizb</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">Competitions</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">Description</th>
-                    <th className="py-3 px-4 text-left whitespace-nowrap">Presentation</th>
-                    <th className="py-3 px-4 text-left whitespace-nowrap">Writing</th>
-                    <th className="py-3 px-4 text-left whitespace-nowrap">Reading</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Presentation Skill</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Writing Skill</th>
+                    <th className="py-3 px-4 text-left whitespace-nowrap">Reading Skill</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">Attendance</th>
                     <th className="py-3 px-4 text-left">Total</th>
                     <th className="py-3 px-4 text-left whitespace-nowrap">R Status</th>
@@ -860,60 +860,103 @@ const Hifiz = () => {
 
               <h2 className="text-lg font-bold mb-4">Add New Exam Result</h2>
 
-              <select
-                value={selectedCourse}
-                onChange={(e) => {
-                  setSelectedCourse(e.target.value);
-                  setSelectedStudent("");
-                }}
-                className="w-full border p-2 mb-3 rounded"
-              >
-                <option value="">Select Course</option>
-                {[...new Set(students
-                  .filter(s => s.institution === "Hifzul Quran College" && s.joining_batch)
-                  .map(s => s.joining_batch))]
-                  .map((course, index) => (
-                    <option key={index} value={course}>{course}</option>
-                  ))}
-              </select>
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Batch / Course</label>
+                <select
+                  value={selectedCourse}
+                  onChange={(e) => {
+                    setSelectedCourse(e.target.value);
+                    setSelectedStudent("");
+                  }}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="">Select Course</option>
+                  {[...new Set(students
+                    .filter(s => s.institution === "Hifzul Quran College" && s.joining_batch)
+                    .map(s => s.joining_batch))]
+                    .map((course, index) => (
+                      <option key={index} value={course}>{course}</option>
+                    ))}
+                </select>
+              </div>
 
-              <select
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full border p-2 mb-3 rounded"
-              >
-                <option value="">Select Student</option>
-                {students
-                  .filter(s => s.institution === "Hifzul Quran College")
-                  .filter(s => !selectedCourse || s.joining_batch === selectedCourse)
-                  .map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.full_name}
-                    </option>
-                  ))}
-              </select>
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Exam Date</label>
+                <input
+                  type="date"
+                  value={examDate}
+                  onChange={(e) => setExamDate(e.target.value)}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
 
-              <input
-                type="date"
-                value={examDate}
-                onChange={(e) => setExamDate(e.target.value)}
-                className="w-full border p-2 mb-3 rounded"
-              />
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Student</label>
+                <select
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                  className="w-full border p-2 rounded"
+                  disabled={!examDate}
+                >
+                  <option value="">{!examDate ? "Please select Exam Date first" : "Select Student"}</option>
+                  {students
+                    .filter(s => s.institution === "Hifzul Quran College")
+                    .filter(s => !selectedCourse || s.joining_batch === selectedCourse)
+                    .filter(s => {
+                      if (!examDate) return false;
+                      const modalMonth = examDate.substring(0, 7);
+                      const hasResult = results.some(r => r.student_id === s.id && r.exam_date && r.exam_date.substring(0, 7) === modalMonth);
+                      return !hasResult;
+                    })
+                    .map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.full_name}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-              <input type="number" placeholder="Hifiz Marks" value={hifiz} onChange={(e) => setHifiz(e.target.value)} className="w-full border p-2 mb-3 rounded" />
-              <input type="number" placeholder="Hizb Marks" value={hizb} onChange={(e) => setHizb(e.target.value)} className="w-full border p-2 mb-3 rounded" />
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Hifiz Marks</label>
+                <input type="number" placeholder="Hifiz Marks" value={hifiz} onChange={(e) => setHifiz(e.target.value)} className="w-full border p-2 rounded" />
+              </div>
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Hizb Marks</label>
+                <input type="number" placeholder="Hizb Marks" value={hizb} onChange={(e) => setHizb(e.target.value)} className="w-full border p-2 rounded" />
+              </div>
 
               <hr className="my-3" />
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Additional Fields</p>
 
-              <input type="number" placeholder="Competitions" value={competitions} onChange={(e) => setCompetitions(e.target.value)} className="w-full border p-2 mb-3 rounded" />
-              <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border p-2 mb-3 rounded text-sm resize-none" />
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <input type="number" placeholder="Presentation" value={presentationSkill} onChange={(e) => setPresentationSkill(e.target.value)} className="border p-2 rounded text-sm" />
-                <input type="number" placeholder="Writing" value={writingSkill} onChange={(e) => setWritingSkill(e.target.value)} className="border p-2 rounded text-sm" />
-                <input type="number" placeholder="Reading" value={readingSkill} onChange={(e) => setReadingSkill(e.target.value)} className="border p-2 rounded text-sm" />
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Competitions</label>
+                <input type="number" placeholder="Competitions" value={competitions} onChange={(e) => setCompetitions(e.target.value)} className="w-full border p-2 rounded" />
               </div>
-              <input type="number" placeholder="Attendance" value={attendance} onChange={(e) => setAttendance(e.target.value)} className="w-full border p-2 mb-4 rounded" />
+
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Description</label>
+                <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full border p-2 rounded text-sm resize-none" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Pres Skill</label>
+                  <input type="number" placeholder="Pres Skill" value={presentationSkill} onChange={(e) => setPresentationSkill(e.target.value)} className="w-full border p-2 rounded text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Writ Skill</label>
+                  <input type="number" placeholder="Writ Skill" value={writingSkill} onChange={(e) => setWritingSkill(e.target.value)} className="w-full border p-2 rounded text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-400 mb-1">Read Skill</label>
+                  <input type="number" placeholder="Read Skill" value={readingSkill} onChange={(e) => setReadingSkill(e.target.value)} className="w-full border p-2 rounded text-sm" />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Attendance</label>
+                <input type="number" placeholder="Attendance Marks" value={attendance} onChange={(e) => setAttendance(e.target.value)} className="w-full border p-2 rounded" />
+              </div>
 
               {/* Auto-computed Total */}
               <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded px-4 py-3 mb-4">
