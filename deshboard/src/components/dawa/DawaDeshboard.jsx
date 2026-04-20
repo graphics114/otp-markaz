@@ -44,7 +44,7 @@ const DawaDeshboard = () => {
 
   /* GRAPH DATA */
   const studentsData = [
-    { name: "Uthmaniyya College...", value: cards?.dawa_students || 0 },
+    { name: "Uthmaniyya College of Excellence", value: cards?.dawa_students || 0 },
   ];
 
   const admissionsData = [

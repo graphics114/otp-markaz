@@ -68,8 +68,11 @@ const Attendance = () => {
             setFilters(prev => ({ ...prev, institution: "Hifzul Quran College" }));
             setReportFilters(prev => ({ ...prev, institution: "Hifzul Quran College" }));
         } else if (user?.role === "Dawa") {
-            setFilters(prev => ({ ...prev, institution: "Uthmaniyya College..." }));
-            setReportFilters(prev => ({ ...prev, institution: "Uthmaniyya College..." }));
+            setFilters(prev => ({ ...prev, institution: "Uthmaniyya College of Excellence" }));
+            setReportFilters(prev => ({ ...prev, institution: "Uthmaniyya College of Excellence" }));
+        } else if (user?.role === "School" || user?.role === "Entry") {
+            setFilters(prev => ({ ...prev, institution: "Acadamic" }));
+            setReportFilters(prev => ({ ...prev, institution: "Acadamic" }));
         }
     }, [user?.role]);
 
@@ -110,7 +113,7 @@ const Attendance = () => {
             const yesterday = new Date(filters.attendance_date);
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().split("T")[0];
-            
+
             dispatch(fetchYesterdayAttendanceData({
                 program_id: filters.program_id,
                 attendance_date: yesterdayStr
@@ -136,16 +139,27 @@ const Attendance = () => {
         }
     };
 
-    const institutions = [
-        {
-            instu: "Hifzul Quran College",
-            batches: ["HZ1", "HZ2", "HZ3"],
-        },
-        {
-            instu: "Uthmaniyya College...",
-            batches: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
-        },
-    ];
+    const institutions = useMemo(() => {
+        const all = [
+            {
+                instu: "Hifzul Quran College",
+                batches: ["HZ1", "HZ2", "HZ3"],
+            },
+            {
+                instu: "Uthmaniyya College of Excellence",
+                batches: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
+            },
+            {
+                instu: "Acadamic",
+                batches: ["HZ1", "HZ2", "HZ3", "HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
+            },
+        ];
+
+        if (user?.role === "Hifiz") return all.filter(i => i.instu === "Hifzul Quran College");
+        if (user?.role === "Dawa") return all.filter(i => i.instu === "Uthmaniyya College of Excellence");
+        if (user?.role === "School" || user?.role === "Entry") return all.filter(i => i.instu === "Acadamic");
+        return all;
+    }, [user?.role]);
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -373,31 +387,28 @@ const Attendance = () => {
                                             <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1 no-print">
                                                 <button
                                                     onClick={() => setStatusFilter("all")}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                                                        statusFilter === "all"
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${statusFilter === "all"
                                                             ? "bg-blue-600 text-white shadow"
                                                             : "text-gray-500 hover:bg-gray-200"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     All ({sortedStudents.length})
                                                 </button>
                                                 <button
                                                     onClick={() => setStatusFilter("present")}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                                                        statusFilter === "present"
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${statusFilter === "present"
                                                             ? "bg-green-600 text-white shadow"
                                                             : "text-gray-500 hover:bg-gray-200"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     Present ({Object.values(localAttendance).filter(v => v !== false).length})
                                                 </button>
                                                 <button
                                                     onClick={() => setStatusFilter("absent")}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                                                        statusFilter === "absent"
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${statusFilter === "absent"
                                                             ? "bg-red-600 text-white shadow"
                                                             : "text-gray-500 hover:bg-gray-200"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     Absent ({Object.values(localAttendance).filter(v => v === false).length})
                                                 </button>
@@ -488,34 +499,35 @@ const Attendance = () => {
                                                         return true;
                                                     })
                                                     .map((s) => {
-                                                    const isAbsentYesterday = yesterdayAttendanceData && yesterdayAttendanceData.some(a => a.student_id === s.id && a.status === false);
-                                                    let bgColorClass = "bg-green-600 text-white";
-                                                    if (localAttendance[s.id] === false) {
-                                                        bgColorClass = "bg-red-600 text-white";
-                                                    } else if (isAbsentYesterday) {
-                                                        bgColorClass = "bg-yellow-500 text-white";
-                                                    }
+                                                        const isAbsentYesterday = yesterdayAttendanceData && yesterdayAttendanceData.some(a => a.student_id === s.id && a.status === false);
+                                                        let bgColorClass = "bg-green-600 text-white";
+                                                        if (localAttendance[s.id] === false) {
+                                                            bgColorClass = "bg-red-600 text-white";
+                                                        } else if (isAbsentYesterday) {
+                                                            bgColorClass = "bg-yellow-500 text-white";
+                                                        }
 
-                                                    return (
-                                                    <button
-                                                        key={s.id}
-                                                        onClick={() => toggleStatus(s.id)}
-                                                        title={s.full_name}
-                                                        className={`aspect-square flex flex-col items-center justify-center p-1 rounded-sm transition-all transform active:scale-95 ${bgColorClass}`}
-                                                    >
-                                                        <span className="font-black text-xl border-b border-white/30 w-full text-center pb-1 mb-1">{s.roll_number || '-'}</span>
-                                                        <span className="text-[10px] font-bold text-center leading-tight line-clamp-2 w-full px-1">{s.full_name}</span>
-                                                    </button>
-                                                )})}
+                                                        return (
+                                                            <button
+                                                                key={s.id}
+                                                                onClick={() => toggleStatus(s.id)}
+                                                                title={s.full_name}
+                                                                className={`aspect-square flex flex-col items-center justify-center p-1 rounded-sm transition-all transform active:scale-95 ${bgColorClass}`}
+                                                            >
+                                                                <span className="font-black text-xl border-b border-white/30 w-full text-center pb-1 mb-1">{s.roll_number || '-'}</span>
+                                                                <span className="text-[10px] font-bold text-center leading-tight line-clamp-2 w-full px-1">{s.full_name}</span>
+                                                            </button>
+                                                        )
+                                                    })}
                                                 {sortedStudents.filter(s => {
                                                     if (statusFilter === "present") return localAttendance[s.id] !== false;
                                                     if (statusFilter === "absent") return localAttendance[s.id] === false;
                                                     return false;
                                                 }).length === 0 && statusFilter !== "all" && (
-                                                    <div className="col-span-full py-10 text-center text-gray-400">
-                                                        <p className="text-xs font-bold">No {statusFilter} students found</p>
-                                                    </div>
-                                                )}
+                                                        <div className="col-span-full py-10 text-center text-gray-400">
+                                                            <p className="text-xs font-bold">No {statusFilter} students found</p>
+                                                        </div>
+                                                    )}
                                             </div>
 
                                             {/* PRINT ONLY: RESPECTS STATUS FILTER */}

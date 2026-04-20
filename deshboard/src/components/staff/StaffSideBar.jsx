@@ -11,15 +11,13 @@ const StaffSideBar = () => {
     const { user } = useSelector((state) => state.auth);
 
     const [activeLink, setActiveLink] = useState(0);
-    const [isStudentsDropdownOpen, setIsStudentsDropdownOpen] = useState(false);
+    const [dropdowns, setDropdowns] = useState({ Students: false, Result: false });
 
-
-    const Links = [
+    let Links = [
         {
             icon: <LayoutDashboard />,
             title: "Deshboard"
         },
-
         {
             icon: <GraduationCap />,
             title: "Students",
@@ -29,22 +27,41 @@ const StaffSideBar = () => {
                 { title: "Attendance", icon: <ClipboardCheck className="w-4 h-4" /> },
             ]
         },
-
         {
             icon: <ClipboardCheck />,
             title: "Result"
         },
-
         {
             icon: <Users />,
             title: "Users"
         },
-
         {
             icon: <User />,
             title: "Profile"
         },
     ];
+
+    if (user?.role === "Entry") {
+        Links = [
+            {
+                icon: <LayoutDashboard />,
+                title: "Deshboard"
+            },
+            {
+                icon: <ClipboardCheck />,
+                title: "Result",
+                isDropdown: true,
+                subLinks: [
+                    { title: "Hifiz Result", icon: <ClipboardCheck className="w-4 h-4" /> },
+                    { title: "Dawa Result", icon: <ClipboardCheck className="w-4 h-4" /> },
+                ]
+            },
+            {
+                icon: <User />,
+                title: "Profile"
+            },
+        ];
+    }
 
     const { isNavbarOpened } = useSelector((state) => state.extra);
     const { isAuthenticated } = useSelector((state) => state.auth);
@@ -80,9 +97,9 @@ const StaffSideBar = () => {
                 </div>
 
                 {Links.map((item, index) => {
-                    const isOpen = item.title === "Students" ? isStudentsDropdownOpen : false;
+                    const isOpen = dropdowns[item.title];
                     const toggle = () => {
-                        if (item.title === "Students") setIsStudentsDropdownOpen(!isStudentsDropdownOpen);
+                        setDropdowns(prev => ({ ...prev, [item.title]: !prev[item.title] }));
                     };
 
                     if (item.isDropdown) {

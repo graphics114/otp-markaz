@@ -6,7 +6,7 @@ import { authorizedRoles, isAuthenticated } from "../middlewares/authMiddleware.
 const router = express.Router();
 
 router.use(isAuthenticated);
-router.use(authorizedRoles("Admin", "Hifiz", "Dawa"));
+router.use(authorizedRoles("Admin", "Hifiz", "Dawa", "School", "Entry"));
 
 router.get("/users", fetchAllUsers);
 router.get("/users/:userId", fetchSingleUser);

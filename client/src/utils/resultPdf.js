@@ -10,31 +10,58 @@ export const downloadResultPDF = (r) => {
   const hifizValid = !hifizBlank && Number(r.hifiz_marks) >= 30;
   const hizbValid = !hizbBlank && Number(r.hizb_marks) >= 30;
   
-  const isPassed =
-    r.hifiz_marks === 1 ||
-    r.hizb_marks === 1 ||
-    (hifizValid && hizbValid) ||
-    (hifizBlank && hizbValid) ||
-    (hizbBlank && hifizValid);
-
   const validHifiz = r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1;
   const validHizb = r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1;
 
+  const memorySubjects = [
+    { name: "Hifiz", val: r.hifiz_marks, valid: validHifiz, pass: hifizValid || r.hifiz_marks === 1 },
+    { name: "Hizb", val: r.hizb_marks, valid: validHizb, pass: hizbValid || r.hizb_marks === 1 }
+  ];
+
+  const academicSubjects = [
+    { name: "Competition", val: r.competitions, pass: (r.competitions ?? 0) >= 0 },
+    { name: "Presentation Skill", val: r.presentation_skill, pass: (r.presentation_skill ?? 0) >= 0 },
+    { name: "Writing Skill", val: r.writing_skill, pass: (r.writing_skill ?? 0) >= 0 },
+    { name: "Reading Skill", val: r.reading_skill, pass: (r.reading_skill ?? 0) >= 0 },
+    { name: "Attendance", val: r.attendance, pass: (r.attendance ?? 0) >= 13 }
+  ];
+
+  const allApplicableSubjects = [
+    ...memorySubjects.filter(s => s.valid),
+    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== "")
+  ];
+
+  const isPassed = allApplicableSubjects.length > 0 && allApplicableSubjects.every(s => s.pass);
+  const subjectsCount = allApplicableSubjects.length;
+
   let totalObtained = 0;
   let totalMax = 0;
-  let subjectsCount = 0;
 
   if (validHifiz) {
     totalObtained += r.hifiz_marks === 0 ? 0 : Number(r.hifiz_marks);
     totalMax += 100;
-    subjectsCount++;
   }
   
   if (validHizb) {
     totalObtained += r.hizb_marks === 0 ? 0 : Number(r.hizb_marks);
     totalMax += 100;
-    subjectsCount++;
   }
+
+  // Additional Fields
+  const additionalFields = [
+    { name: "Competition", val: r.competitions, max: 20 },
+    { name: "Presentation Skill", val: r.presentation_skill, max: 20 },
+    { name: "Writing Skill", val: r.writing_skill, max: 20 },
+    { name: "Reading Skill", val: r.reading_skill, max: 20 },
+    { name: "Attendance", val: r.attendance, max: 20 },
+  ];
+
+  additionalFields.forEach(f => {
+    if (f.val !== null && f.val !== undefined && f.val !== "") {
+      totalObtained += Number(f.val);
+      totalMax += f.max;
+    }
+  });
 
   const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
 
@@ -161,8 +188,9 @@ export const downloadResultPDF = (r) => {
       if (mark === null || mark === undefined || mark === "" || mark === 1) return;
       const isAbsent = mark === 0;
       const obtained = isAbsent ? 0 : Number(mark);
-      const pass = obtained >= 30; // Assuming 30 is pass
-      const pct = isAbsent ? "0.00" : `${((obtained / 100) * 100).toFixed(2)}`;
+      const isAcademic = !["Hifiz", "Hizb"].includes(name);
+      const pass = name === "Attendance" ? obtained >= 13 : (isAcademic ? obtained >= 0 : obtained >= 30);
+      const pct = isAbsent ? "0.00" : `${((obtained / max) * 100).toFixed(2)}`;
       
       tableRows.push([
           name,
@@ -175,6 +203,26 @@ export const downloadResultPDF = (r) => {
 
   createSubjectRow("Hifiz", r.hifiz_marks);
   createSubjectRow("Hizb", r.hizb_marks);
+
+  // Helper for skill-based rows
+  const addSkillRow = (name, mark, max) => {
+    if (mark === null || mark === undefined || mark === "") return;
+    const obtained = Number(mark);
+    const pct = `${((obtained / max) * 100).toFixed(2)}`;
+    tableRows.push([
+        name,
+        max,
+        obtained,
+        `${pct}%`,
+        obtained >= (name === "Attendance" ? 13 : 0) ? "Pass" : "Fail"
+    ]);
+  };
+
+  addSkillRow("Competition", r.competitions, 20);
+  addSkillRow("Presentation Skill", r.presentation_skill, 20);
+  addSkillRow("Writing Skill", r.writing_skill, 20);
+  addSkillRow("Reading Skill", r.reading_skill, 20);
+  addSkillRow("Attendance", r.attendance, 20);
 
   if (tableRows.length > 0) {
     tableRows.push([

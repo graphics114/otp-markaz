@@ -38,7 +38,7 @@ const UserRegister = () => {
             ],
         },
         {
-            instu: "Uthmaniyya College...",
+            instu: "Uthmaniyya College of Excellence",
             courses: [
                 "HI1",
                 "HI2",
@@ -51,6 +51,10 @@ const UserRegister = () => {
                 "BS4",
                 "BS5",
             ],
+        },
+        {
+            instu: "Acadamic",
+            courses: [],
         },
     ];
 
@@ -111,7 +115,8 @@ const UserRegister = () => {
                             <option value="Student" className="text-black">Student</option>
                             <option value="Hifiz" className="text-black">Hifiz</option>
                             <option value="Dawa" className="text-black">Dawa</option>
-
+                            <option value="School" className="text-black">School</option>
+                            <option value="Entry" className="text-black">Entry</option>
                         </select>
                     </div>
 

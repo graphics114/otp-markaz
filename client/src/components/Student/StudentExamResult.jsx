@@ -8,8 +8,18 @@ import Header from "./Head";
 const SubjectResultCard = ({ subjectName, obtainedMarks, maxMarks = 100 }) => {
   if (obtainedMarks === null || obtainedMarks === undefined || obtainedMarks === "") return null;
 
-  const isAbsent = obtainedMarks === 0;
-  const passed = !isAbsent && Number(obtainedMarks) >= 30; // Assuming 30 is passing
+  const isAbsent = obtainedMarks === null || obtainedMarks === undefined || obtainedMarks === "" || obtainedMarks === "A";
+  let passed = false;
+  
+  if (subjectName === "Attendance") {
+    passed = !isAbsent && Number(obtainedMarks) >= 13;
+  } else if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(subjectName)) {
+    passed = !isAbsent && Number(obtainedMarks) >= 0;
+  } else {
+    // Memory subjects (Hifiz/Hizb)
+    passed = !isAbsent && Number(obtainedMarks) >= 30;
+  }
+  
   const percentage = isAbsent ? "0.00" : ((Number(obtainedMarks) / maxMarks) * 100).toFixed(2);
 
   return (
@@ -46,36 +56,62 @@ const SubjectResultCard = ({ subjectName, obtainedMarks, maxMarks = 100 }) => {
 const ResultCard = ({ result }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isBlank = (value) => value === null || value === undefined || value === "";
+  
   const hifizBlank = isBlank(result.hifiz_marks);
   const hizbBlank = isBlank(result.hizb_marks);
   const hifizValid = !hifizBlank && Number(result.hifiz_marks) >= 30;
   const hizbValid = !hizbBlank && Number(result.hizb_marks) >= 30;
 
-  const isPassed =
-    result.hifiz_marks === 1 ||
-    result.hizb_marks === 1 ||
-    (hifizValid && hizbValid) ||
-    (hifizBlank && hizbValid) ||
-    (hizbBlank && hifizValid);
-
   const validHifiz = result.hifiz_marks !== null && result.hifiz_marks !== undefined && result.hifiz_marks !== "" && result.hifiz_marks !== 1;
   const validHizb = result.hizb_marks !== null && result.hizb_marks !== undefined && result.hizb_marks !== "" && result.hizb_marks !== 1;
 
+  const memorySubjects = [
+    { name: "Hifiz", val: result.hifiz_marks, valid: validHifiz, pass: hifizValid || result.hifiz_marks === 1 },
+    { name: "Hizb", val: result.hizb_marks, valid: validHizb, pass: hizbValid || result.hizb_marks === 1 }
+  ];
+
+  const academicSubjects = [
+    { name: "Competition", val: result.competitions, pass: (result.competitions ?? 0) >= 0 },
+    { name: "Presentation Skill", val: result.presentation_skill, pass: (result.presentation_skill ?? 0) >= 0 },
+    { name: "Writing Skill", val: result.writing_skill, pass: (result.writing_skill ?? 0) >= 0 },
+    { name: "Reading Skill", val: result.reading_skill, pass: (result.reading_skill ?? 0) >= 0 },
+    { name: "Attendance", val: result.attendance, pass: (result.attendance ?? 0) >= 13 }
+  ];
+
+  const allApplicableSubjects = [
+    ...memorySubjects.filter(s => s.valid),
+    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== "")
+  ];
+
+  const isPassed = allApplicableSubjects.length > 0 && allApplicableSubjects.every(s => s.pass);
+  const subjectsCount = allApplicableSubjects.length;
+
   let totalObtained = 0;
   let totalMax = 0;
-  let subjectsCount = 0;
 
   if (validHifiz) {
     totalObtained += result.hifiz_marks === 0 ? 0 : Number(result.hifiz_marks);
     totalMax += 100;
-    subjectsCount++;
   }
-
   if (validHizb) {
     totalObtained += result.hizb_marks === 0 ? 0 : Number(result.hizb_marks);
     totalMax += 100;
-    subjectsCount++;
   }
+
+  const additionalFields = [
+    { name: "Competitions", val: result.competitions, max: 20 },
+    { name: "Presentation Skill", val: result.presentation_skill, max: 20 },
+    { name: "Writing Skill", val: result.writing_skill, max: 20 },
+    { name: "Reading Skill", val: result.reading_skill, max: 20 },
+    { name: "Attendance", val: result.attendance, max: 20 },
+  ];
+
+  additionalFields.forEach(f => {
+    if (f.val !== null && f.val !== undefined && f.val !== "") {
+      totalObtained += Number(f.val);
+      totalMax += f.max;
+    }
+  });
 
   const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
 
@@ -134,13 +170,30 @@ const ResultCard = ({ result }) => {
           </div>
 
           {/* Subject-wise Results */}
-          <div className="mb-4">
+          <div className="mb-6">
             <h4 className="font-bold text-gray-800 mb-3 ml-1">Subject-wise Results</h4>
-
-            <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SubjectResultCard subjectName="Hifiz" obtainedMarks={result.hifiz_marks === 1 ? null : result.hifiz_marks} />
               <SubjectResultCard subjectName="Hizb" obtainedMarks={result.hizb_marks === 1 ? null : result.hizb_marks} />
             </div>
+          </div>
+
+          {/* Personal and Skill Assessment */}
+          <div className="mb-4">
+            <h4 className="font-bold text-gray-800 mb-3 ml-1">Personal and Skill Assessment</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SubjectResultCard subjectName="Competition" obtainedMarks={result.competitions} maxMarks={20} />
+              <SubjectResultCard subjectName="Presentation Skill" obtainedMarks={result.presentation_skill} maxMarks={20} />
+              <SubjectResultCard subjectName="Writing Skill" obtainedMarks={result.writing_skill} maxMarks={20} />
+              <SubjectResultCard subjectName="Reading Skill" obtainedMarks={result.reading_skill} maxMarks={20} />
+              <SubjectResultCard subjectName="Attendance" obtainedMarks={result.attendance} maxMarks={20} />
+            </div>
+            {result.description && (
+               <div className="mt-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                 <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Teacher's Note / Description</p>
+                 <p className="text-sm text-gray-700 italic">"{result.description}"</p>
+               </div>
+            )}
           </div>
 
           {/* Footer Info */}

@@ -19,6 +19,7 @@ import Result from "./components/Result";
 import Admissions from "./components/admissions";
 import TopStudents from "./components/TopStudents";
 import Attendance from "./components/Attendance";
+import ProgressReport from "./components/ProgressReport";
 
 
 // Hifiz Components
@@ -26,7 +27,7 @@ import StaffUsers from "./components/staff/StaffUsers";
 import StaffSideBar from "./components/staff/StaffSideBar";
 import HifizResult from "./components/staff/HifizResult";
 import HifizStudents from "./components/staff/HifizStudents";
-import HifizDeshboard from "./components/staff/HifizDeshboard";
+import AcadamicDeshboard from "./components/staff/AcadamicDeshboard";
 
 
 
@@ -72,6 +73,8 @@ const App = () => {
         return <Profile />;
       case "Attendance":
         return <Attendance />;
+      case "Progress Report":
+        return <ProgressReport />;
 
       default:
         return <Deshboard />;
@@ -82,11 +85,15 @@ const App = () => {
   const staffRenderDashboardContent = () => {
     switch (openedComponent) {
       case "Deshboard":
-        return <HifizDeshboard />;
+        return <AcadamicDeshboard />;
       case "Students":
         return <HifizStudents />;
       case "Result":
         return <HifizResult />;
+      case "Hifiz Result":
+        return <HifizResult />;
+      case "Dawa Result":
+        return <DawaResult />;
       case "Users":
         return <StaffUsers />;
       case "Profile":
@@ -94,7 +101,7 @@ const App = () => {
       case "Attendance":
         return <Attendance />;
       default:
-        return <HifizDeshboard />;
+        return <AcadamicDeshboard />;
 
     }
   };
@@ -138,22 +145,15 @@ const App = () => {
       );
     }
 
-    //HIFIZ
-    if (user?.role === "Hifiz") {
-      return (
-        <div className="flex min-h-screen">
-          <StaffSideBar />
-          {staffRenderDashboardContent()}
-        </div>
-      );
-    }
+    //HIFIZ, DAWA, SCHOOL, ENTRY (Staff roles)
+    if (["Hifiz", "Dawa", "School", "Entry"].includes(user?.role)) {
+      const dashboardContent = 
+        user.role === "Dawa" ? dawaRenderDashboardContent() : staffRenderDashboardContent();
 
-    //DAWA
-    if (user?.role === "Dawa") {
       return (
         <div className="flex min-h-screen">
           <StaffSideBar />
-          {dawaRenderDashboardContent()}
+          {dashboardContent}
         </div>
       );
     }

@@ -145,6 +145,10 @@ const EnrollStudent = ({ selectedAdmition }) => {
             instu: "Uthmaniyya College of Excellence",
             courses: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
         },
+        {
+            instu: "Acadamic",
+            courses: [],
+        },
     ];
 
     const selectedinstuObj = institutions.find(

@@ -172,6 +172,12 @@ export const fetchStudentExamResult = catchAsyncError(async (req, res, next) => 
             ser.tajweed_marks,
             ser.total_marks,
             ser.result_status,
+            ser.competitions,
+            ser.description,
+            ser.presentation_skill,
+            ser.writing_skill,
+            ser.reading_skill,
+            ser.attendance,
             ser.created_at
          FROM student_exam_results ser
          JOIN students s ON s.id = ser.student_id
@@ -232,6 +238,12 @@ export const fetchMyExamResult = catchAsyncError(async (req, res, next) => {
             ser.total_marks,
             ser.result_status,
             ser.exam_date,
+            ser.competitions,
+            ser.description,
+            ser.presentation_skill,
+            ser.writing_skill,
+            ser.reading_skill,
+            ser.attendance,
             ser.created_at
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id

@@ -15,7 +15,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { axiosInstance } from "../../lib/axios";
 
-const INSTITUTION = "Uthmaniyya College...";
+const INSTITUTION = "Uthmaniyya College of Excellence";
 
 const UthmaniyyaBatchResult = ({ course, onBack }) => {
   const { loading, results, students } = useSelector((state) => state.std);
@@ -70,8 +70,15 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
     (Number(attendance) || 0);
 
   const getRStatus = (result) => {
-    const total = calcTotal(result.result_id, result);
-    return total >= 35 ? "Passed" : "Failed";
+    const isAcademicPass = (
+      (result.competitions ?? 0) >= 0 &&
+      (result.presentation_skill ?? 0) >= 0 &&
+      (result.writing_skill ?? 0) >= 0 &&
+      (result.reading_skill ?? 0) >= 0
+    );
+    const isAttendancePass = (result.attendance ?? 0) >= 13;
+    
+    return (isAcademicPass && isAttendancePass) ? "Passed" : "Failed";
   };
 
   const isWithinDateRange = (examDate) => {

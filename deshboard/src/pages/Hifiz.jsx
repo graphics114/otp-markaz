@@ -73,8 +73,12 @@ const Hifiz = () => {
   const getRStatus = (result) => {
     const hifiz = result.hifiz_marks ?? 0;
     const hizb = result.hizb_marks ?? 0;
+    const attendance = result.attendance ?? 0;
 
-    return hifiz >= 30 && hizb >= 30 ? "passed" : "failed";
+    const memoryPass = hifiz >= 30 || hizb >= 30;
+    const attendancePass = attendance >= 13;
+    
+    return (memoryPass && attendancePass) ? "passed" : "failed";
   };
 
   const isWithinDateRange = (examDate) => {
@@ -734,10 +738,13 @@ const Hifiz = () => {
                               const hifizValid = !hifizBlank && Number(hifiz) >= 30;
                               const hizbValid = !hizbBlank && Number(hizb) >= 30;
 
-                              const isPassed = hifiz === 1 || hizb === 1 ||
+                              const attendance = selectedStatus[result.result_id]?.attendance ?? result.attendance;
+                              const attendancePass = (attendance ?? 0) >= 13;
+
+                              const isPassed = attendancePass && (hifiz === 1 || hizb === 1 ||
                                 (hifizValid && hizbValid) ||
                                 (hifizBlank && hizbValid) ||
-                                (hizbBlank && hifizValid);
+                                (hizbBlank && hifizValid));
 
                               return (
                                 <span

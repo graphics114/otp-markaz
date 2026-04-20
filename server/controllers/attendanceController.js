@@ -57,7 +57,7 @@ export const fetchStudentsForAttendance = catchAsyncError(async (req, res, next)
          FROM students s
          JOIN users u ON s.user_id = u.id
          WHERE s.institution = $1`;
-    
+
     let queryParams = [institution];
 
     if (joining_batch && joining_batch !== "all") {

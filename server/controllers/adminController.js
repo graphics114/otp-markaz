@@ -103,6 +103,40 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
   const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates`);
   const totalResults = await database.query(`SELECT COUNT(*) FROM student_exam_results WHERE DATE_TRUNC('month', exam_date) = DATE_TRUNC('month', CURRENT_DATE)`);
 
+  const hifizResults = await database.query(`
+    SELECT 
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Published') AS published,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Pending') AS pending
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    WHERE s.institution = 'Hifzul Quran College'
+    AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
+  `);
+
+  const dawaResults = await database.query(`
+    SELECT 
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Published') AS published,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Pending') AS pending
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    WHERE s.institution = 'Uthmaniyya College of Excellence'
+    AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
+  `);
+
+  const resultsByClass = await database.query(`
+    SELECT 
+      s.course_program,
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Published') AS published,
+      COUNT(*) FILTER (WHERE ser.result_status = 'Pending') AS pending
+    FROM student_exam_results ser
+    JOIN students s ON s.id = ser.student_id
+    WHERE DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
+    GROUP BY s.course_program
+  `);
+
   const resultStatus = await database.query(`
     SELECT
       COUNT(*) FILTER (WHERE result_status = 'Published') AS published,
@@ -114,8 +148,14 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
   const studentsByInstitution = await database.query(`
     SELECT
       COUNT(*) FILTER (WHERE institution = 'Hifzul Quran College') AS hifzul_students,
-      COUNT(*) FILTER (WHERE institution = 'Uthmaniyya College...') AS uthmaniyya_students
+      COUNT(*) FILTER (WHERE institution = 'Uthmaniyya College of Excellence') AS uthmaniyya_students
     FROM students
+  `);
+
+  const studentsByClass = await database.query(`
+    SELECT course_program, COUNT(*) as count
+    FROM students
+    GROUP BY course_program
   `);
 
   const admissionsByInstitution = await database.query(`
@@ -175,11 +215,34 @@ export const adminDashboardStats = catchAsyncError(async (req, res) => {
       total_admissions: Number(totalAdmissions.rows[0].count),
       total_results: Number(totalResults.rows[0].count),
 
+      hifiz_results: {
+        total: Number(hifizResults.rows[0].total),
+        published: Number(hifizResults.rows[0].published),
+        pending: Number(hifizResults.rows[0].pending)
+      },
+      dawa_results: {
+        total: Number(dawaResults.rows[0].total),
+        published: Number(dawaResults.rows[0].published),
+        pending: Number(dawaResults.rows[0].pending)
+      },
+
+      results_by_class: resultsByClass.rows.map(row => ({
+        name: row.course_program,
+        total: Number(row.total),
+        published: Number(row.published),
+        pending: Number(row.pending)
+      })),
+
       published_results: Number(resultStatus.rows[0].published),
       pending_results: Number(resultStatus.rows[0].pending),
 
       hifzul_students: Number(studentsByInstitution.rows[0].hifzul_students),
       uthmaniyya_students: Number(studentsByInstitution.rows[0].uthmaniyya_students),
+
+      students_by_class: studentsByClass.rows.map(row => ({
+        name: row.course_program,
+        value: Number(row.count)
+      })),
 
       hifzul_admissions: Number(admissionsByInstitution.rows[0].hifzul_admissions),
       uthmaniyya_admissions: Number(admissionsByInstitution.rows[0].uthmaniyya_admissions),
@@ -212,7 +275,7 @@ export const hifizDashboardStats = catchAsyncError(async (req, res) => {
   `, ["Hifzul Quran College"]);
 
   const totalStudents = await database.query(`SELECT COUNT(*) FROM students WHERE institution = $1`, ["Hifzul Quran College"]);
-  const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates WHERE institution = $1`, ["Hifzul_Quran_College"]); // Note: Check consistency of institution names in DB
+  const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates WHERE institution = $1`, ["Hifzul Quran College"]); // Note: Check consistency of institution names in DB
 
   const totalResults = await database.query(`
   SELECT COUNT(*) 
@@ -329,9 +392,9 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     SELECT COUNT(*) FROM users u
     JOIN students s ON u.id = s.user_id
     WHERE s.institution = $1
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
-  const totalStudents = await database.query(`SELECT COUNT(*) FROM students WHERE institution = $1`, ["Uthmaniyya College..."]);
+  const totalStudents = await database.query(`SELECT COUNT(*) FROM students WHERE institution = $1`, ["Uthmaniyya College of Excellence"]);
   const totalAdmissions = await database.query(`SELECT COUNT(*) FROM admission_candidates WHERE institution = $1`, ["Uthmaniyya College of Excellence"]);
 
   const totalResults = await database.query(`
@@ -340,7 +403,7 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
   JOIN students s ON s.id = ser.student_id
   WHERE s.institution = $1
   AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
   const resultStatus = await database.query(`
     SELECT
@@ -350,13 +413,13 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     JOIN students s ON s.id = ser.student_id
     WHERE s.institution = $1
     AND DATE_TRUNC('month', ser.exam_date) = DATE_TRUNC('month', CURRENT_DATE)
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
   const studentsByInstitution = await database.query(`
     SELECT COUNT(*) AS dawa_students
     FROM students
     WHERE institution = $1
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
   const admissionsByInstitution = await database.query(`
     SELECT
@@ -385,7 +448,7 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     JOIN latest_session ls ON a.program_id = ls.program_id AND a.attendance_date = ls.attendance_date
     WHERE s.institution = $1
     GROUP BY p.program_name, a.attendance_date
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
   const batchAttendance = await database.query(`
     WITH latest_batch_session AS (
@@ -408,7 +471,7 @@ export const dawaDashboardStats = catchAsyncError(async (req, res) => {
     JOIN attendance a ON a.student_id = s.id AND a.attendance_date = lbs.attendance_date AND a.program_id = lbs.program_id
     GROUP BY lbs.joining_batch, lbs.attendance_date
     ORDER BY lbs.attendance_date DESC, lbs.joining_batch
-  `, ["Uthmaniyya College..."]);
+  `, ["Uthmaniyya College of Excellence"]);
 
 
   res.status(200).json({

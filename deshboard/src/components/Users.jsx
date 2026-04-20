@@ -37,7 +37,7 @@ const Users = () => {
     const [selectedInstitution, setSelectedInstitution] = useState("All Institutions");
 
     const filteredUsers = (users || []).filter((user) => {
-        const matchesRole = (user.role === "Hifiz" || user.role === "Student" || user.role === "Dawa");
+        const matchesRole = ["Hifiz", "Student", "Dawa", "School", "Entry"].includes(user.role);
 
         const matchesInstitution =
             selectedInstitution === "All Institutions" ||

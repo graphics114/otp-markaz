@@ -35,6 +35,7 @@ const SideBar = () => {
             subLinks: [
                 { title: "Result", icon: <ClipboardCheck className="w-4 h-4" /> },
                 { title: "Top Students", icon: <Trophy className="w-4 h-4" /> },
+                { title: "Progress Report", icon: <ClipboardCheck className="w-4 h-4" /> },
             ]
         },
         {

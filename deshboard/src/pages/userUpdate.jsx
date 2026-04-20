@@ -78,7 +78,7 @@ const UserUpdate = ({ selectedUser }) => {
             ],
         },
         {
-            instu: "Uthmaniyya College...",
+            instu: "Uthmaniyya College of Excellence",
             courses: [
                 "HI1",
                 "HI2",
@@ -137,7 +137,8 @@ const UserUpdate = ({ selectedUser }) => {
                             <option value="Student">Student</option>
                             <option value="Hifiz">Hifiz</option>
                             <option value="Dawa">Dawa</option>
-
+                            <option value="School">School</option>
+                            <option value="Entry">Entry</option>
                         </select>
                     </div>
 

@@ -38,7 +38,7 @@ const StaffUserRegister = () => {
             ],
         },
         {
-            instu: "Uthmaniyya College...",
+            instu: "Uthmaniyya College of Excellence",
             courses: [
                 "HI1",
                 "HI2",
@@ -51,6 +51,10 @@ const StaffUserRegister = () => {
                 "BS4",
                 "BS5",
             ],
+        },
+        {
+            instu: "Acadamic",
+            courses: [],
         },
     ];
 

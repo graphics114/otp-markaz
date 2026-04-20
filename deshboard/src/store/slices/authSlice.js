@@ -99,7 +99,7 @@ export const login = (data) => async (dispatch) => {
     dispatch(authSlice.actions.loginRequest());
     try {
         await axiosInstance.post("/auth/login", data).then(res => {
-            if (res.data.user.role === "Admin" || res.data.user.role === "Hifiz" || res.data.user.role === "Dawa") {
+            if (["Admin", "Hifiz", "Dawa", "School", "Entry"].includes(res.data.user.role)) {
                 dispatch(authSlice.actions.loginSuccess(res.data.user));
                 toast.success(res.data.message);
             } else {
