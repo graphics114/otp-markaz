@@ -325,6 +325,22 @@ const StaffDeshboard = () => {
                             </td>
                           </tr>
                         ))}
+                        {/* GRAND TOTAL ROW */}
+                        <tr className="bg-blue-50/40 font-black border-t-2 border-blue-100">
+                          <td className="py-4 px-3 sm:px-4 text-blue-700 text-xs sm:text-sm" colSpan={(user?.role === "Entry" || user?.role === "School") ? 3 : 2}>
+                            GRAND TOTAL
+                          </td>
+                          <td className="py-4 px-2 sm:px-4 text-center">
+                            <span className="text-base sm:text-xl text-green-700">
+                              <CountUp end={cards.batch_attendance.reduce((sum, b) => sum + b.present, 0)} />
+                            </span>
+                          </td>
+                          <td className="py-4 px-2 sm:px-4 text-center">
+                            <span className="text-base sm:text-xl text-red-600">
+                              <CountUp end={cards.batch_attendance.reduce((sum, b) => sum + b.absent, 0)} />
+                            </span>
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -365,6 +381,19 @@ const StaffDeshboard = () => {
                             </td>
                           </tr>
                         ))}
+                        {/* GRAND TOTAL ROW */}
+                        <tr className="bg-emerald-50/40 font-black border-t-2 border-emerald-100">
+                          <td className="py-4 px-4 text-emerald-700 text-xs">GRAND TOTAL</td>
+                          <td className="py-4 px-4 text-center text-sm">
+                            <CountUp end={resultsByClassData.reduce((sum, res) => sum + res.total, 0)} />
+                          </td>
+                          <td className="py-4 px-4 text-center text-emerald-700">
+                            <CountUp end={resultsByClassData.reduce((sum, res) => sum + res.published, 0)} />
+                          </td>
+                          <td className="py-4 px-4 text-center text-orange-600">
+                            <CountUp end={resultsByClassData.reduce((sum, res) => sum + res.pending, 0)} />
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>

@@ -27,7 +27,7 @@ const Students = () => {
   const institutions = [
     "All Institutions",
     "Hifzul Quran College",
-    "Uthmaniyya College...",
+    "Uthmaniyya College of Excellence",
   ];
 
   // INST FILTER

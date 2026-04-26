@@ -14,7 +14,7 @@ const StudentDetailedAttendance = () => {
     const { loading, students, studentDetailedAttendance } = useSelector((state) => state.attendance);
 
     const [filters, setFilters] = useState({
-        institution: user?.role === "Hifiz" ? "Hifzul Quran College" : user?.role === "Dawa" ? "Uthmaniyya College..." : "",
+        institution: user?.role === "Hifiz" ? "Hifzul Quran College" : user?.role === "Dawa" ? "Uthmaniyya College of Excellence" : "",
         joining_batch: "",
         student_id: "",
         start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
@@ -27,7 +27,7 @@ const StudentDetailedAttendance = () => {
             batches: ["HZ1", "HZ2", "HZ3"],
         },
         {
-            instu: "Uthmaniyya College...",
+            instu: "Uthmaniyya College of Excellence",
             batches: ["HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
         },
     ];

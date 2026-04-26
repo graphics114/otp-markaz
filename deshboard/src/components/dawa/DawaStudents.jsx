@@ -45,7 +45,7 @@ const DawaStudents = () => {
   const filteredStudents = students.filter((student) => {
     // Institution filter
     const matchesInstitution =
-      student.institution === "Uthmaniyya College...";
+      student.institution === "Uthmaniyya College of Excellence";
 
     // Course filter
     const matchesCourse =
