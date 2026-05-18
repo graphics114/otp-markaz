@@ -139,7 +139,7 @@ const EnrollStudent = ({ selectedAdmition }) => {
     const institutions = [
         {
             instu: "Hifzul Quran College",
-            courses: ["HZ1", "HZ2", "HZ3"],
+            courses: ["HZ1", "HZ2", "HZ3", "HZ4", "HZ5"],
         },
         {
             instu: "Uthmaniyya College of Excellence",

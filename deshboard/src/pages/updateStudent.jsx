@@ -199,6 +199,8 @@ const UpdateStudent = ({ selectedStudent }) => {
                 "HZ1",
                 "HZ2",
                 "HZ3",
+                "HZ4",
+                "HZ5",
             ],
         },
         {

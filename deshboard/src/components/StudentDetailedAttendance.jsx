@@ -24,7 +24,7 @@ const StudentDetailedAttendance = () => {
     const institutions = [
         {
             instu: "Hifzul Quran College",
-            batches: ["HZ1", "HZ2", "HZ3"],
+            batches: ["HZ1", "HZ2", "HZ3", "HZ4", "HZ5"],
         },
         {
             instu: "Uthmaniyya College of Excellence",

@@ -35,6 +35,8 @@ const StaffUserRegister = () => {
                 "HZ1",
                 "HZ2",
                 "HZ3",
+                "HZ4",
+                "HZ5",
             ],
         },
         {

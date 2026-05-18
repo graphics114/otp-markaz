@@ -143,7 +143,7 @@ const Attendance = () => {
         const all = [
             {
                 instu: "Hifzul Quran College",
-                batches: ["HZ1", "HZ2", "HZ3"],
+                batches: ["HZ1", "HZ2", "HZ3", "HZ4", "HZ5"],
             },
             {
                 instu: "Uthmaniyya College of Excellence",
@@ -151,7 +151,7 @@ const Attendance = () => {
             },
             {
                 instu: "Acadamic",
-                batches: ["HZ1", "HZ2", "HZ3", "HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
+                batches: ["HZ1", "HZ2", "HZ3", "HZ4", "HZ5", "HI1", "HI2", "HI3", "HS1", "HS2", "BS1", "BS2", "BS3", "BS4", "BS5"],
             },
         ];
 
