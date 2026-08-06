@@ -35,7 +35,8 @@ export const updateExamResult = catchAsyncError(async (req, res, next) => {
     let {
         hifiz_marks, hizb_marks, result_status,
         competitions, description, presentation_skill,
-        writing_skill, reading_skill, attendance, total_marks
+        writing_skill, reading_skill, attendance, total_marks,
+        custom_subjects
     } = req.body;
 
     if (hifiz_marks === "") hifiz_marks = null;
@@ -92,6 +93,11 @@ export const updateExamResult = catchAsyncError(async (req, res, next) => {
         updates.push(`total_marks = $${paramCount}`);
         values.push(total_marks); paramCount++;
     }
+    if (custom_subjects !== undefined) {
+        updates.push(`custom_subjects = $${paramCount}`);
+        values.push(typeof custom_subjects === "string" ? custom_subjects : JSON.stringify(custom_subjects));
+        paramCount++;
+    }
 
     if (updates.length === 0) {
         return next(new ErrorHandler("No fields to update", 400));
@@ -140,7 +146,8 @@ export const fetchAllExamResults = catchAsyncError(async (req, res) => {
           ser.presentation_skill,
           ser.writing_skill,
           ser.reading_skill,
-          ser.attendance
+          ser.attendance,
+          ser.custom_subjects
 
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id
@@ -178,6 +185,7 @@ export const fetchStudentExamResult = catchAsyncError(async (req, res, next) => 
             ser.writing_skill,
             ser.reading_skill,
             ser.attendance,
+            ser.custom_subjects,
             ser.created_at
          FROM student_exam_results ser
          JOIN students s ON s.id = ser.student_id
@@ -244,6 +252,7 @@ export const fetchMyExamResult = catchAsyncError(async (req, res, next) => {
             ser.writing_skill,
             ser.reading_skill,
             ser.attendance,
+            ser.custom_subjects,
             ser.created_at
         FROM student_exam_results ser
         JOIN students s ON s.id = ser.student_id
@@ -270,7 +279,8 @@ export const addExamResult = catchAsyncError(async (req, res) => {
     let {
         hifiz_marks, hizb_marks, tajweed_marks, exam_date,
         competitions, description, presentation_skill,
-        writing_skill, reading_skill, attendance, total_marks
+        writing_skill, reading_skill, attendance, total_marks,
+        custom_subjects
     } = req.body;
 
     if (hifiz_marks === "") hifiz_marks = null;
@@ -288,15 +298,16 @@ export const addExamResult = catchAsyncError(async (req, res) => {
         `INSERT INTO student_exam_results
         (student_id, exam_date, hifiz_marks, hizb_marks, tajweed_marks,
          competitions, description, presentation_skill, writing_skill,
-         reading_skill, attendance, total_marks)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         reading_skill, attendance, total_marks, custom_subjects)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *`,
         [
             studentId,
             exam_date || new Date(),
             hifiz_marks, hizb_marks, tajweed_marks,
             competitions, description, presentation_skill,
-            writing_skill, reading_skill, attendance, total_marks
+            writing_skill, reading_skill, attendance, total_marks,
+            typeof custom_subjects === "string" ? custom_subjects : JSON.stringify(custom_subjects || {})
         ]
     );
 
@@ -304,6 +315,51 @@ export const addExamResult = catchAsyncError(async (req, res) => {
         success: true,
         message: "New exam result added",
         result: result.rows[0]
+    });
+});
+
+export const getUthmaniyyaSubjects = catchAsyncError(async (req, res) => {
+    const result = await database.query(
+        "SELECT * FROM uthmaniyya_subjects ORDER BY created_at ASC"
+    );
+    res.status(200).json({
+        success: true,
+        subjects: result.rows
+    });
+});
+
+export const addUthmaniyyaSubject = catchAsyncError(async (req, res, next) => {
+    const { name, pass_mark = 35, max_marks = 100 } = req.body;
+    if (!name || !name.trim()) {
+        return next(new ErrorHandler("Subject name is required", 400));
+    }
+    const cleanName = name.trim();
+    const result = await database.query(
+        `INSERT INTO uthmaniyya_subjects (name, pass_mark, max_marks)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (name) DO UPDATE SET pass_mark = EXCLUDED.pass_mark, max_marks = EXCLUDED.max_marks
+         RETURNING *`,
+        [cleanName, Number(pass_mark) || 35, Number(max_marks) || 100]
+    );
+    res.status(201).json({
+        success: true,
+        message: "Subject added successfully",
+        subject: result.rows[0]
+    });
+});
+
+export const deleteUthmaniyyaSubject = catchAsyncError(async (req, res, next) => {
+    const { id } = req.params;
+    const result = await database.query(
+        "DELETE FROM uthmaniyya_subjects WHERE id = $1 RETURNING *",
+        [id]
+    );
+    if (result.rows.length === 0) {
+        return next(new ErrorHandler("Subject not found", 404));
+    }
+    res.status(200).json({
+        success: true,
+        message: "Subject deleted successfully"
     });
 });
 

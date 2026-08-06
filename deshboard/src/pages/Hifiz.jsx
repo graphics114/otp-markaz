@@ -133,22 +133,30 @@ const Hifiz = () => {
   };
 
   const handleSave = (resultId) => {
-    if (!selectedStatus[resultId]) {
+    const keys = Object.keys(selectedStatus);
+    if (keys.length === 0) {
       toast.info("No changes to save");
       return;
     }
-    const dataToSave = { ...selectedStatus[resultId] };
-    if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = null;
-    if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = null;
-    if (dataToSave.competitions === "") dataToSave.competitions = null;
-    if (dataToSave.presentation_skill === "") dataToSave.presentation_skill = null;
-    if (dataToSave.writing_skill === "") dataToSave.writing_skill = null;
-    if (dataToSave.reading_skill === "") dataToSave.reading_skill = null;
-    if (dataToSave.attendance === "") dataToSave.attendance = null;
+    let savedCount = 0;
+    keys.forEach((id) => {
+      const dataToSave = { ...selectedStatus[id] };
+      if (dataToSave.hifiz_marks === "") dataToSave.hifiz_marks = null;
+      if (dataToSave.hizb_marks === "") dataToSave.hizb_marks = null;
+      if (dataToSave.competitions === "") dataToSave.competitions = null;
+      if (dataToSave.presentation_skill === "") dataToSave.presentation_skill = null;
+      if (dataToSave.writing_skill === "") dataToSave.writing_skill = null;
+      if (dataToSave.reading_skill === "") dataToSave.reading_skill = null;
+      if (dataToSave.attendance === "") dataToSave.attendance = null;
 
-    dataToSave.total_marks = calcTotal(resultId, selectedStatus[resultId]);
+      const currentResult = results.find(r => r.result_id === id);
+      dataToSave.total_marks = calcTotal(id, currentResult);
 
-    dispatch(updateResult(resultId, dataToSave));
+      dispatch(updateResult(id, dataToSave));
+      savedCount++;
+    });
+
+    toast.success(`Saved ${savedCount} results successfully`);
   };
 
 

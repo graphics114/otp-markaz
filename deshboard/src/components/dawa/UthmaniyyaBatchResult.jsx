@@ -46,28 +46,142 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
   const [readingSkill, setReadingSkill] = useState("");
   const [attendance, setAttendance] = useState("");
 
+  // Custom Subjects state
+  const [customSubjectList, setCustomSubjectList] = useState([]);
+  const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
+  const [newSubjectName, setNewSubjectName] = useState("");
+  const [customSubjectMarksModal, setCustomSubjectMarksModal] = useState({});
+
+  const fetchSubjects = async () => {
+    try {
+      const res = await axiosInstance.get("/exam/uthmaniyya-subjects");
+      if (res.data?.success) {
+        setCustomSubjectList(res.data.subjects || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch subjects:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const handleAddSubject = async () => {
+    if (!newSubjectName.trim()) {
+      toast.error("Please enter a subject name");
+      return;
+    }
+    try {
+      const res = await axiosInstance.post("/exam/uthmaniyya-subjects", {
+        name: newSubjectName.trim(),
+        pass_mark: 35,
+        max_marks: 100
+      });
+      if (res.data?.success) {
+        toast.success(`Subject '${newSubjectName.trim()}' added with pass mark 35`);
+        setNewSubjectName("");
+        setShowAddSubjectModal(false);
+        fetchSubjects();
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to add subject");
+    }
+  };
+
+  const handleDeleteSubject = async (subId, subName) => {
+    if (!window.confirm(`Are you sure you want to delete the subject '${subName}'?`)) return;
+    try {
+      const res = await axiosInstance.delete(`/exam/uthmaniyya-subjects/${subId}`);
+      if (res.data?.success) {
+        toast.success(`Subject '${subName}' deleted successfully`);
+        fetchSubjects();
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to delete subject");
+    }
+  };
+
+  const getCustomSubjectVal = (resultId, subjectName, fallbackCustom) => {
+    const statusObj = selectedStatus[resultId];
+    if (statusObj?.custom_subjects && statusObj.custom_subjects[subjectName] !== undefined) {
+      return statusObj.custom_subjects[subjectName] ?? "";
+    }
+    const parsedFallback = typeof fallbackCustom === "string"
+      ? JSON.parse(fallbackCustom || "{}")
+      : (fallbackCustom || {});
+    return parsedFallback[subjectName] ?? "";
+  };
+
+  const handleCustomSubjectChange = (resultId, subjectName, val) => {
+    setSelectedStatus((prev) => {
+      const currentItem = prev[resultId] || {};
+      const existingResult = results.find(r => r.result_id === resultId);
+      const defaultCustom = typeof existingResult?.custom_subjects === "string"
+        ? JSON.parse(existingResult.custom_subjects || "{}")
+        : (existingResult?.custom_subjects || {});
+      
+      const currentCustomObj = currentItem.custom_subjects !== undefined
+        ? currentItem.custom_subjects
+        : defaultCustom;
+
+      return {
+        ...prev,
+        [resultId]: {
+          ...currentItem,
+          custom_subjects: {
+            ...currentCustomObj,
+            [subjectName]: val === "" ? null : Number(val)
+          }
+        }
+      };
+    });
+  };
+
   // Auto-compute total from all numeric sub-fields
   const calcTotal = (resultId, result) => {
     const get = (field, fallback) => {
       const s = selectedStatus[resultId]?.[field];
       return Number(s !== undefined ? s : (fallback ?? 0)) || 0;
     };
-    return (
+    let total = (
       get("competitions", result?.competitions) +
       get("presentation_skill", result?.presentation_skill) +
       get("writing_skill", result?.writing_skill) +
       get("reading_skill", result?.reading_skill) +
       get("attendance", result?.attendance)
     );
+
+    const statusObj = selectedStatus[resultId];
+    const customObj = statusObj?.custom_subjects !== undefined
+      ? statusObj.custom_subjects
+      : (typeof result?.custom_subjects === "string"
+         ? JSON.parse(result?.custom_subjects || "{}")
+         : (result?.custom_subjects || {}));
+
+    if (customObj) {
+      Object.values(customObj).forEach(val => {
+        if (val !== null && val !== undefined && val !== "" && !isNaN(val)) {
+          total += Number(val);
+        }
+      });
+    }
+    return total;
   };
 
   // Modal-level auto total
-  const modalTotal =
+  let modalTotal = (
     (Number(competitions) || 0) +
     (Number(presentationSkill) || 0) +
     (Number(writingSkill) || 0) +
     (Number(readingSkill) || 0) +
-    (Number(attendance) || 0);
+    (Number(attendance) || 0)
+  );
+  Object.values(customSubjectMarksModal).forEach(val => {
+    if (val !== null && val !== undefined && val !== "" && !isNaN(val)) {
+      modalTotal += Number(val);
+    }
+  });
 
   const getRStatus = (result) => {
     const isAcademicPass = (
@@ -78,7 +192,27 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
     );
     const isAttendancePass = (result.attendance ?? 0) >= 13;
     
-    return (isAcademicPass && isAttendancePass) ? "Passed" : "Failed";
+    let customPass = true;
+    const statusObj = selectedStatus[result.result_id];
+    const customObj = statusObj?.custom_subjects !== undefined
+      ? statusObj.custom_subjects
+      : (typeof result.custom_subjects === "string"
+         ? JSON.parse(result.custom_subjects || "{}")
+         : (result.custom_subjects || {}));
+
+    if (customObj) {
+      for (const key of Object.keys(customObj)) {
+        const val = customObj[key];
+        if (val !== null && val !== undefined && val !== "") {
+          if (Number(val) < 35) {
+            customPass = false;
+            break;
+          }
+        }
+      }
+    }
+    
+    return (isAcademicPass && isAttendancePass && customPass) ? "Passed" : "Failed";
   };
 
   const isWithinDateRange = (examDate) => {
@@ -127,16 +261,22 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
   };
 
   const handleSave = (resultId, result) => {
-    if (!selectedStatus[resultId]) {
+    const keys = Object.keys(selectedStatus);
+    if (keys.length === 0) {
       toast.info("No changes to save");
       return;
     }
-    const data = { ...selectedStatus[resultId] };
-    const nullIfEmpty = ["competitions", "presentation_skill", "writing_skill", "reading_skill", "attendance"];
-    nullIfEmpty.forEach((f) => { if (data[f] === "") data[f] = null; });
-    // Always persist the auto-computed total
-    data.total_marks = calcTotal(resultId, result);
-    dispatch(updateResult(resultId, data));
+    let savedCount = 0;
+    keys.forEach((id) => {
+      const data = { ...selectedStatus[id] };
+      const nullIfEmpty = ["competitions", "presentation_skill", "writing_skill", "reading_skill", "attendance"];
+      nullIfEmpty.forEach((f) => { if (data[f] === "") data[f] = null; });
+      const currentResult = results.find(r => r.result_id === id);
+      data.total_marks = calcTotal(id, currentResult);
+      dispatch(updateResult(id, data));
+      savedCount++;
+    });
+    toast.success(`Saved ${savedCount} results successfully`);
   };
 
   const handleToggleAllStatus = async () => {
@@ -177,6 +317,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
     setWritingSkill("");
     setReadingSkill("");
     setAttendance("");
+    setCustomSubjectMarksModal({});
     setShowAddModal(false);
   };
 
@@ -192,6 +333,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         writing_skill: writingSkill === "" ? null : (writingSkill ? Number(writingSkill) : null),
         reading_skill: readingSkill === "" ? null : (readingSkill ? Number(readingSkill) : null),
         attendance: attendance === "" ? null : (attendance ? Number(attendance) : null),
+        custom_subjects: customSubjectMarksModal,
       })
     );
     resetAddForm();
@@ -255,26 +397,41 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
     }
   };
 
+  // Helper for dynamic subject row maps in exports
+  const getExportCustomSubjectVal = (r, subName) => {
+    const statusObj = selectedStatus[r.result_id];
+    const customObj = statusObj?.custom_subjects !== undefined
+      ? statusObj.custom_subjects
+      : (typeof r.custom_subjects === "string" ? JSON.parse(r.custom_subjects || "{}") : (r.custom_subjects || {}));
+    return customObj?.[subName] ?? "";
+  };
+
   // ── PRINT ──
   const handlePrint = () => {
     const win = window.open("", "", "width=1000,height=700");
     const printDate = new Date().toLocaleDateString("en-IN");
-    const rows = filteredResults.map((r, i) => `
+    const customHeaders = customSubjectList.map(s => `<th>${s.name}</th>`).join("");
+
+    const rows = filteredResults.map((r, i) => {
+      const customCells = customSubjectList.map(s => `<td>${getExportCustomSubjectVal(r, s.name)}</td>`).join("");
+      return `
       <tr>
         <td>${i + 1}</td>
         <td>${new Date(r.exam_date).toLocaleString("default", { month: "long" })}</td>
         <td>${r.full_name}</td>
         <td>${r.reg_number}</td>
+        ${customCells}
         <td>${r.competitions ?? ""}</td>
         <td>${r.description ?? ""}</td>
         <td>${r.presentation_skill ?? ""}</td>
         <td>${r.writing_skill ?? ""}</td>
         <td>${r.reading_skill ?? ""}</td>
         <td>${r.attendance ?? ""}</td>
-        <td>${r.total_marks ?? ""}</td>
+        <td>${calcTotal(r.result_id, r)}</td>
         <td>${getRStatus(r).toUpperCase()}</td>
         <td>${r.result_status ?? ""}</td>
-      </tr>`).join("");
+      </tr>`;
+    }).join("");
 
     win.document.write(`
       <html><head><title>${INSTITUTION} – ${course}</title>
@@ -291,6 +448,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         <p>Exam Results | Print Date: ${printDate}</p>
         <table><thead><tr>
           <th>#</th><th>Month</th><th>Name</th><th>Reg No</th>
+          ${customHeaders}
           <th>Competition</th><th>Description</th><th>Presentation Skill</th>
           <th>Writing Skill</th><th>Reading Skill</th><th>Attendance</th>
           <th>Total</th><th>R Status</th><th>P Status</th>
@@ -304,21 +462,29 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
 
   // ── EXCEL ──
   const handleExcel = () => {
-    const data = filteredResults.map((r, i) => ({
-      "Sl No": i + 1,
-      Month: new Date(r.exam_date).toLocaleString("default", { month: "long" }),
-      Name: r.full_name,
-      "Reg No": r.reg_number,
-      Competitions: r.competitions,
-      Description: r.description,
-      "Presentation Skill": r.presentation_skill,
-      "Writing Skill": r.writing_skill,
-      "Reading Skill": r.reading_skill,
-      Attendance: r.attendance,
-      "Total Marks": r.total_marks,
-      "R Status": getRStatus(r).toUpperCase(),
-      "P Status": r.result_status,
-    }));
+    const data = filteredResults.map((r, i) => {
+      const row = {
+        "Sl No": i + 1,
+        Month: new Date(r.exam_date).toLocaleString("default", { month: "long" }),
+        Name: r.full_name,
+        "Reg No": r.reg_number,
+      };
+      customSubjectList.forEach(s => {
+        row[s.name] = getExportCustomSubjectVal(r, s.name);
+      });
+      return {
+        ...row,
+        Competitions: r.competitions,
+        Description: r.description,
+        "Presentation Skill": r.presentation_skill,
+        "Writing Skill": r.writing_skill,
+        "Reading Skill": r.reading_skill,
+        Attendance: r.attendance,
+        "Total Marks": calcTotal(r.result_id, r),
+        "R Status": getRStatus(r).toUpperCase(),
+        "P Status": r.result_status,
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, course);
@@ -331,22 +497,26 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
       const doc = new jsPDF({ orientation: "landscape" });
       doc.setFontSize(16); doc.text(`Uthmaniyya College — ${course}`, 14, 18);
       doc.setFontSize(10); doc.text(`Print Date: ${new Date().toLocaleDateString("en-IN")}`, 14, 26);
+      
+      const headRow = ["#", "Month", "Name", "Reg No", ...customSubjectList.map(s => s.name), "Competition", "Description", "Presentation Skill", "Writing Skill", "Reading Skill", "Attendance", "Total", "R Status", "P Status"];
+
       autoTable(doc, {
         startY: 32,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [241, 245, 249], textColor: 0 },
-        head: [["#", "Month", "Name", "Reg No", "Competition", "Description", "Presentation Skill", "Writing Skill", "Reading Skill", "Attendance", "Total", "R Status", "P Status"]],
+        head: [headRow],
         body: filteredResults.map((r, i) => [
           i + 1,
           new Date(r.exam_date).toLocaleString("default", { month: "long" }),
           r.full_name, r.reg_number,
+          ...customSubjectList.map(s => getExportCustomSubjectVal(r, s.name)),
           r.competitions ?? "",
           r.description ?? "",
           r.presentation_skill ?? "",
           r.writing_skill ?? "",
           r.reading_skill ?? "",
           r.attendance ?? "",
-          r.total_marks ?? "",
+          calcTotal(r.result_id, r),
           getRStatus(r).toUpperCase(),
           r.result_status ?? "",
         ]),
@@ -428,6 +598,12 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                 <button onClick={handlePDF} className="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700">PDF</button>
                 <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap">Auto</button>
                 <button
+                  onClick={() => setShowAddSubjectModal(true)}
+                  className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 whitespace-nowrap font-medium"
+                >
+                  + Add Subject
+                </button>
+                <button
                   onClick={() => setShowAddModal(true)}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 whitespace-nowrap"
                 >
@@ -448,6 +624,23 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Month</th>
                       <th className="py-3 px-3 text-left text-sm">Name</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Reg No</th>
+                      {/* DYNAMIC SUBJECT COLUMNS */}
+                      {customSubjectList.map((sub) => (
+                        <th key={sub.id} className="py-3 px-3 text-left text-sm whitespace-nowrap font-bold text-purple-900 bg-purple-50">
+                          <div className="flex items-center justify-between gap-1">
+                            <span>{sub.name} <span className="text-[10px] font-normal text-purple-600">(P:35)</span></span>
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleDeleteSubject(sub.id, sub.name)}
+                                className="text-purple-400 hover:text-red-600 transition ml-1"
+                                title={`Delete subject '${sub.name}'`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </th>
+                      ))}
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Competition</th>
                       <th className="py-3 px-3 text-left text-sm">Description</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Presentation Skill</th>
@@ -470,6 +663,21 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                         </td>
                         <td className="py-2 px-3 text-sm whitespace-nowrap">{result.full_name}</td>
                         <td className="py-2 px-3 text-sm whitespace-nowrap">{result.reg_number}</td>
+
+                        {/* DYNAMIC SUBJECT INPUTS */}
+                        {customSubjectList.map((sub) => (
+                          <td key={sub.id} className="py-2 px-3 bg-purple-50/20">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              placeholder="-"
+                              value={getCustomSubjectVal(result.result_id, sub.name, result.custom_subjects)}
+                              onChange={(e) => handleCustomSubjectChange(result.result_id, sub.name, e.target.value)}
+                              className="w-14 text-center focus:outline-none bg-transparent border-b border-purple-300 font-semibold text-purple-900 text-sm"
+                            />
+                          </td>
+                        ))}
 
                         {/* COMPETITIONS */}
                         <td className="py-2 px-3">
@@ -595,6 +803,48 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         </div>
       </div>
 
+      {/* ADD SUBJECT MODAL */}
+      {showAddSubjectModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-xl">
+            <h2 className="text-lg font-bold mb-3 text-purple-900">Add Subject — Uthmaniyya College</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              Pass mark for subjects added via this button is <strong className="text-purple-700 font-bold">35</strong> out of 100. Unentered marks will not be displayed on student cards.
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Subject Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Fiqh, Hadith, Aqeedah..."
+                value={newSubjectName}
+                onChange={(e) => setNewSubjectName(e.target.value)}
+                className="w-full border p-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setNewSubjectName("");
+                  setShowAddSubjectModal(false);
+                }}
+                className="px-4 py-2 bg-gray-100 rounded text-sm text-gray-600 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddSubject}
+                className="px-4 py-2 bg-purple-600 text-white rounded text-sm font-semibold hover:bg-purple-700"
+              >
+                Save Subject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ADD RESULT MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -628,6 +878,36 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                 ))}
               </select>
             </div>
+
+            {/* DYNAMIC SUBJECTS IN MODAL */}
+            {customSubjectList.length > 0 && (
+              <>
+                <hr className="my-3" />
+                <p className="text-xs font-bold text-purple-700 uppercase tracking-widest mb-3">Uthmaniyya College Subjects (Pass: 35)</p>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {customSubjectList.map((sub) => (
+                    <div key={sub.id}>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">{sub.name}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="Marks (0-100)"
+                        value={customSubjectMarksModal[sub.name] ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCustomSubjectMarksModal(prev => ({
+                            ...prev,
+                            [sub.name]: val === "" ? null : Number(val)
+                          }));
+                        }}
+                        className="w-full border p-2 rounded text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
 
             <hr className="my-3" />
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Additional Fields</p>

@@ -29,6 +29,24 @@ export async function createExamResultsTable() {
             );
         `;
         await database.query(query);
+
+        // Ensure custom_subjects column exists on student_exam_results
+        await database.query(`
+            ALTER TABLE student_exam_results 
+            ADD COLUMN IF NOT EXISTS custom_subjects JSONB DEFAULT '{}'::jsonb;
+        `);
+
+        // Create uthmaniyya_subjects table
+        await database.query(`
+            CREATE TABLE IF NOT EXISTS uthmaniyya_subjects (
+                id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                name VARCHAR(255) NOT NULL UNIQUE,
+                pass_mark INT DEFAULT 35,
+                max_marks INT DEFAULT 100,
+                institution VARCHAR(255) DEFAULT 'Uthmaniyya College of Excellence',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
     } catch (error) {
         console.error("Error creating exam result table:", error);
         process.exit(1);

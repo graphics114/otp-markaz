@@ -26,9 +26,22 @@ export const downloadResultPDF = (r) => {
     { name: "Attendance", val: r.attendance, pass: (r.attendance ?? 0) >= 13 }
   ];
 
+  const customSubjectsObj = typeof r.custom_subjects === "string"
+    ? JSON.parse(r.custom_subjects || "{}")
+    : (r.custom_subjects || {});
+
+  const customSubjects = Object.entries(customSubjectsObj)
+    .filter(([_, val]) => val !== null && val !== undefined && val !== "")
+    .map(([name, val]) => ({
+      name,
+      val,
+      pass: Number(val) >= 35
+    }));
+
   const allApplicableSubjects = [
     ...memorySubjects.filter(s => s.valid),
-    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== "")
+    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== ""),
+    ...customSubjects
   ];
 
   const isPassed = allApplicableSubjects.length > 0 && allApplicableSubjects.every(s => s.pass);
@@ -61,6 +74,11 @@ export const downloadResultPDF = (r) => {
       totalObtained += Number(f.val);
       totalMax += f.max;
     }
+  });
+
+  customSubjects.forEach(s => {
+    totalObtained += Number(s.val);
+    totalMax += 100;
   });
 
   const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
@@ -190,7 +208,7 @@ export const downloadResultPDF = (r) => {
       const obtained = isAbsent ? 0 : Number(mark);
       const isAcademic = !["Hifiz", "Hizb"].includes(name);
       const pass = name === "Attendance" ? obtained >= 13 : (isAcademic ? obtained >= 0 : obtained >= 30);
-      const pct = isAbsent ? "0.00" : `${((obtained / max) * 100).toFixed(2)}`;
+      const pct = isAbsent ? "0.00" : `${((obtained / 100) * 100).toFixed(2)}`;
       
       tableRows.push([
           name,
@@ -203,6 +221,18 @@ export const downloadResultPDF = (r) => {
 
   createSubjectRow("Hifiz", r.hifiz_marks);
   createSubjectRow("Hizb", r.hizb_marks);
+
+  customSubjects.forEach(s => {
+    const obtained = Number(s.val);
+    const pct = `${((obtained / 100) * 100).toFixed(2)}`;
+    tableRows.push([
+      s.name,
+      100,
+      obtained,
+      `${pct}%`,
+      s.pass ? "Pass" : "Fail"
+    ]);
+  });
 
   // Helper for skill-based rows
   const addSkillRow = (name, mark, max) => {

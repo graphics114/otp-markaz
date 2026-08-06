@@ -15,9 +15,11 @@ const SubjectResultCard = ({ subjectName, obtainedMarks, maxMarks = 100 }) => {
     passed = !isAbsent && Number(obtainedMarks) >= 13;
   } else if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(subjectName)) {
     passed = !isAbsent && Number(obtainedMarks) >= 0;
-  } else {
-    // Memory subjects (Hifiz/Hizb)
+  } else if (["Hifiz", "Hizb"].includes(subjectName)) {
     passed = !isAbsent && Number(obtainedMarks) >= 30;
+  } else {
+    // Custom subjects (e.g. Uthmaniyya College added subjects): pass mark is 35
+    passed = !isAbsent && Number(obtainedMarks) >= 35;
   }
   
   const percentage = isAbsent ? "0.00" : ((Number(obtainedMarks) / maxMarks) * 100).toFixed(2);
@@ -78,9 +80,22 @@ const ResultCard = ({ result }) => {
     { name: "Attendance", val: result.attendance, pass: (result.attendance ?? 0) >= 13 }
   ];
 
+  const customSubjectsObj = typeof result.custom_subjects === "string"
+    ? JSON.parse(result.custom_subjects || "{}")
+    : (result.custom_subjects || {});
+
+  const customSubjects = Object.entries(customSubjectsObj)
+    .filter(([_, val]) => val !== null && val !== undefined && val !== "")
+    .map(([name, val]) => ({
+      name,
+      val,
+      pass: Number(val) >= 35
+    }));
+
   const allApplicableSubjects = [
     ...memorySubjects.filter(s => s.valid),
-    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== "")
+    ...academicSubjects.filter(s => s.val !== null && s.val !== undefined && s.val !== ""),
+    ...customSubjects
   ];
 
   const isPassed = allApplicableSubjects.length > 0 && allApplicableSubjects.every(s => s.pass);
@@ -111,6 +126,11 @@ const ResultCard = ({ result }) => {
       totalObtained += Number(f.val);
       totalMax += f.max;
     }
+  });
+
+  customSubjects.forEach(s => {
+    totalObtained += Number(s.val);
+    totalMax += 100;
   });
 
   const overallPercentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
@@ -175,6 +195,9 @@ const ResultCard = ({ result }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SubjectResultCard subjectName="Hifiz" obtainedMarks={result.hifiz_marks === 1 ? null : result.hifiz_marks} />
               <SubjectResultCard subjectName="Hizb" obtainedMarks={result.hizb_marks === 1 ? null : result.hizb_marks} />
+              {customSubjects.map((s, idx) => (
+                <SubjectResultCard key={idx} subjectName={s.name} obtainedMarks={s.val} maxMarks={100} />
+              ))}
             </div>
           </div>
 

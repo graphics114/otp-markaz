@@ -187,6 +187,20 @@ const ProgressReport = () => {
     const hasHifiz = sortedRecords.some(r => r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1);
     const hasHizb = sortedRecords.some(r => r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1);
 
+    // Identify custom subjects that have entered marks in any record of sortedRecords
+    const customSubjectsMap = {};
+    sortedRecords.forEach(r => {
+      const customObj = typeof r.custom_subjects === "string"
+        ? JSON.parse(r.custom_subjects || "{}")
+        : (r.custom_subjects || {});
+      Object.entries(customObj).forEach(([name, val]) => {
+        if (val !== null && val !== undefined && val !== "") {
+          if (!customSubjectsMap[name]) customSubjectsMap[name] = 0;
+          customSubjectsMap[name] += Number(val);
+        }
+      });
+    });
+
     const aggregated = sortedRecords.reduce((acc, r) => {
       acc.hifiz += (Number(r.hifiz_marks) || 0);
       acc.hizb += (Number(r.hizb_marks) || 0);
@@ -201,6 +215,11 @@ const ProgressReport = () => {
     const subjects = [
       ...(hasHifiz ? [{ name: "Hifiz", obtained: aggregated.hifiz, max: examCount * 100 }] : []),
       ...(hasHizb ? [{ name: "Hizb", obtained: aggregated.hizb, max: examCount * 100 }] : []),
+      ...Object.entries(customSubjectsMap).map(([name, obtained]) => ({
+        name,
+        obtained,
+        max: examCount * 100
+      })),
       { name: "Competition", obtained: aggregated.competition, max: examCount * 20 },
       { name: "Presentation Skill", obtained: aggregated.presentation, max: examCount * 20 },
       { name: "Writing Skill", obtained: aggregated.writing, max: examCount * 20 },
@@ -216,7 +235,8 @@ const ProgressReport = () => {
       const pct = (s.obtained / s.max) * 100;
       if (s.name === "Attendance") return pct >= 65; // (13/20 = 65%)
       if (["Hifiz", "Hizb"].includes(s.name)) return pct >= 30; // (30/100 = 30%)
-      return pct >= 0;
+      if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return pct >= 0;
+      return pct >= 35;
     };
 
     const overallPassed = subjects.every(s => {
@@ -391,9 +411,22 @@ const ProgressReport = () => {
                 <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 underline decoration-blue-500/30 underline-offset-8">Exam Records Breakdown</h3>
                 <div className="space-y-8 overflow-y-auto max-h-[600px] pr-2 scrollbar-hide">
                   {individualData.results.slice().reverse().map((r, i) => {
+                    const customObj = typeof r.custom_subjects === "string"
+                      ? JSON.parse(r.custom_subjects || "{}")
+                      : (r.custom_subjects || {});
+
+                    const customSubs = Object.entries(customObj)
+                      .filter(([_, val]) => val !== null && val !== undefined && val !== "")
+                      .map(([name, val]) => ({
+                        name,
+                        max: 100,
+                        obtained: Number(val)
+                      }));
+
                     const subjects = [
                       ...(r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1 ? [{ name: "Hifiz", max: 100, obtained: Number(r.hifiz_marks) }] : []),
                       ...(r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1 ? [{ name: "Hizb", max: 100, obtained: Number(r.hizb_marks) }] : []),
+                      ...customSubs,
                       { name: "Competition", obtained: r.competitions || 0, max: 20 },
                       { name: "Presentation Skill", obtained: r.presentation_skill || 0, max: 20 },
                       { name: "Writing Skill", obtained: r.writing_skill || 0, max: 20 },
@@ -404,7 +437,8 @@ const ProgressReport = () => {
                     const isPassed = subjects.every(s => {
                       if (s.name === "Attendance") return s.obtained >= 13;
                       if (["Hifiz", "Hizb"].includes(s.name)) return s.obtained >= 30;
-                      return s.obtained >= 0;
+                      if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return s.obtained >= 0;
+                      return s.obtained >= 35;
                     });
 
                     const totalObtained = subjects.reduce((sum, s) => sum + s.obtained, 0);
@@ -438,7 +472,8 @@ const ProgressReport = () => {
                               let passed = false;
                               if (s.name === "Attendance") passed = (s.obtained >= 13);
                               else if (["Hifiz", "Hizb"].includes(s.name)) passed = (s.obtained >= 30);
-                              else passed = (s.obtained >= 0);
+                              else if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) passed = (s.obtained >= 0);
+                              else passed = (s.obtained >= 35);
                               return (
                                 <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                                   <td className="px-4 py-3 font-bold text-gray-700">{s.name}</td>

@@ -1,8 +1,16 @@
 import express from "express";
 import { authorizedRoles, isAuthenticated } from "../middlewares/authMiddleware.js";
-import { addExamResult, deleteExamResult, fetchAllExamResults, fetchMyExamResult, fetchStudentExamResult, publishExamResult, searchResultsByDate, updateExamResult, getTopScoringStudents } from "../controllers/examController.js";
+import { 
+    addExamResult, deleteExamResult, fetchAllExamResults, fetchMyExamResult, 
+    fetchStudentExamResult, publishExamResult, searchResultsByDate, updateExamResult, 
+    getTopScoringStudents, getUthmaniyyaSubjects, addUthmaniyyaSubject, deleteUthmaniyyaSubject 
+} from "../controllers/examController.js";
 
 const router = express.Router();
+
+router.get("/uthmaniyya-subjects", getUthmaniyyaSubjects);
+router.post("/uthmaniyya-subjects", isAuthenticated, addUthmaniyyaSubject);
+router.delete("/uthmaniyya-subjects/:id", isAuthenticated, deleteUthmaniyyaSubject);
 
 router.post("/add/result/:studentId", isAuthenticated, addExamResult);
 router.put("/update/result/:resultId", isAuthenticated, updateExamResult);
