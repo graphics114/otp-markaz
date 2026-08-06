@@ -597,12 +597,14 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                 <button onClick={handleExcel} className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700">Excel</button>
                 <button onClick={handlePDF} className="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700">PDF</button>
                 <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap">Auto</button>
-                <button
-                  onClick={() => setShowAddSubjectModal(true)}
-                  className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 whitespace-nowrap font-medium"
-                >
-                  + Add Subject
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAddSubjectModal(true)}
+                    className="px-3 py-1.5 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 whitespace-nowrap font-medium"
+                  >
+                    + Add Subject
+                  </button>
+                )}
                 <button
                   onClick={() => setShowAddModal(true)}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 whitespace-nowrap"
