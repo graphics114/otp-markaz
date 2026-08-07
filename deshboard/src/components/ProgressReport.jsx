@@ -212,14 +212,17 @@ const ProgressReport = () => {
       return acc;
     }, { hifiz: 0, hizb: 0, competition: 0, presentation: 0, writing: 0, reading: 0, attendance: 0 });
 
-    const subjects = [
+    const mainSubjects = [
       ...(hasHifiz ? [{ name: "Hifiz", obtained: aggregated.hifiz, max: examCount * 100 }] : []),
       ...(hasHizb ? [{ name: "Hizb", obtained: aggregated.hizb, max: examCount * 100 }] : []),
       ...Object.entries(customSubjectsMap).map(([name, obtained]) => ({
         name,
         obtained,
         max: examCount * 100
-      })),
+      }))
+    ];
+
+    const additionalFields = [
       { name: "Competition", obtained: aggregated.competition, max: examCount * 20 },
       { name: "Presentation Skill", obtained: aggregated.presentation, max: examCount * 20 },
       { name: "Writing Skill", obtained: aggregated.writing, max: examCount * 20 },
@@ -227,9 +230,17 @@ const ProgressReport = () => {
       { name: "Attendance", obtained: aggregated.attendance, max: examCount * 20 }
     ];
 
-    const totalObtained = subjects.reduce((sum, s) => sum + s.obtained, 0);
-    const totalMax = subjects.reduce((sum, s) => sum + s.max, 0);
-    const overallPct = ((totalObtained / totalMax) * 100).toFixed(2);
+    const mainMax = mainSubjects.reduce((sum, s) => sum + s.max, 0);
+    const mainObtained = mainSubjects.reduce((sum, s) => sum + s.obtained, 0);
+    const mainPct = mainMax > 0 ? ((mainObtained / mainMax) * 100).toFixed(2) : "0.00";
+
+    const addMax = additionalFields.reduce((sum, s) => sum + s.max, 0);
+    const addObtained = additionalFields.reduce((sum, s) => sum + s.obtained, 0);
+    const addPct = addMax > 0 ? ((addObtained / addMax) * 100).toFixed(2) : "0.00";
+
+    const totalObtained = mainObtained + addObtained;
+    const totalMax = mainMax + addMax;
+    const overallPct = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
 
     const checkPass = (s) => {
       const pct = (s.obtained / s.max) * 100;
@@ -239,43 +250,64 @@ const ProgressReport = () => {
       return pct >= 35;
     };
 
-    const overallPassed = subjects.every(s => {
-       if (["Hifiz", "Hizb"].includes(s.name)) {
-         // Special handling: if it's a Hifiz student, they pass if EITHER hifiz or hizb is pass
-         if (student.institution === "Hifzul Quran College") {
-           const hifizRec = subjects.find(sub => sub.name === "Hifiz");
-           const hizbRec = subjects.find(sub => sub.name === "Hizb");
-           return (hifizRec && checkPass(hifizRec)) || (hizbRec && checkPass(hizbRec));
-         }
-       }
-       return checkPass(s);
-    });
+    const mainPassed = mainSubjects.every(s => checkPass(s));
+    const addPassed = additionalFields.every(s => checkPass(s));
+
+    const overallPassed = mainPassed && addPassed;
 
     autoTable(doc, {
-      startY: 85,
+      startY: 78,
       head: [["Subject", "Max", "Obtained", "Percentage", "Status"]],
-      body: [...subjects.map(s => [
-        s.name.toUpperCase(),
-        s.max,
-        s.obtained,
-        `${((s.obtained / s.max) * 100).toFixed(2)}%`,
-        checkPass(s) ? "PASS" : "FAIL"
-      ]), [{ content: "PERIOD PERFORMANCE SUMMARY", styles: { fontStyle: 'bold' } }, totalMax, totalObtained, `${overallPct}%`, overallPassed ? "PASSED" : "FAILED"]],
-      theme: 'grid', styles: { fontSize: 8, cellPadding: 3, halign: 'center' },
+      body: [
+        ...(mainSubjects.length > 0 ? [
+          [{ content: "MAIN SUBJECTS", colSpan: 5, styles: { fillColor: [224, 231, 255], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' } }]
+        ] : []),
+        ...mainSubjects.map(s => [
+          s.name.toUpperCase(),
+          s.max,
+          s.obtained,
+          `${((s.obtained / s.max) * 100).toFixed(2)}%`,
+          checkPass(s) ? "PASS" : "FAIL"
+        ]),
+        ...(mainSubjects.length > 0 ? [
+          [{ content: "MAIN SUBJECTS SUMMARY", styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } }, mainMax, mainObtained, `${mainPct}%`, mainPassed ? "PASSED" : "FAILED"]
+        ] : []),
+        [{ content: "", colSpan: 5, styles: { fillColor: [255, 255, 255], minCellHeight: 2 } }],
+        [{ content: "ADDITIONAL FIELDS", colSpan: 5, styles: { fillColor: [224, 231, 255], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' } }],
+        ...additionalFields.map(s => [
+          s.name.toUpperCase(),
+          s.max,
+          s.obtained,
+          `${((s.obtained / s.max) * 100).toFixed(2)}%`,
+          checkPass(s) ? "PASS" : "FAIL"
+        ]),
+        [{ content: "ADDITIONAL FIELDS SUMMARY", styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } }, addMax, addObtained, `${addPct}%`, addPassed ? "PASSED" : "FAILED"],
+        [{ content: "", colSpan: 5, styles: { fillColor: [255, 255, 255], minCellHeight: 2 } }],
+        [{ content: "OVERALL PERFORMANCE SUMMARY", styles: { fontStyle: 'bold', fillColor: [226, 232, 240] } }, totalMax, totalObtained, `${overallPct}%`, overallPassed ? "PASSED" : "FAILED"]
+      ],
+      theme: 'grid', styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
       columnStyles: { 0: { halign: 'left' } },
       headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255], fontStyle: 'bold' },
       didParseCell: (data) => {
         if (data.section === 'body') {
-          const isOverall = data.row.index === subjects.length;
+          let rawText = "";
+          const rawCell = data.row.cells[0]?.raw;
+          if (rawCell) {
+            rawText = rawCell.content !== undefined ? rawCell.content : rawCell;
+          }
+          rawText = String(rawText || "");
+          
+          const isOverall = rawText.includes("SUMMARY");
+          const isDivider = rawText === "MAIN SUBJECTS" || rawText === "ADDITIONAL FIELDS" || rawText === "";
+          
           if (isOverall) {
-            data.cell.styles.fillColor = [241, 245, 249];
             if (data.column.index === 4) {
               const pass = data.cell.raw === "PASSED";
               data.cell.styles.fillColor = pass ? [34, 197, 94] : [239, 68, 68];
               data.cell.styles.textColor = [255, 255, 255];
             }
           }
-          else if (data.column.index === 4) {
+          else if (data.column.index === 4 && !isDivider) {
             data.cell.styles.fillColor = data.cell.raw === "PASS" ? [59, 130, 246] : [244, 63, 94];
             data.cell.styles.textColor = [255, 255, 255];
             data.cell.styles.fontStyle = 'bold';
@@ -284,7 +316,12 @@ const ProgressReport = () => {
       }
     });
 
-    const finalY = 270;
+    let finalY = doc.lastAutoTable.finalY + 20;
+    if (finalY > 275) {
+      doc.addPage();
+      doc.setDrawColor(37, 99, 235); doc.setLineWidth(0.5); doc.rect(5, 5, 200, 287);
+      finalY = 30;
+    }
     doc.setDrawColor(229, 231, 235); doc.line(14, finalY, 74, finalY); doc.setFontSize(9); doc.setTextColor(156, 163, 175); doc.text("Teacher's Signature", 14, finalY + 5);
     doc.line(136, finalY, 196, finalY); doc.text("Parent's Signature", 136, finalY + 5);
     doc.setFontSize(7); doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 285, { align: "center" });
@@ -423,10 +460,13 @@ const ProgressReport = () => {
                         obtained: Number(val)
                       }));
 
-                    const subjects = [
+                    const mainSubjects = [
                       ...(r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1 ? [{ name: "Hifiz", max: 100, obtained: Number(r.hifiz_marks) }] : []),
                       ...(r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1 ? [{ name: "Hizb", max: 100, obtained: Number(r.hizb_marks) }] : []),
-                      ...customSubs,
+                      ...customSubs
+                    ];
+
+                    const additionalFields = [
                       { name: "Competition", obtained: r.competitions || 0, max: 20 },
                       { name: "Presentation Skill", obtained: r.presentation_skill || 0, max: 20 },
                       { name: "Writing Skill", obtained: r.writing_skill || 0, max: 20 },
@@ -434,16 +474,29 @@ const ProgressReport = () => {
                       { name: "Attendance", obtained: r.attendance || 0, max: 20 }
                     ];
 
-                    const isPassed = subjects.every(s => {
+                    const checkPassItem = (s) => {
                       if (s.name === "Attendance") return s.obtained >= 13;
                       if (["Hifiz", "Hizb"].includes(s.name)) return s.obtained >= 30;
                       if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return s.obtained >= 0;
                       return s.obtained >= 35;
-                    });
+                    };
 
-                    const totalObtained = subjects.reduce((sum, s) => sum + s.obtained, 0);
-                    const totalMax = subjects.reduce((sum, s) => sum + s.max, 0);
-                    const overallPct = ((totalObtained / totalMax) * 100).toFixed(2);
+                    const mainMax = mainSubjects.reduce((sum, s) => sum + s.max, 0);
+                    const mainObtained = mainSubjects.reduce((sum, s) => sum + s.obtained, 0);
+                    const mainPct = mainMax > 0 ? ((mainObtained / mainMax) * 100).toFixed(2) : "0.00";
+                    const mainPassed = mainSubjects.every(s => checkPassItem(s));
+
+                    const addMax = additionalFields.reduce((sum, s) => sum + s.max, 0);
+                    const addObtained = additionalFields.reduce((sum, s) => sum + s.obtained, 0);
+                    const addPct = addMax > 0 ? ((addObtained / addMax) * 100).toFixed(2) : "0.00";
+                    const addPassed = additionalFields.every(s => checkPassItem(s));
+
+                    const subjects = [...mainSubjects, ...additionalFields];
+                    const isPassed = mainPassed && addPassed;
+
+                    const totalObtained = mainObtained + addObtained;
+                    const totalMax = mainMax + addMax;
+                    const overallPct = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
                     const isLast = i === individualData.results.length - 1;
 
                     const totalMarksOnly = totalObtained - (r.attendance || 0);
@@ -467,15 +520,18 @@ const ProgressReport = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {subjects.map((s, idx) => {
+                            {mainSubjects.length > 0 && (
+                              <tr className="bg-purple-50/50 border-b border-purple-100">
+                                <td colSpan="5" className="px-4 py-2 font-bold text-purple-700 text-[10px] uppercase tracking-widest">Subjects</td>
+                              </tr>
+                            )}
+                            {mainSubjects.map((s, idx) => {
                               const pct = ((s.obtained / s.max) * 100).toFixed(2);
                               let passed = false;
-                              if (s.name === "Attendance") passed = (s.obtained >= 13);
-                              else if (["Hifiz", "Hizb"].includes(s.name)) passed = (s.obtained >= 30);
-                              else if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) passed = (s.obtained >= 0);
+                              if (["Hifiz", "Hizb"].includes(s.name)) passed = (s.obtained >= 30);
                               else passed = (s.obtained >= 35);
                               return (
-                                <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                <tr key={`main-${idx}`} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                                   <td className="px-4 py-3 font-bold text-gray-700">{s.name}</td>
                                   <td className="px-2 py-3 text-center text-gray-400">{s.max}</td>
                                   <td className="px-2 py-3 text-center font-bold text-gray-800">{s.obtained}</td>
@@ -488,9 +544,67 @@ const ProgressReport = () => {
                                 </tr>
                               );
                             })}
+                            
+                            {/* MAIN SUBJECTS SUMMARY ROW */}
+                            {mainSubjects.length > 0 && (
+                              <tr className="bg-gray-50/50 font-black border-t border-gray-100">
+                                <td className="px-4 py-3 uppercase text-gray-700 text-[10px]">MAIN SUBJECTS SUMMARY</td>
+                                <td className="px-2 py-3 text-center text-gray-700">{mainMax}</td>
+                                <td className="px-2 py-3 text-center text-gray-700">{mainObtained}</td>
+                                <td className="px-2 py-3 text-center text-blue-600">{mainPct}%</td>
+                                <td className="px-2 py-0 text-center">
+                                  <div className={`h-full w-full py-3 flex items-center justify-center text-white rounded-r-lg ${mainPassed ? "bg-emerald-500" : "bg-rose-600"}`}>
+                                    {mainPassed ? "PASSED" : "FAILED"}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+
+                            <tr>
+                              <td colSpan="5" className="h-3 bg-white border-none"></td>
+                            </tr>
+                            <tr className="bg-blue-50/50 border-b border-blue-100">
+                              <td colSpan="5" className="px-4 py-2 font-bold text-blue-700 text-[10px] uppercase tracking-widest">Additional Fields</td>
+                            </tr>
+                            {additionalFields.map((s, idx) => {
+                              const pct = ((s.obtained / s.max) * 100).toFixed(2);
+                              let passed = false;
+                              if (s.name === "Attendance") passed = (s.obtained >= 13);
+                              else passed = (s.obtained >= 0);
+                              return (
+                                <tr key={`add-${idx}`} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                  <td className="px-4 py-3 font-bold text-gray-700">{s.name}</td>
+                                  <td className="px-2 py-3 text-center text-gray-400">{s.max}</td>
+                                  <td className="px-2 py-3 text-center font-bold text-gray-800">{s.obtained}</td>
+                                  <td className="px-2 py-3 text-center font-black text-emerald-600">{pct}%</td>
+                                  <td className="px-2 py-0 text-center">
+                                    <div className={`h-full w-full py-3 flex items-center justify-center font-bold text-white rounded-r-lg ${passed ? "bg-blue-600" : "bg-rose-600"}`}>
+                                      {passed ? "PASS" : "FAIL"}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            
+                            {/* ADDITIONAL FIELDS SUMMARY ROW */}
+                            <tr className="bg-gray-50/50 font-black border-t border-gray-100">
+                              <td className="px-4 py-3 uppercase text-gray-700 text-[10px]">ADDITIONAL FIELDS SUMMARY</td>
+                              <td className="px-2 py-3 text-center text-gray-700">{addMax}</td>
+                              <td className="px-2 py-3 text-center text-gray-700">{addObtained}</td>
+                              <td className="px-2 py-3 text-center text-blue-600">{addPct}%</td>
+                              <td className="px-2 py-0 text-center">
+                                <div className={`h-full w-full py-3 flex items-center justify-center text-white rounded-r-lg ${addPassed ? "bg-emerald-500" : "bg-rose-600"}`}>
+                                  {addPassed ? "PASSED" : "FAILED"}
+                                </div>
+                              </td>
+                            </tr>
+
                             {/* OVERALL ROW */}
-                            <tr className="bg-gray-50/20 font-black">
-                              <td className="px-4 py-4 uppercase text-gray-900">OVERALL</td>
+                            <tr>
+                              <td colSpan="5" className="h-3 bg-white border-none"></td>
+                            </tr>
+                            <tr className="bg-gray-100 font-black">
+                              <td className="px-4 py-4 uppercase text-gray-900">OVERALL PERFORMANCE SUMMARY</td>
                               <td className="px-2 py-4 text-center text-gray-900">{totalMax}</td>
                               <td className="px-2 py-4 text-center text-gray-900">{totalObtained}</td>
                               <td className="px-2 py-4 text-center text-blue-600">{overallPct}%</td>
