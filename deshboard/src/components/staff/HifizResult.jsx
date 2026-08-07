@@ -554,12 +554,12 @@ const Hifiz = () => {
               </button>
 
               {/* AUTO ATTENDANCE */}
-              <button
+              {/* <button
                 onClick={handleAutoAttendance}
                 className="px-3 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 whitespace-nowrap text-sm"
               >
                 Auto
-              </button>
+              </button> */}
 
               {/* ADD RESULT */}
               <button

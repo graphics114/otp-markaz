@@ -596,7 +596,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                 <button onClick={handlePrint} className="px-3 py-1.5 bg-gray-700 text-white rounded text-sm">Print</button>
                 <button onClick={handleExcel} className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700">Excel</button>
                 <button onClick={handlePDF} className="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700">PDF</button>
-                <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap">Auto</button>
+                {/* <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap"> Auto </button> */}
                 {isAdmin && (
                   <button
                     onClick={() => setShowAddSubjectModal(true)}
@@ -627,7 +627,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                       <th className="py-3 px-3 text-left text-sm">Name</th>
                       <th className="py-3 px-3 text-left text-sm whitespace-nowrap">Reg No</th>
                       {/* DYNAMIC SUBJECT COLUMNS */}
-                      {customSubjectList.map((sub) => (
+                      {(isAdmin || user?.role === "Dawa") && customSubjectList.map((sub) => (
                         <th key={sub.id} className="py-3 px-3 text-left text-sm whitespace-nowrap font-bold text-purple-900 bg-purple-50">
                           <div className="flex items-center justify-between gap-1">
                             <span>{sub.name} <span className="text-[10px] font-normal text-purple-600">(P:35)</span></span>
@@ -667,7 +667,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                         <td className="py-2 px-3 text-sm whitespace-nowrap">{result.reg_number}</td>
 
                         {/* DYNAMIC SUBJECT INPUTS */}
-                        {customSubjectList.map((sub) => (
+                        {(isAdmin || user?.role === "Dawa") && customSubjectList.map((sub) => (
                           <td key={sub.id} className="py-2 px-3 bg-purple-50/20">
                             <input
                               type="number"
