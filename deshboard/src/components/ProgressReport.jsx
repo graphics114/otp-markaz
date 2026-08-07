@@ -27,6 +27,8 @@ const ProgressReport = () => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().substring(0, 10);
   });
+  const [selectedBatch, setSelectedBatch] = useState("all"); // Batch filter
+  const [selectedInstitution, setSelectedInstitution] = useState("all"); // Institution filter
 
   const [viewMode, setViewMode] = useState("all"); // "all" or "individual"
   const [displayType, setDisplayType] = useState("summary"); // "summary" or "detailed"
@@ -39,14 +41,14 @@ const ProgressReport = () => {
   useEffect(() => {
     if (startDate && endDate) {
       dispatch(fetchAttendanceReport({
-        institution: "all",
-        joining_batch: "all",
+        institution: selectedInstitution,
+        joining_batch: selectedBatch,
         program_id: "all",
         start_date: startDate,
         end_date: endDate
       }));
     }
-  }, [startDate, endDate, dispatch]);
+  }, [startDate, endDate, selectedInstitution, selectedBatch, dispatch]);
 
   const rangeResults = useMemo(() => {
     const filtered = results.filter(r => {
@@ -71,7 +73,13 @@ const ProgressReport = () => {
 
   // Data for Summary View
   const allStudentsSummary = useMemo(() => {
-    return students.map(student => {
+    // Apply batch and institution filters before computing summary
+    const filteredStudents = students.filter(s => {
+      const batchMatch = selectedBatch === "all" || s.joining_batch === selectedBatch;
+      const institutionMatch = selectedInstitution === "all" || (s.institution && s.institution.includes(selectedInstitution));
+      return batchMatch && institutionMatch;
+    });
+    return filteredStudents.map(student => {
       const studentRangeResults = results.filter(r => r.student_id === student.id && r.exam_date && r.exam_date.substring(0, 10) >= startDate && r.exam_date.substring(0, 10) <= endDate);
       const att = attendanceReport.find(a => a.id === student.id);
 
@@ -408,8 +416,41 @@ const ProgressReport = () => {
         {/* FILTERS */}
         <div className="bg-white p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 mb-8 font-sans">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1"><Calendar size={12} /> Start Date</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20" /></div>
-            <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1"><Calendar size={12} /> End Date</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20" /></div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1"><Calendar size={12} /> Start Date</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1"><Calendar size={12} /> End Date</label>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1">Batch</label>
+              <select value={selectedBatch} onChange={(e) => setSelectedBatch(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20">
+                <option value="all">All</option>
+                {(() => {
+                  if (selectedInstitution === "Hifzul Quran College") {
+                    return ["hz1","hz2","hz3","hz4","hz5"];
+                  } else if (selectedInstitution !== "all") {
+                    const filtered = students.filter(s => s.institution && s.institution.includes(selectedInstitution));
+                    return Array.from(new Set(filtered.map(s => s.joining_batch)));
+                  } else {
+                    return Array.from(new Set(students.map(s => s.joining_batch)));
+                  }
+                })().map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1">Institution</label>
+              <select value={selectedInstitution} onChange={(e) => setSelectedInstitution(e.target.value)} className="w-full bg-gray-50 border-none p-3 rounded-2xl outline-none font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-blue-500/20">
+                <option value="all">All</option>
+                {Array.from(new Set(students.map(s => s.institution?.trim()).filter(Boolean))).map((inst) => (
+                  <option key={inst} value={inst}>{inst}</option>
+                ))}
+              </select>
+            </div>
             <div className="md:col-span-2 relative mt-0"><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1 flex items-center gap-1"><Search size={12} /> {viewMode === "all" ? (displayType === 'summary' ? "Search Summary" : "Search Detailed Results") : "Search Student Profile"}</label><div className="relative"><input type="text" placeholder="Search name or reg no..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-gray-50 border-none p-3 pl-10 rounded-2xl outline-none transition-all font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20" /><Search className="absolute left-3 top-3.5 text-gray-300" size={18} /></div>
               {viewMode === "individual" && searchTerm && (<div className="absolute z-10 w-full left-0 mt-2 bg-white border border-gray-100 shadow-2xl rounded-2xl overflow-hidden p-1">{filteredStudents.map(s => (<button key={s.id} onClick={() => { setSelectedStudentId(s.id); setSearchTerm(""); setViewMode("individual"); }} className="w-full p-3 flex items-center gap-3 hover:bg-blue-50 rounded-xl text-left"><div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">{s.full_name[0]}</div><div><p className="font-bold text-gray-800 text-sm">{s.full_name}</p><p className="text-[10px] text-gray-400 font-medium">{s.reg_number}</p></div></button>))}</div>)}
             </div>
