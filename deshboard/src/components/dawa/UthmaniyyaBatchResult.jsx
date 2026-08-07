@@ -23,6 +23,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
   const dispatch = useDispatch();
 
   const isAdmin = user?.role === "Admin";
+  const canEditAttendance = isAdmin || user?.role === "Dawa"; // Admin & Dawa can edit attendance
 
   const [selectedStatus, setSelectedStatus] = useState({});
   const [search, setSearch] = useState("");
@@ -742,7 +743,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                             className="w-14 text-center focus:outline-none bg-transparent border-b border-gray-300 text-sm" />
                         </td>
 
-                        {/* ATTENDANCE — editable */}
+                        {/* ATTENDANCE — editable for Admin only */}
                         <td className="py-2 px-3">
                           {(() => {
                             const attReport = attendanceReportData.find(r => r.id === result.student_id);
@@ -753,21 +754,33 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                                   : (attReport ? attReport.present_days : ""));
                             const totalDays = attReport && attReport.total_days > 0 ? attReport.total_days : null;
 
+                            if (canEditAttendance) {
+                              return (
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={totalDays || 100}
+                                    value={defaultPresent}
+                                    onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
+                                    className="w-14 text-center focus:outline-none bg-transparent border-b border-blue-400 font-bold text-blue-700 text-sm"
+                                    placeholder="-"
+                                  />
+                                  {totalDays && (
+                                    <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                                      {defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            // Staff: read-only
                             return (
                               <div className="flex flex-col items-center gap-0.5">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={totalDays || 100}
-                                  value={defaultPresent}
-                                  onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
-                                  className="w-14 text-center focus:outline-none bg-transparent border-b border-blue-400 font-bold text-blue-700 text-sm"
-                                  placeholder="-"
-                                />
+                                <span className="font-bold text-blue-700 text-sm">{defaultPresent !== "" ? defaultPresent : "-"}</span>
                                 {totalDays && (
-                                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
-                                    {defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}
-                                  </span>
+                                  <span className="text-[10px] text-gray-400 whitespace-nowrap">{defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}</span>
                                 )}
                               </div>
                             );

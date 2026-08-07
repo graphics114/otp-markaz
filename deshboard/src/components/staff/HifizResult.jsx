@@ -690,32 +690,18 @@ const Hifiz = () => {
                               onChange={(e) => handleResultChange(result.result_id, "reading_skill", e.target.value)}
                               className="text-center w-12 focus:outline-none bg-transparent" />
                           </td>
-                          {/* ATTENDANCE — editable */}
+                          {/* ATTENDANCE — read-only for staff */}
                           <td className="py-3 px-4">
                             {(() => {
                               const attReport = attendanceReportData.find(r => r.id === result.student_id);
-                              const defaultPresent = (selectedStatus[result.result_id]?.attendance !== undefined)
-                                ? selectedStatus[result.result_id].attendance
-                                : (result.attendance !== null && result.attendance !== undefined && result.attendance !== ""
-                                    ? result.attendance
-                                    : (attReport ? attReport.present_days : ""));
+                              const presentVal = attReport ? attReport.present_days
+                                : (result.attendance !== null && result.attendance !== undefined && result.attendance !== "" ? result.attendance : "-");
                               const totalDays = attReport && attReport.total_days > 0 ? attReport.total_days : null;
-
                               return (
                                 <div className="flex flex-col items-center gap-0.5">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={totalDays || 100}
-                                    value={defaultPresent}
-                                    onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
-                                    className="w-14 text-center focus:outline-none bg-transparent border-b border-blue-400 font-bold text-blue-700 text-sm"
-                                    placeholder="-"
-                                  />
+                                  <span className="font-bold text-blue-700 text-sm">{presentVal}</span>
                                   {totalDays && (
-                                    <span className="text-[10px] text-gray-400 whitespace-nowrap">
-                                      {defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}
-                                    </span>
+                                    <span className="text-[10px] text-gray-400 whitespace-nowrap">{presentVal} / {totalDays}</span>
                                   )}
                                 </div>
                               );
