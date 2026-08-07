@@ -51,6 +51,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
   const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
   const [newSubjectName, setNewSubjectName] = useState("");
   const [customSubjectMarksModal, setCustomSubjectMarksModal] = useState({});
+  const [attendanceReportData, setAttendanceReportData] = useState([]); // {id, present_days, total_days}[]
 
   const fetchSubjects = async () => {
     try {
@@ -190,7 +191,10 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
       (result.writing_skill ?? 0) >= 0 &&
       (result.reading_skill ?? 0) >= 0
     );
-    const isAttendancePass = (result.attendance ?? 0) >= 13;
+    const attReport = attendanceReportData.find(r => r.id === result.student_id);
+    const isAttendancePass = attReport && attReport.total_days > 0
+      ? (attReport.present_days / attReport.total_days) >= 0.75
+      : (result.attendance ?? 0) >= 15;
     
     let customPass = true;
     const statusObj = selectedStatus[result.result_id];
@@ -243,6 +247,22 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
   useEffect(() => {
     setPage(1);
   }, [search, selectedMonth]);
+
+  // Auto-fetch attendance data whenever month changes
+  useEffect(() => {
+    if (!selectedMonth) return;
+    const parts = selectedMonth.split("-");
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const lastDay = new Date(year, month, 0).getDate();
+    const start_date = `${selectedMonth}-01`;
+    const end_date = `${selectedMonth}-${lastDay}`;
+    axiosInstance.get("/attendance/report", {
+      params: { program_id: "all", start_date, end_date, institution: INSTITUTION, joining_batch: course }
+    }).then(res => {
+      if (res.data?.report) setAttendanceReportData(res.data.report);
+    }).catch(() => {});
+  }, [selectedMonth, course]);
 
   useEffect(() => {
     const newMax = Math.ceil(filteredResults.length / 10) || 1;
@@ -369,6 +389,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         toast.warning("No attendance records found for this month");
         return;
       }
+      setAttendanceReportData(reportData);
       
       const newStatusMap = { ...selectedStatus };
       let updatedCount = 0;
@@ -378,7 +399,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
         const studentReport = reportData.find(r => r.id === studentId);
         
         if (studentReport && studentReport.total_days > 0) {
-          const attendanceMark = Math.round((studentReport.present_days / studentReport.total_days) * 10);
+          const attendanceMark = studentReport.present_days;
           
           newStatusMap[resItem.result_id] = {
             ...(newStatusMap[resItem.result_id] || {}),
@@ -596,7 +617,7 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                 <button onClick={handlePrint} className="px-3 py-1.5 bg-gray-700 text-white rounded text-sm">Print</button>
                 <button onClick={handleExcel} className="px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700">Excel</button>
                 <button onClick={handlePDF} className="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700">PDF</button>
-                {/* <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap"> Auto </button> */}
+                <button onClick={handleAutoAttendance} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 whitespace-nowrap">Auto</button>
                 {isAdmin && (
                   <button
                     onClick={() => setShowAddSubjectModal(true)}
@@ -721,12 +742,36 @@ const UthmaniyyaBatchResult = ({ course, onBack }) => {
                             className="w-14 text-center focus:outline-none bg-transparent border-b border-gray-300 text-sm" />
                         </td>
 
-                        {/* ATTENDANCE */}
+                        {/* ATTENDANCE — editable */}
                         <td className="py-2 px-3">
-                          <input type="number" min="0"
-                            value={selectedStatus[result.result_id]?.attendance !== undefined ? selectedStatus[result.result_id].attendance : (result.attendance ?? "")}
-                            onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
-                            className="w-14 text-center focus:outline-none bg-transparent border-b border-gray-300 text-sm" />
+                          {(() => {
+                            const attReport = attendanceReportData.find(r => r.id === result.student_id);
+                            const defaultPresent = (selectedStatus[result.result_id]?.attendance !== undefined)
+                              ? selectedStatus[result.result_id].attendance
+                              : (result.attendance !== null && result.attendance !== undefined && result.attendance !== ""
+                                  ? result.attendance
+                                  : (attReport ? attReport.present_days : ""));
+                            const totalDays = attReport && attReport.total_days > 0 ? attReport.total_days : null;
+
+                            return (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={totalDays || 100}
+                                  value={defaultPresent}
+                                  onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
+                                  className="w-14 text-center focus:outline-none bg-transparent border-b border-blue-400 font-bold text-blue-700 text-sm"
+                                  placeholder="-"
+                                />
+                                {totalDays && (
+                                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                                    {defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         {/* TOTAL MARKS — auto-computed, read-only */}

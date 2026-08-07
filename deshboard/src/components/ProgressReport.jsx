@@ -81,25 +81,39 @@ const ProgressReport = () => {
     });
     return filteredStudents.map(student => {
       const studentRangeResults = results.filter(r => r.student_id === student.id && r.exam_date && r.exam_date.substring(0, 10) >= startDate && r.exam_date.substring(0, 10) <= endDate);
-      const att = attendanceReport.find(a => a.id === student.id);
+      const att = attendanceReport.find(a => String(a.id) === String(student.id) || (a.reg_number && a.reg_number === student.reg_number));
+      const count = studentRangeResults.length;
 
-      let total = 0;
-      let count = 0;
+      let totalMainMark = 0;
+      let mainSubCount = 0;
       studentRangeResults.forEach(result => {
-        total += (result.hifiz_marks || 0) + (result.hizb_marks || 0) + (result.competitions || 0) +
-          (result.presentation_skill || 0) + (result.writing_skill || 0) +
-          (result.reading_skill || 0) + (result.attendance || 0);
-        count++;
+        const customObj = typeof result.custom_subjects === "string"
+          ? JSON.parse(result.custom_subjects || "{}")
+          : (result.custom_subjects || {});
+        if (result.hifiz_marks !== null && result.hifiz_marks !== undefined && result.hifiz_marks !== "" && result.hifiz_marks !== 1) {
+          totalMainMark += Number(result.hifiz_marks);
+          mainSubCount++;
+        }
+        if (result.hizb_marks !== null && result.hizb_marks !== undefined && result.hizb_marks !== "" && result.hizb_marks !== 1) {
+          totalMainMark += Number(result.hizb_marks);
+          mainSubCount++;
+        }
+        Object.values(customObj).forEach(val => {
+          if (val !== null && val !== undefined && val !== "") {
+            totalMainMark += Number(val);
+            mainSubCount++;
+          }
+        });
       });
-      const avg = count > 0 ? Math.round(total / count) : 0;
-      const allExamsPassed = studentRangeResults.length > 0 && studentRangeResults.every(r => {
+      const avg = mainSubCount > 0 ? Math.round(totalMainMark / mainSubCount) : 0;
+      const allExamsPassed = count > 0 && studentRangeResults.every(r => {
         const isAcademicPass = (
           (r.competitions ?? 0) >= 0 &&
           (r.presentation_skill ?? 0) >= 0 &&
           (r.writing_skill ?? 0) >= 0 &&
           (r.reading_skill ?? 0) >= 0
         );
-        const isAttendancePass = (r.attendance ?? 0) >= 13;
+        const isAttendancePass = att && att.total_days > 0 ? ((att.present_days / att.total_days) >= 0.75) : ((r.attendance ?? 0) >= 15);
 
         // Memory subjects pass rule (30+)
         const hifizPass = (r.hifiz_marks === null || r.hifiz_marks === undefined || r.hifiz_marks === "" || r.hifiz_marks === 1 || Number(r.hifiz_marks) >= 30);
@@ -117,9 +131,10 @@ const ProgressReport = () => {
         student,
         avg,
         status: count > 0 ? (allExamsPassed ? "Passed" : "Failed") : "N/A",
-        attendance: att ? `${Math.round((att.present_days / att.total_days) * 100)}%` : "0%",
+        attendance: att && att.total_days > 0 ? `${Math.round((att.present_days / att.total_days) * 100)}%` : "0%",
         examCount: count,
-        allResults: studentRangeResults
+        allResults: studentRangeResults,
+        att
       };
     }).filter(item => searchTerm ? (
       item.student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,22 +143,36 @@ const ProgressReport = () => {
   }, [students, results, startDate, endDate, attendanceReport, searchTerm]);
 
   const individualData = useMemo(() => {
-    if (!selectedStudentId) return { results: [], chart: [], stats: { avg: 0, high: 0, low: 0, count: 0 } };
+    if (!selectedStudentId) return { results: [], chart: [], stats: { avg: 0, high: 0, low: 0, count: 0 }, att: null };
     const filtered = results.filter(r => r.student_id === selectedStudentId && r.exam_date)
       .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date));
+    const att = attendanceReport.find(a => a.id === selectedStudentId);
     const chart = filtered.map(r => {
-      const total = (r.hifiz_marks || 0) + (r.hizb_marks || 0) + (r.competitions || 0) +
-        (r.presentation_skill || 0) + (r.writing_skill || 0) + (r.reading_skill || 0) +
-        (r.attendance || 0);
+      const customObj = typeof r.custom_subjects === "string"
+        ? JSON.parse(r.custom_subjects || "{}")
+        : (r.custom_subjects || {});
+      let sum = 0;
+      let cnt = 0;
+      if (r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1) {
+        sum += Number(r.hifiz_marks); cnt++;
+      }
+      if (r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1) {
+        sum += Number(r.hizb_marks); cnt++;
+      }
+      Object.values(customObj).forEach(val => {
+        if (val !== null && val !== undefined && val !== "") {
+          sum += Number(val); cnt++;
+        }
+      });
+      const mainAvg = cnt > 0 ? Math.round(sum / cnt) : 0;
       return {
         month: new Date(r.exam_date).toLocaleString('default', { month: 'short' }),
-        totalMarks: total,
+        totalMarks: mainAvg,
         exam_date: r.exam_date
       };
     });
     const marks = chart.map(d => d.totalMarks);
-    const attMarks = filtered.map(r => r.attendance || 0);
-    const attAvgPct = attMarks.length > 0 ? Math.round((attMarks.reduce((a, b) => a + b, 0) / (attMarks.length * 20)) * 100) : 0;
+    const attAvgPct = att && att.total_days > 0 ? Math.round((att.present_days / att.total_days) * 100) : (filtered.length > 0 ? Math.round((filtered.reduce((a, b) => a + (b.attendance || 0), 0) / (filtered.length * 20)) * 100) : 0);
 
     const stats = marks.length > 0 ? {
       avg: Math.round(marks.reduce((a, b) => a + b, 0) / marks.length),
@@ -152,8 +181,8 @@ const ProgressReport = () => {
       count: marks.length,
       attAvg: `${attAvgPct}%`
     } : { avg: 0, high: 0, low: 0, count: 0, attAvg: "0%" };
-    return { results: filtered, chart, stats };
-  }, [selectedStudentId, results]);
+    return { results: filtered, chart, stats, att };
+  }, [selectedStudentId, results, attendanceReport]);
 
   const generateDetailedReport = (doc, item, isFirstPage = true) => {
     const { student, allResults } = item;
@@ -189,7 +218,7 @@ const ProgressReport = () => {
     doc.setFontSize(10); doc.setTextColor(31, 41, 55); doc.text(`${startDate} to ${endDate}`, 140, 63);
 
     const sortedRecords = allResults.sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date));
-    const examCount = sortedRecords.length;
+    const examCount = sortedRecords.length || 1;
 
     // Identify if memory marks exist anywhere in the period
     const hasHifiz = sortedRecords.some(r => r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1);
@@ -197,6 +226,7 @@ const ProgressReport = () => {
 
     // Identify custom subjects that have entered marks in any record of sortedRecords
     const customSubjectsMap = {};
+    const customSubjectsCount = {};
     sortedRecords.forEach(r => {
       const customObj = typeof r.custom_subjects === "string"
         ? JSON.parse(r.custom_subjects || "{}")
@@ -204,10 +234,15 @@ const ProgressReport = () => {
       Object.entries(customObj).forEach(([name, val]) => {
         if (val !== null && val !== undefined && val !== "") {
           if (!customSubjectsMap[name]) customSubjectsMap[name] = 0;
+          if (!customSubjectsCount[name]) customSubjectsCount[name] = 0;
           customSubjectsMap[name] += Number(val);
+          customSubjectsCount[name] += 1;
         }
       });
     });
+
+    const hifizCount = sortedRecords.filter(r => r.hifiz_marks !== null && r.hifiz_marks !== undefined && r.hifiz_marks !== "" && r.hifiz_marks !== 1).length || 1;
+    const hizbCount = sortedRecords.filter(r => r.hizb_marks !== null && r.hizb_marks !== undefined && r.hizb_marks !== "" && r.hizb_marks !== 1).length || 1;
 
     const aggregated = sortedRecords.reduce((acc, r) => {
       acc.hifiz += (Number(r.hifiz_marks) || 0);
@@ -221,46 +256,53 @@ const ProgressReport = () => {
     }, { hifiz: 0, hizb: 0, competition: 0, presentation: 0, writing: 0, reading: 0, attendance: 0 });
 
     const mainSubjects = [
-      ...(hasHifiz ? [{ name: "Hifiz", obtained: aggregated.hifiz, max: examCount * 100 }] : []),
-      ...(hasHizb ? [{ name: "Hizb", obtained: aggregated.hizb, max: examCount * 100 }] : []),
+      ...(hasHifiz ? [{ name: "Hifiz", obtained: Math.round(aggregated.hifiz / hifizCount), max: 100 }] : []),
+      ...(hasHizb ? [{ name: "Hizb", obtained: Math.round(aggregated.hizb / hizbCount), max: 100 }] : []),
       ...Object.entries(customSubjectsMap).map(([name, obtained]) => ({
         name,
-        obtained,
-        max: examCount * 100
+        obtained: Math.round(obtained / (customSubjectsCount[name] || 1)),
+        max: 100
       }))
     ];
 
+    const att = item.att || attendanceReport.find(a => String(a.id) === String(student.id) || (a.reg_number && a.reg_number === student.reg_number));
+    const attTotal = att && Number(att.total_days) > 0 ? Number(att.total_days) : (examCount * 20);
+    const attTotalDays = att && Number(att.total_days) > 0 ? Number(att.total_days) : (examCount * 20);
+    const attPresentDays = att ? Number(att.present_days) : Math.round(aggregated.attendance / examCount);
+    const attAbsentDays = Math.max(0, attTotalDays - attPresentDays);
+    const attPctVal = attTotalDays > 0 ? ((attPresentDays / attTotalDays) * 100).toFixed(2) : "0.00";
+
     const additionalFields = [
-      { name: "Competition", obtained: aggregated.competition, max: examCount * 20 },
-      { name: "Presentation Skill", obtained: aggregated.presentation, max: examCount * 20 },
-      { name: "Writing Skill", obtained: aggregated.writing, max: examCount * 20 },
-      { name: "Reading Skill", obtained: aggregated.reading, max: examCount * 20 },
-      { name: "Attendance", obtained: aggregated.attendance, max: examCount * 20 }
+      { name: "Competition", obtained: Math.round(aggregated.competition / examCount), max: 20 },
+      { name: "Presentation Skill", obtained: Math.round(aggregated.presentation / examCount), max: 20 },
+      { name: "Writing Skill", obtained: Math.round(aggregated.writing / examCount), max: 20 },
+      { name: "Reading Skill", obtained: Math.round(aggregated.reading / examCount), max: 20 },
+      { name: "Attendance", obtained: attPresentDays, max: attTotalDays }
     ];
+
+    const checkPass = (s) => {
+      if (s.name === "Attendance") {
+        if (s.max > 0) return (s.obtained / s.max) >= 0.75;
+        return s.obtained >= 15;
+      }
+      if (["Hifiz", "Hizb"].includes(s.name)) return s.obtained >= 30;
+      if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return s.obtained >= 0;
+      return s.obtained >= 35;
+    };
 
     const mainMax = mainSubjects.reduce((sum, s) => sum + s.max, 0);
     const mainObtained = mainSubjects.reduce((sum, s) => sum + s.obtained, 0);
     const mainPct = mainMax > 0 ? ((mainObtained / mainMax) * 100).toFixed(2) : "0.00";
+    const mainPassed = mainSubjects.every(s => checkPass(s));
 
     const addMax = additionalFields.reduce((sum, s) => sum + s.max, 0);
     const addObtained = additionalFields.reduce((sum, s) => sum + s.obtained, 0);
     const addPct = addMax > 0 ? ((addObtained / addMax) * 100).toFixed(2) : "0.00";
-
-    const totalObtained = mainObtained + addObtained;
-    const totalMax = mainMax + addMax;
-    const overallPct = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
-
-    const checkPass = (s) => {
-      const pct = (s.obtained / s.max) * 100;
-      if (s.name === "Attendance") return pct >= 65; // (13/20 = 65%)
-      if (["Hifiz", "Hizb"].includes(s.name)) return pct >= 30; // (30/100 = 30%)
-      if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return pct >= 0;
-      return pct >= 35;
-    };
-
-    const mainPassed = mainSubjects.every(s => checkPass(s));
     const addPassed = additionalFields.every(s => checkPass(s));
 
+    const totalMax = mainMax + addMax;
+    const totalObtained = mainObtained + addObtained;
+    const overallPct = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : "0.00";
     const overallPassed = mainPassed && addPassed;
 
     autoTable(doc, {
@@ -356,9 +398,8 @@ const ProgressReport = () => {
     if (displayType === "detailed") {
       autoTable(doc, {
         startY: 35,
-        head: [["#", "Month", "Name", "Reg No", "Competition", "Description", "Presentation", "Writing", "Reading", "Attendance", "Total", "R Status", "P Status"]],
+        head: [["#", "Month", "Name", "Reg No", "Competition", "Description", "Presentation", "Writing", "Reading", "Attendance", "R Status", "P Status"]],
         body: rangeResults.map((r, i) => {
-          const total = (r.hifiz_marks || 0) + (r.hizb_marks || 0) + (r.competitions || 0) + (r.presentation_skill || 0) + (r.writing_skill || 0) + (r.reading_skill || 0) + (r.attendance || 0);
           return [
             i + 1,
             new Date(r.exam_date).toLocaleString('default', { month: 'long' }),
@@ -459,9 +500,30 @@ const ProgressReport = () => {
 
         {viewMode === "individual" && selectedStudentId ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm mb-8">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Attendance Summary</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">TOTAL</p>
+                  <p className="text-2xl font-black text-gray-800 mt-1">{individualData.att ? individualData.att.total_days : "-"}</p>
+                </div>
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">PRESENT</p>
+                  <p className="text-2xl font-black text-emerald-600 mt-1">{individualData.att ? individualData.att.present_days : "-"}</p>
+                </div>
+                <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
+                  <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">ABSENT</p>
+                  <p className="text-2xl font-black text-rose-600 mt-1">{individualData.att ? Math.max(0, individualData.att.total_days - individualData.att.present_days) : "-"}</p>
+                </div>
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">ATTENDANCE %</p>
+                  <p className="text-2xl font-black text-emerald-600 mt-1">{individualData.stats.attAvg}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
               {[
-                { label: "Attendance", val: individualData.stats.attAvg, color: "text-blue-600", bg: "bg-blue-50", icon: <Calendar /> },
                 { label: "Avg Marks", val: individualData.stats.avg, color: "text-emerald-600", bg: "bg-emerald-50", icon: <TrendingUp /> },
                 { label: "Best Score", val: individualData.stats.high, color: "text-purple-600", bg: "bg-purple-50", icon: <TrendingUp /> },
                 { label: "Exams", val: individualData.stats.count, color: "text-orange-600", bg: "bg-orange-50", icon: <FileText /> },
@@ -507,16 +569,19 @@ const ProgressReport = () => {
                       ...customSubs
                     ];
 
+                    const rowAttTotal = individualData.att && Number(individualData.att.total_days) > 0 ? Number(individualData.att.total_days) : 20;
+                    const rowAttPresent = individualData.att ? Number(individualData.att.present_days) : (r.attendance || 0);
+
                     const additionalFields = [
                       { name: "Competition", obtained: r.competitions || 0, max: 20 },
                       { name: "Presentation Skill", obtained: r.presentation_skill || 0, max: 20 },
                       { name: "Writing Skill", obtained: r.writing_skill || 0, max: 20 },
                       { name: "Reading Skill", obtained: r.reading_skill || 0, max: 20 },
-                      { name: "Attendance", obtained: r.attendance || 0, max: 20 }
+                      { name: "Attendance", obtained: rowAttPresent, max: rowAttTotal }
                     ];
 
                     const checkPassItem = (s) => {
-                      if (s.name === "Attendance") return s.obtained >= 13;
+                      if (s.name === "Attendance") return s.max > 0 ? (s.obtained / s.max) >= 0.75 : s.obtained >= 15;
                       if (["Hifiz", "Hizb"].includes(s.name)) return s.obtained >= 30;
                       if (["Competition", "Presentation Skill", "Writing Skill", "Reading Skill"].includes(s.name)) return s.obtained >= 0;
                       return s.obtained >= 35;
@@ -601,6 +666,7 @@ const ProgressReport = () => {
                               </tr>
                             )}
 
+                            {/* ADDITIONAL FIELDS */}
                             <tr>
                               <td colSpan="5" className="h-3 bg-white border-none"></td>
                             </tr>
@@ -626,7 +692,7 @@ const ProgressReport = () => {
                                 </tr>
                               );
                             })}
-                            
+
                             {/* ADDITIONAL FIELDS SUMMARY ROW */}
                             <tr className="bg-gray-50/50 font-black border-t border-gray-100">
                               <td className="px-4 py-3 uppercase text-gray-700 text-[10px]">ADDITIONAL FIELDS SUMMARY</td>
@@ -713,8 +779,8 @@ const ProgressReport = () => {
                   </tbody>
                 </table>
               ) : (
-                /* DETAILED TABLE (EXACT MATCH TO SUBMITTED SCREENSHOT) */
-                <table className="w-full text-left min-w-[1200px] text-xs">
+                /* DETAILED TABLE */
+                <table className="w-full text-left min-w-[1100px] text-xs">
                   <thead className="bg-[#f8f9fa] border-b border-gray-100">
                     <tr>
                       <th className="px-4 py-3 font-bold text-gray-700 text-center">#</th>
@@ -727,14 +793,12 @@ const ProgressReport = () => {
                       <th className="px-4 py-3 font-bold text-gray-700 text-center">Writing Skill</th>
                       <th className="px-4 py-3 font-bold text-gray-700 text-center">Reading Skill</th>
                       <th className="px-4 py-3 font-bold text-gray-700 text-center">Attendance</th>
-                      <th className="px-4 py-3 font-bold text-gray-700 text-center">Total</th>
                       <th className="px-4 py-3 font-bold text-gray-700">R Status</th>
                       <th className="px-4 py-3 font-bold text-gray-700">P Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
                     {rangeResults.map((r, i) => {
-                      const total = (r.hifiz_marks || 0) + (r.hizb_marks || 0) + (r.competitions || 0) + (r.presentation_skill || 0) + (r.writing_skill || 0) + (r.reading_skill || 0) + (r.attendance || 0);
                       return (
                         <tr key={i} className="hover:bg-gray-50 transition-all border-b border-gray-50">
                           <td className="px-4 py-3 text-center text-gray-400">{i + 1}</td>
@@ -747,7 +811,6 @@ const ProgressReport = () => {
                           <td className="px-4 py-3 text-center text-gray-600">{r.writing_skill ?? 0}</td>
                           <td className="px-4 py-3 text-center text-gray-600">{r.reading_skill ?? 0}</td>
                           <td className="px-4 py-3 text-center text-gray-600">{r.attendance ?? 0}</td>
-                          <td className="px-4 py-3 text-center font-bold text-gray-900">{total}</td>
                           <td className="px-4 py-3"><span className={`font-bold ${(r.competitions || 0) >= 0 && (r.presentation_skill || 0) >= 0 && (r.writing_skill || 0) >= 0 && (r.reading_skill || 0) >= 0 && (r.attendance || 0) >= 13 ? 'text-emerald-600' : 'text-rose-500'}`}>{(r.competitions || 0) >= 0 && (r.presentation_skill || 0) >= 0 && (r.writing_skill || 0) >= 0 && (r.reading_skill || 0) >= 0 && (r.attendance || 0) >= 13 ? 'PASSED' : 'FAILED'}</span></td>
                           <td className="px-4 py-3"><span className="text-gray-400 font-medium">{r.status || "Pending"}</span></td>
                         </tr>

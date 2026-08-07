@@ -16,6 +16,7 @@ const Hifiz = () => {
   const { loading, results, students } = useSelector((state) => state.std);
 
   const [selectedStatus, setSelectedStatus] = useState({});
+  const [attendanceReportData, setAttendanceReportData] = useState([]);
 
   const [search, setSearch] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -106,6 +107,22 @@ const Hifiz = () => {
     setPage(1);
   }, [search, selectedMonth]);
 
+  // Auto-fetch attendance data whenever month changes
+  useEffect(() => {
+    if (!selectedMonth) return;
+    const parts = selectedMonth.split("-");
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const lastDay = new Date(year, month, 0).getDate();
+    const start_date = `${selectedMonth}-01`;
+    const end_date = `${selectedMonth}-${lastDay}`;
+    axiosInstance.get("/attendance/report", {
+      params: { program_id: "all", start_date, end_date, institution: "Hifzul Quran College", joining_batch: "all" }
+    }).then(res => {
+      if (res.data?.report) setAttendanceReportData(res.data.report);
+    }).catch(() => {});
+  }, [selectedMonth]);
+
   useEffect(() => {
     const newMax = Math.ceil(filteredResults.length / 10);
     setMaxPage(newMax || 1);
@@ -185,6 +202,7 @@ const Hifiz = () => {
         toast.warning("No attendance records found for this month");
         return;
       }
+      setAttendanceReportData(reportData);
       
       const newStatusMap = { ...selectedStatus };
       let updatedCount = 0;
@@ -194,7 +212,7 @@ const Hifiz = () => {
         const studentReport = reportData.find(r => r.id === studentId);
         
         if (studentReport && studentReport.total_days > 0) {
-          const attendanceMark = Math.round((studentReport.present_days / studentReport.total_days) * 10);
+          const attendanceMark = studentReport.present_days;
           
           newStatusMap[resItem.result_id] = {
             ...(newStatusMap[resItem.result_id] || {}),
@@ -554,12 +572,12 @@ const Hifiz = () => {
               </button>
 
               {/* AUTO ATTENDANCE */}
-              {/* <button
+              <button
                 onClick={handleAutoAttendance}
                 className="px-3 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 whitespace-nowrap text-sm"
               >
                 Auto
-              </button> */}
+              </button>
 
               {/* ADD RESULT */}
               <button
@@ -672,12 +690,36 @@ const Hifiz = () => {
                               onChange={(e) => handleResultChange(result.result_id, "reading_skill", e.target.value)}
                               className="text-center w-12 focus:outline-none bg-transparent" />
                           </td>
-                          {/* ATTENDANCE */}
+                          {/* ATTENDANCE — editable */}
                           <td className="py-3 px-4">
-                            <input type="number" min="0"
-                              value={selectedStatus[result.result_id]?.attendance !== undefined ? selectedStatus[result.result_id].attendance : (result.attendance ?? "")}
-                              onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
-                              className="text-center w-12 focus:outline-none bg-transparent" />
+                            {(() => {
+                              const attReport = attendanceReportData.find(r => r.id === result.student_id);
+                              const defaultPresent = (selectedStatus[result.result_id]?.attendance !== undefined)
+                                ? selectedStatus[result.result_id].attendance
+                                : (result.attendance !== null && result.attendance !== undefined && result.attendance !== ""
+                                    ? result.attendance
+                                    : (attReport ? attReport.present_days : ""));
+                              const totalDays = attReport && attReport.total_days > 0 ? attReport.total_days : null;
+
+                              return (
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={totalDays || 100}
+                                    value={defaultPresent}
+                                    onChange={(e) => handleResultChange(result.result_id, "attendance", e.target.value)}
+                                    className="w-14 text-center focus:outline-none bg-transparent border-b border-blue-400 font-bold text-blue-700 text-sm"
+                                    placeholder="-"
+                                  />
+                                  {totalDays && (
+                                    <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                                      {defaultPresent !== "" ? defaultPresent : "-"} / {totalDays}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-4 font-bold text-gray-700">
                             <span className="inline-block w-14 text-center font-black text-blue-700 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 text-sm">
